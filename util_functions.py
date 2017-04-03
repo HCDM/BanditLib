@@ -60,7 +60,7 @@ def vectorize(M):
 	# 	temp.append(M.T.item(i))
 	# V = np.asarray(temp)
 	# return V
-	return np.reshape(M, M.shape[0]*M.shape[1])
+	return np.reshape(M.T, M.shape[0]*M.shape[1])
 
 def matrixize(V, C_dimension):
 	# temp = np.zeros(shape = (C_dimension, len(V)/C_dimension))
@@ -69,4 +69,4 @@ def matrixize(V, C_dimension):
 	# W = temp
 	# return W
 	#To-do: use numpy built-in function reshape.
-	return np.reshape(V, (C_dimension, int(len(V)/C_dimension)))
+	return np.transpose(np.reshape(V, ( int(len(V)/C_dimension), C_dimension)))
