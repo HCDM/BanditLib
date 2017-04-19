@@ -22,6 +22,7 @@ from lib.CoLin import AsyCoLinUCBAlgorithm
 from lib.CLUB import *
 from lib.PTS import PTSAlgorithm
 from lib.UCBPMF import UCBPMFAlgorithm
+from lib.GOBLin import GOBLinAlgorithm
 
 
 
@@ -416,7 +417,7 @@ if __name__ == '__main__':
 		latent_dimension = 0
 
 	training_iterations = 0
-	testing_iterations = 100
+	testing_iterations = 300
 	
 	NoiseScale = .01
 
@@ -507,6 +508,7 @@ if __name__ == '__main__':
 	if args.alg == 'CoLin':
 		algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = simExperiment.getW())
 		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
+		algorithms['GOBLin'] = GOBLinAlgorithm( dimension= context_dimension, alpha = G_alpha, lambda_ = G_lambda_, n = n_users, W = simExperiment.getGW() )
 	if algName == 'CLUB':
 		algorithms['CLUB'] = CLUBAlgorithm(dimension =context_dimension,alpha = alpha, lambda_ = lambda_, n = n_users, alpha_2 = 0.5, cluster_init = 'Erdos-Renyi')	
 	if algName == 'All':

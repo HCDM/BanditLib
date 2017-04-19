@@ -21,14 +21,14 @@ class GOBLinSharedStruct:
 		self.theta = np.dot(self.AInv , self.b)
 		self.STBigWInv = sqrtm( np.linalg.inv(np.kron(W, np.identity(n=featureDimension))) )
 		self.STBigW = sqrtm(np.kron(W, np.identity(n=featureDimension)))
-	def updateParameters(self, articlePicked, click, userID):
+	def updateParameters(self, articlePicked, click, userID, update = 'inv'):
 		featureVectorM = np.zeros(shape =(len(articlePicked.contextFeatureVector), self.userNum))
 		featureVectorM.T[userID] = articlePicked.contextFeatureVector
 		featureVectorV = vectorize(featureVectorM)
 
 		CoFeaV = np.dot(self.STBigWInv, featureVectorV)
-		self.A += np.outer(CoFeaV, CoFeaV)
-		self.b += click * CoFeaV
+		self.A = self.A + np.outer(CoFeaV, CoFeaV)
+		self.b = self.b + click * CoFeaV
 
 		self.AInv = np.linalg.inv(self.A)
 
@@ -53,7 +53,12 @@ class GOBLinAlgorithm(CoLinUCBAlgorithm):
 	def __init__(self, dimension, alpha, lambda_, n, W):
 		CoLinUCBAlgorithm.__init__(self, dimension, alpha, lambda_, n, W)
 		self.USERS = GOBLinSharedStruct(dimension, lambda_, n, W)
-	def getLearntParameters(self, userID):
+		self.CanEstimateUserPreference = False
+		self.CanEstimateCoUserPreference = True 
+		self.CanEstimateW = False
+		self.CanEstimateV = False
+
+	def getCoTheta(self, userID):
 		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
 		return thetaMatrix.T[userID]
 

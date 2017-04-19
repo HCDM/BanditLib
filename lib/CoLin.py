@@ -38,11 +38,13 @@ class CoLinUCBUserSharedStruct(object):
 		mean = np.dot(self.CoTheta.T[userID], article.contextFeatureVector)	
 		var = np.sqrt(np.dot(np.dot(TempFeatureV, self.CCA), TempFeatureV))
 
-
-		self.alpha_t = 0.01*np.sqrt(np.log(np.linalg.det(self.A)/float(self.sigma * self.lambda_) )) + np.sqrt(self.lambda_)
-		
-		#pta = mean + alpha * var    # use emprically tuned alpha
-		pta = mean + self.alpha_t *var   # use the theoretically computed alpha_t
+		ComputeAlpha_t = False
+		if ComputeAlpha_t:
+			self.alpha_t = 0.01*np.sqrt(np.log(np.linalg.det(self.A)/float(self.sigma * self.lambda_) )) + np.sqrt(self.lambda_)
+			pta = mean + self.alpha_t *var   # use the theoretically computed alpha_t
+		else:
+			pta = mean + alpha * var    # use emprically tuned alpha
+			
 		
 		return pta
 
@@ -104,8 +106,8 @@ class CoLinUCBAlgorithm:
 		self.alpha = alpha
 		self.W = W
 
-		self.CanEstimateUserPreference = False
-		self.CanEstimateCoUserPreference = False 
+		self.CanEstimateUserPreference = True
+		self.CanEstimateCoUserPreference = True 
 		self.CanEstimateW = False
 		self.CanEstimateV = False
 	def decide(self, pool_articles, userID):
@@ -123,7 +125,7 @@ class CoLinUCBAlgorithm:
 	def updateParameters(self, articlePicked, click, userID, update='Inv'):
 		self.USERS.updateParameters(articlePicked, click, userID, update)
 		
-	def getLearntParameters(self, userID):
+	def getTheta(self, userID):
 		return self.USERS.UserTheta.T[userID]
 
 	def getCoTheta(self, userID):
@@ -173,7 +175,7 @@ class CoLinUCB_SelectUserAlgorithm:
 	def updateParameters(self, articlePicked, click, userID):
 		self.USERS.updateParameters(articlePicked, click, userID)
 		
-	def getLearntParameters(self, userID):
+	def getTheta(self, userID):
 		return self.USERS.UserTheta.T[userID]
 
 	def getCoThetaFromCoLinUCB(self, userID):
