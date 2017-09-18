@@ -65,20 +65,20 @@ class Uniform_LinUCBAlgorithm(object):
 
 #---------------LinUCB(fixed user order) algorithm---------------
 class N_LinUCBAlgorithm:
-	def __init__(self, dimension, alpha, lambda_, n, init="zero"):  # n is number of users
-		self.users = []
-		#algorithm have n users, each user has a user structure
-		for i in range(n):
-			self.users.append(LinUCBUserStruct(dimension, lambda_ , init)) 
-
+	def __init__(self, dimension, alpha, lambda_,  init="zero"):  # n is number of users
+		self.users = {}
 		self.dimension = dimension
 		self.alpha = alpha
+		self.lambda_ = lambda_
+		self.init = init
 
 		self.CanEstimateUserPreference = False
 		self.CanEstimateCoUserPreference = True
 		self.CanEstimateW = False
 		self.CanEstimateV = False
 	def decide(self, pool_articles, userID):
+		if userID not in self.users:
+			self.users[userID] = LinUCBUserStruct(self.dimension, self.lambda_ , self.init)
 		maxPTA = float('-inf')
 		articlePicked = None
 
