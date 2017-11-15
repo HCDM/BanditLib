@@ -1,0 +1,72 @@
+from Reward import Reward
+import numpy as np
+
+class SocialLinearReward(Reward):
+	def __init__(self, k, W, Gepsilon = 1):
+		Reward.__init__(self, k)
+
+		#self.GW = self.constructLaplacianMatrix(W, Gepsilon)
+
+	def getReward(self, user, pickedArticle):
+		# How to conditionally change
+		return np.dot(user.CoTheta, pickedArticle.featureVector)
+
+	def getRecommendationReward(self, user, recommendation, noise, cotheta = False):
+		total = 0
+		rewardList = []
+		for i in recommendation.articles:
+			if cotheta is False:
+				articleReward = np.dot(user.CoTheta, i.featureVector) + noise
+			else:
+				articleReward = np.dot(cotheta, i.featureVector)
+			total += articleReward
+			rewardList.append(articleReward)
+		return (total/self.k), rewardList
+
+	# def getOptimalRecommendationReward(self, user, articlePool, k):
+	# 	total = 0
+	# 	prev_selections = []
+	# 	for x in range(k):
+	# 		articleReward, articlePicked = self.getOptimalReward(user, articlePool, prev_selections)
+	# 		total += articleReward
+	# 		prev_selections.append(articlePicked)
+	# 		#local_pool.remove(articlePicked)
+	# 	return total/k
+
+	# def getOptimalReward(self, user, articlePool, exclude = []):		
+	# 	maxReward = float('-inf')
+	# 	maxx = None
+	# 	for x in articlePool:	 
+	# 		reward = self.getReward(user, x)
+	# 		if reward > maxReward and x not in exclude:
+	# 			maxReward = reward
+	# 			maxx = x
+	# 	return maxReward, x
+
+	def constructLaplacianMatrix(self, W, Gepsilon):
+		G = W.copy()
+		#Convert adjacency matrix of weighted graph to adjacency matrix of unweighted graph
+		for i in self.users:
+			for j in self.users:
+				if G[i.id][j.id] > 0:
+					G[i.id][j.id] = 1	
+
+		L = csgraph.laplacian(G, normed = False)
+		print L
+		I = np.identity(n = G.shape[0])
+		GW = I + Gepsilon*L  # W is a double stochastic matrix
+		print 'GW', GW
+		return GW.T
+	
+	def getGW(self):
+		return self.GW
+
+	def getTheta(self):
+		Theta = np.zeros(shape = (self.dimension, len(self.users)))
+		for i in range(len(self.users)):
+			Theta.T[i] = self.users[i].theta
+		return Theta
+	def generateUserFeature(self,W):
+		svd = TruncatedSVD(n_components=20)
+		result = svd.fit(W).transform(W)
+		return result

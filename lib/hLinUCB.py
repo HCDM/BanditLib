@@ -1,4 +1,6 @@
 import numpy as np
+from BaseAlg import BaseAlg
+
 
 class HLinUCBArticleStruct:
 	def __init__(self, id, context_dimension, latent_dimension, lambda_, init="zero", context_feature=None):
@@ -98,23 +100,18 @@ class HLinUCBUserStruct:
 		else:
 			return 0
 
-class HLinUCBAlgorithm:
-	def __init__(self, context_dimension, latent_dimension, alpha, alpha2, lambda_, n, itemNum, init="zero", window_size = 1, max_window_size = 50):  # n is number of users
-
-		self.context_dimension = context_dimension
-		self.latent_dimension = latent_dimension
-		self.d = context_dimension + latent_dimension
+class HLinUCBAlgorithm(BaseAlg):
+	def __init__(self, arg_dict, init="zero", window_size = 1, max_window_size = 50):  # n is number of users
+		BaseAlg.__init__(self, arg_dict)
+		self.d = self.context_dimension + self.latent_dimension
 		
 		self.users = []
 		#algorithm have n users, each user has a user structure
-		for i in range(n):
-			self.users.append(HLinUCBUserStruct(i, context_dimension, latent_dimension, lambda_ , init)) 
+		for i in range(self.n_users):
+			self.users.append(HLinUCBUserStruct(i, self.context_dimension, self.latent_dimension, self.lambda_ , init)) 
 		self.articles = []
-		for i in range(itemNum):
-			self.articles.append(HLinUCBArticleStruct(i, context_dimension, latent_dimension, lambda_ , init)) 
-
-		self.alpha = alpha
-		self.alpha2 = alpha2
+		for i in range(self.n_articles):
+			self.articles.append(HLinUCBArticleStruct(i, self.context_dimension, self.latent_dimension, self.lambda_ , init)) 
 
 		if window_size == -1:
 			self.increase_window = True
@@ -125,10 +122,11 @@ class HLinUCBAlgorithm:
 		self.max_window_size = max_window_size
 		self.window = []
 		self.time = 0
-		self.CanEstimateUserPreference = False
-		self.CanEstimateCoUserPreference = True 
-		self.CanEstimateW = False
-		self.CanEstimateV = True
+		self.estimates['CanEstimateUserPreference'] = False
+		self.estimates['CanEstimateCoUserPreference'] = True 
+		self.estimates['CanEstimateW'] = False
+		self.estimates['CanEstimateV'] = True
+
 	def decide(self, pool_articles, userID):
 		maxPTA = float('-inf')
 		articlePicked = None

@@ -5,7 +5,8 @@ import time
 import datetime
 
 from util_functions import vectorize, matrixize
-from CoLin import CoLinUCBAlgorithm, CoLinUCB_SelectUserAlgorithm
+#from CoLin import CoLinUCBAlgorithm, CoLinUCB_SelectUserAlgorithm
+from CoLin import CoLinUCBAlgorithm
 
 
 
@@ -21,7 +22,7 @@ class GOBLinSharedStruct:
 		self.theta = np.dot(self.AInv , self.b)
 		self.STBigWInv = sqrtm( np.linalg.inv(np.kron(W, np.identity(n=featureDimension))) )
 		self.STBigW = sqrtm(np.kron(W, np.identity(n=featureDimension)))
-	def updateParameters(self, articlePicked, click, userID):
+	def updateParameters(self, articlePicked, click, userID, update):
 		featureVectorM = np.zeros(shape =(len(articlePicked.contextFeatureVector), self.userNum))
 		featureVectorM.T[userID] = articlePicked.contextFeatureVector
 		featureVectorV = vectorize(featureVectorM)
@@ -50,18 +51,19 @@ class GOBLinSharedStruct:
 		return pta
 # inherite from CoLinUCBAlgorithm
 class GOBLinAlgorithm(CoLinUCBAlgorithm):
-	def __init__(self, dimension, alpha, lambda_, n, W):
-		CoLinUCBAlgorithm.__init__(self, dimension, alpha, lambda_, n, W)
-		self.USERS = GOBLinSharedStruct(dimension, lambda_, n, W)
+	def __init__(self, arg_dict):
+		CoLinUCBAlgorithm.__init__(self, arg_dict)
+		self.USERS = GOBLinSharedStruct(self.dimension, self.lambda_, self.n_users, self.W)
+		self.estimates['CanEstimateCoUserPreference'] = False
 	def getLearntParameters(self, userID):
 		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
 		return thetaMatrix.T[userID]
 
 #inherite from CoLinUCB_SelectUserAlgorithm
-class GOBLin_SelectUserAlgorithm(CoLinUCB_SelectUserAlgorithm):
-	def __init__(self, dimension, alpha, lambda_, n, W):
-		CoLinUCB_SelectUserAlgorithm.__init__(self, dimension, alpha, lambda_, n, W)
-		self.USERS = GOBLinSharedStruct(dimension, lambda_, n, W)
-	def getLearntParameters(self, userID):
-		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
-		return thetaMatrix.T[userID]
+# class GOBLin_SelectUserAlgorithm(CoLinUCB_SelectUserAlgorithm):
+# 	def __init__(self, dimension, alpha, lambda_, n, W):
+# 		CoLinUCB_SelectUserAlgorithm.__init__(self, dimension, alpha, lambda_, n, W)
+# 		self.USERS = GOBLinSharedStruct(dimension, lambda_, n, W)
+# 	def getLearntParameters(self, userID):
+# 		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
+# 		return thetaMatrix.T[userID]

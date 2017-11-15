@@ -1,0 +1,53 @@
+general:
+  testing_iterations: 300
+  training_iterations: 0
+  context_dimension: 16
+  hidden_dimension: 0
+
+alg:
+  linUCB:  # linUCB/CoLin
+    dimension: 16
+    alpha: 0.3
+    lambda_: 0.1
+    n_users: 10
+  CoLin:
+    dimension: 16
+    alpha: 0.3
+    lambda_: 0.1
+    n_users: 10
+  GOBLin:
+    dimension: 16
+    alpha: 0.3
+    lambda_: 0.1
+    n_users: 10
+  HLinUCB:
+    context_dimension: 16
+    latent_dimension: 0
+    alpha: 0.1
+    alpha2: 0.1
+    lambda_: 0.1
+    n_users: 10
+    n_articles: 1000
+
+user:
+  number: 10
+  groups: 5
+  theta_func: featureUniform
+  load: no
+  save: no
+  collaborative: yes
+  file_name: test.json
+
+article:
+  number: 1000
+  groups: 5
+  load: no
+  save: no
+  file_name: test.json
+
+reward:
+  k: 1
+  type: linear #linear/ social linear
+  options:
+    reward_function: 'np.dot(user.CoTheta, pickedArticle.featureVector)'
+    implicit: yes

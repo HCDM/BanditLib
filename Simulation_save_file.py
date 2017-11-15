@@ -13,7 +13,7 @@ from sklearn.decomposition import PCA
 from conf import sim_files_folder, save_address
 from util_functions import featureUniform, gaussianFeature
 from Articles import ArticleManager
-from Users import UserManager
+from Users.Users import UserManager
 
 from lib.LinUCB import N_LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm

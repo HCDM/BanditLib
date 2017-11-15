@@ -7,17 +7,30 @@ class User():
 	def __init__(self, id, theta = None, CoTheta = None):
 		self.id = id
 		self.theta = theta
-		self.CoTheta = CoTheta
 
 
 class UserManager():
-	def __init__(self, dimension, userNum,  UserGroups, thetaFunc, argv = None):
+	def __init__(self, dimension, user_dict, argv = None):
 		self.dimension = dimension
-		self.thetaFunc = thetaFunc
-		self.userNum = userNum
-		self.UserGroups = UserGroups
+		self.thetaFunc = eval(user_dict['thetaFunc']) if user_dict.has_key('thetaFunc') else featureUniform
+		self.userNum = user_dict['number'] if user_dict.has_key('number') else 10
+		self.UserGroups = user_dict['groups'] if user_dict.has_key('groups') else 5
 		self.argv = argv
 		self.signature = "A-"+"+PA"+"+TF-"+self.thetaFunc.__name__
+		if user_dict.has_key('load') and user_dict['load']:
+			# Load from user file
+			self.users = self.loadUsers(user_dict['filename']) if user_dict.has_key('filename') else self.loadUsers(user_dict['default_file'])
+		else:
+			# Simulate random users
+			self.users = self.simulateThetafromUsers()
+			if user_dict.has_key('save') and user_dict['save']:
+				self.saveUsers(users, user_dict['default_file'], force = False)
+
+		# How should W be set up for this type of Users
+		self.W, self.W0 = self.constructZeroMatrix()
+
+	def getUsers(self):
+		return self.users
 
 	def saveUsers(self, users, filename, force = False):
 		fileOverWriteWarning(filename, force)
@@ -60,3 +73,14 @@ class UserManager():
 					users.append(User(key, thetaVector/l2_norm))
 		return users
 
+	def constructZeroMatrix(self):
+		n = len(self.users)	
+        # Identity Matrix instead, so CoLin equivalent to LinUCB
+		W = np.identity(n)
+		W0 = np.identity(n)
+		return [W, W0] 
+
+	def getW(self):
+		return self.W
+	def getW0(self):
+		return self.W0
