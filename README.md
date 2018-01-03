@@ -48,5 +48,6 @@ The results will be written under folder `./SimulationResults`, including accumu
 [2]: Huazheng Wang, Qingyun Wu and Hongning Wang. Learning Hidden Features for Contextual Bandits. The 25th ACM International Conference on Information and Knowledge Management (CIKM 2016), p1633-1642, 2016.
 
 [3]: Huazheng Wang, Qingyun Wu and Hongning Wang. Factorization Bandits for Interactive Recommendation. The Thirty-First AAAI Conference on Artificial Intelligence (AAAI 2017). (to appear)
+
 [4]: Qingyun Wu, Hongning Wang, Liangjie Hong and Yue Shi. Returning is Believing: Optimizing Long-term User Engagement in Recommender Systems. The 26th ACM International Conference on Information and Knowledge Management (CIKM 2017), p1927-1936, 2017.
 
