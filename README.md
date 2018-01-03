@@ -33,9 +33,8 @@ For example:
 **FactorUCB**: A factorization-based bandit algorithm, in which low-rank matrix completion is performed over an incrementally constructed user-item preference matrix and where an upper confidence bound based item selection strategy is developed to balance the exploit/explore trade-off in online learning. Observable conextual features and dependency among users (e.g., social influence) are leveraged to improve the algorithm’s convergence rate and help conquer cold-start in recommendation. A high probability sublinear upper regret bound is proved in the developed algorithm, where considerable regret reduction is achieved on both user and item sides.
 
 **r2bandit**: It is a bandit-based solution is formulated to balance three competing factors during online learning, including exploitation for immediate click, exploitation for expected
-future clicks, and exploration of unknowns for model estimation. Specically, we consider user click as immediate reward to a recommendation; and the time interval between successive interactions, i.e., user’s return time, determines how many rounds of interactions the agent could take in a given period of time.  We use generalized linear models with logit and inverse link functions to leverage contextual information for modeling discrete click and continuous return time.This choice of reward functions provides us a closed form assessment of model estimation condence, which enables an ecientexploration strategy for our online model learning based on the
-Upper Condence Bound principle. We rigorously prove that with a high probability the proposed
-solution achieves a sublinear upper regret bound in optimizing long-term user engagement. We also demonstrate that if a system only optimizes immediate clicks on its recommendations, a linearly
+future clicks, and exploration of unknowns for model estimation. Specifically, we consider user click as immediate reward to a recommendation; and the time interval between successive interactions, i.e., user’s return time, determines how many rounds of interactions the agent could take in a given period of time.  We use generalized linear models with logit and inverse link functions to leverage contextual information for modeling discrete click and continuous return time.This choice of reward functions provides us a closed form assessment of model estimation confidence, which enables an exploration strategy for our online model learning based on the
+Upper Confidence Bound (UCB) principle. We rigorously prove that with a high probability the proposed solution achieves a sublinear upper regret bound in optimizing long-term user engagement. We also demonstrate that if a system only optimizes immediate clicks on its recommendations, a linearly
 increasing regret can be inevitable.
 
 ##Result
@@ -49,4 +48,5 @@ The results will be written under folder `./SimulationResults`, including accumu
 [2]: Huazheng Wang, Qingyun Wu and Hongning Wang. Learning Hidden Features for Contextual Bandits. The 25th ACM International Conference on Information and Knowledge Management (CIKM 2016), p1633-1642, 2016.
 
 [3]: Huazheng Wang, Qingyun Wu and Hongning Wang. Factorization Bandits for Interactive Recommendation. The Thirty-First AAAI Conference on Artificial Intelligence (AAAI 2017). (to appear)
+[4]: Qingyun Wu, Hongning Wang, Liangjie Hong and Yue Shi. Returning is Believing: Optimizing Long-term User Engagement in Recommender Systems. The 26th ACM International Conference on Information and Knowledge Management (CIKM 2017), p1927-1936, 2017.
 
