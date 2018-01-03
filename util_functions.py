@@ -3,7 +3,12 @@ from math import log
 import numpy as np 
 from random import *
 from custom_errors import FileExists 
-
+def getPoolArticleArr(pool_articles):
+	article_arr = []
+	for x in pool_articles:
+		article_arr.append(np.array(x.featureVector))
+	return np.array(article_arr)
+	
 def gaussianFeature(dimension, argv):
 	mean = argv['mean'] if 'mean' in argv else 0
 	std = argv['std'] if 'std' in argv else 1
