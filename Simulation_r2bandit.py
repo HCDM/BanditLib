@@ -352,7 +352,7 @@ if __name__ == '__main__':
 
 	dimension = 25
 	#alpha  = 0.2
-	alpha = 0.1
+	alpha = 0.2
 	lambda_ = 0.1   # Initialize A
 	epsilon = 10 # initialize W
 	eta_ = 0.1
@@ -378,7 +378,7 @@ if __name__ == '__main__':
 	parser.add_argument('--NoiseScale', dest = 'NoiseScale', help = 'Set NoiseScale')
 	parser.add_argument('--FutureWeight', dest = 'FutureWeight', help = 'Set NoiseScale')
 	parser.add_argument('--ReturnThreshold', dest = 'ReturnThreshold', help = 'threshold of user return, which is defined as tau in the paper')
-	parser.add_argument('--alpha', dest = 'alpha', help = 'Set NoiseScale')
+	#parser.add_argument('--alpha', dest = 'alpha', help = 'Set NoiseScale')
 	parser.add_argument('--usealphaT', action='store_true',
 	                help='Use Rankone Correction to do matrix inverse') 
 	#parser.add_argument('--WindowSize', dest = 'WindowSize', help = 'Set the Init WindowSize')
@@ -394,7 +394,7 @@ if __name__ == '__main__':
 
 	RankoneInverse =args.RankoneInverse
 	ReturnThreshold = float(args.ReturnThreshold)
-	alpha = float(args.alpha)
+	#alpha = float(args.alpha)
 	usealphaT = args.usealphaT
 
 	#WindowSize = int(WindowSize)
