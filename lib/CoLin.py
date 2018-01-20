@@ -55,7 +55,9 @@ class AsyCoLinUCBUserSharedStruct(CoLinUCBUserSharedStruct):
 		#X = vectorize(np.outer(articlePicked.contextFeatureVector, self.currentW.T[userID])) 	
 		
 		X = vectorize(np.outer(articlePicked.contextFeatureVector, self.W.T[userID])) 
-		self.A += np.outer(X, X)	
+		outer = np.outer(X,X)
+
+		self.A += outer	
 		self.b += click*X
 		if update == 'Inv':
 			self.AInv =  np.linalg.inv(self.A)
