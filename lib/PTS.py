@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats
+from BaseAlg import BaseAlg
 
 class PTSArticleStruct:
 	def __init__(self, id, dimension, sigma, sigmaV, init="zero"):
@@ -77,23 +78,15 @@ class PTSParticleStruct:
 		for i in range(itemNum):
 			self.articles.append(PTSArticleStruct(i, dimension, sigma, sigmaV,))
 
-class PTSAlgorithm:
-	def __init__(self, particle_num, dimension,  n, itemNum, sigma, sigmaU, sigmaV,):  # n is number of users
-		self.sigma = sigma
-		self.dimension = dimension
-		self.particle_num = particle_num
+class PTSAlgorithm(BaseAlg):
+	def __init__(self, arg_dict):  # n is number of users
+		BaseAlg.__init__(self, arg_dict)
 		self.particles = [] # Particles
-		for i in range(particle_num):
-			self.particles.append(PTSParticleStruct(dimension, n, itemNum, sigma, sigmaU, sigmaV, 1.0/particle_num))
-
-
+		for i in range(self.particle_num):
+			self.particles.append(PTSParticleStruct(self.dimension, self.n, self.itemNum, self.sigma, self.sigmaU, self.sigmaV, 1.0/self.particle_num))
 		self.time = 0
 
-		self.CanEstimateUserPreference = False
-		self.CanEstimateCoUserPreference = False
-		self.CanEstimateW = False
-		self.CanEstimateV = False
-	def decide(self, pool_articles, userID):
+	def decide(self, pool_articles, userID, exclude = []):
 
 		#Sample a Particle
 		d = np.random.choice(self.particle_num, p = [p.weight for p in self.particles])

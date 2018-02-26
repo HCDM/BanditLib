@@ -1,38 +1,155 @@
 from collections import Counter
 from math import log
 import numpy as np 
+import copy
 from random import *
 from custom_errors import FileExists 
 
-def createLinUCBDict(starter):
-	return_dict = {}
-	return_dict['dimension'] = starter['dimension'] if starter.has_key('dimension') else 16
-	return_dict['alpha'] = starter['alpha'] if starter.has_key('alpha') else 0.3
-	return_dict['lambda_'] = starter['lambda_'] if starter.has_key('lambda_') else 0.1
-	return_dict['n_users'] = starter['n_users'] if starter.has_key('n_users') else 10
+def createLinUCBDict(specific, general, system_params):
+	base_dict = {
+		'dimension': system_params['context_dim'],
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'n_users': system_params['n_users'],
+		'parameters': {
+			'Theta': True,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
 	return return_dict
 
-def createCoLinDict(starter, W):
-	return_dict = {}
-	# 	algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = UM.getW())
-	return_dict['dimension'] = starter['dimension'] if starter.has_key('dimension') else 16
-	return_dict['alpha'] = starter['alpha'] if starter.has_key('alpha') else 0.3
-	return_dict['lambda_'] = starter['lambda_'] if starter.has_key('lambda_') else 0.1
-	return_dict['n_users'] = starter['n_users'] if starter.has_key('n_users') else 10
-	return_dict['W'] = W
+def createCoLinDict(specific, general, W, system_params):
+	base_dict = {
+		'W': W,
+		'dimension': system_params['context_dim'],
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'n_users': system_params['n_users'],
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': False
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
 	return return_dict
 
-def createHLinUCBDict(starter):
-	return_dict = {}
-	#HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = latent_dimension, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, n = n_users, itemNum=n_articles, init='zero', window_size = -1)
-	return_dict['context_dimension'] = starter['context_dimension'] if starter.has_key('context_dimension') else 16
-	return_dict['latent_dimension'] = starter['latent_dimension'] if starter.has_key('latent_dimension') else 0
-	return_dict['alpha'] = starter['alpha'] if starter.has_key('alpha') else 0.1
-	return_dict['alpha2'] = starter['alpha2'] if starter.has_key('alpha2') else 0.1
-	return_dict['lambda_'] = starter['lambda_'] if starter.has_key('lambda_') else 0.1
-	return_dict['n_users'] = starter['n_users'] if starter.has_key('n_users') else 10
-	return_dict['n_articles'] = starter['n_articles'] if starter.has_key('n_articles') else 1000
+def createHLinUCBDict(specific, general, system_params):
+	base_dict = {
+		'context_dimension': system_params['context_dim'],
+		'latent_dimension': system_params['latent_dim'],
+		'alpha': 0.1,
+		'alpha2': 0.1,
+		'lambda_': 0.1,
+		'n_users': system_params['n_users'],
+		'n_articles': system_params['n_articles'],
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
 	return return_dict
+
+def createUCBPMFDict(specific, general, system_params):
+	base_dict = {
+		'dimension' : system_params['context_dim'],
+		'n' : system_params['n_users'],
+		'itemNum' : system_params['n_articles'],
+		'sigma' : np.sqrt(.5),
+		'sigmaU' : 1,
+		'sigmaV' : 1,
+		'alpha' : 0.1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
+	return return_dict
+
+def createFactorUCBDict(specific, general, W, system_params):
+	base_dict = {
+		'W': W,
+		'context_dimension' : system_params['context_dim'],
+		'latent_dimension' : system_params['latent_dim'],
+		'alpha' : 0.05,
+		'alpha2' : 0.025,
+		'lambda_' : 0.1,
+		'n' : system_params['n_users'],
+		'itemNum' : system_params['n_articles'],
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
+	return return_dict
+
+def createCLUBDict(specific, general, system_params):
+	base_dict = {
+		'dimension' : system_params['context_dim'],
+		'alpha' : 0.1,
+		'lambda_' : 0.1,
+		'n' : system_params['n_users'],
+		'alpha_2' : 0.5,
+		'cluster_init' : 'Erdos-Renyi',
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
+	return return_dict
+
+def createPTSDict(specific, general, system_params):
+	base_dict = {
+		'particle_num' : 10,
+		'dimension' : system_params['context_dim'],
+		'n' : system_params['n_users'],
+		'itemNum' : system_params['n_articles'],
+		'sigma' : np.sqrt(.5),
+		'sigmaU' : 1,
+		'sigmaV' : 1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	middle = update_dict(specific, general)
+	return_dict = update_dict(middle, base_dict)
+	return return_dict
+
+def update_dict(a, b):
+	c = copy.deepcopy(b)
+	for i in a:
+		if i == 'parameters':
+			for j in a[i]:
+				if j in b['parameters']:
+					c[i][j] = a[i][j]
+		elif i in b:
+			c[i] = a[i]
+	return c
 
 def gaussianFeature(dimension, argv):
 	mean = argv['mean'] if 'mean' in argv else 0

@@ -15,33 +15,13 @@ class SocialLinearReward(Reward):
 		total = 0
 		rewardList = []
 		for i in recommendation.articles:
-			if cotheta is False:
-				articleReward = np.dot(user.CoTheta, i.featureVector) + noise
-			else:
-				articleReward = np.dot(cotheta, i.featureVector)
+			articleReward = np.dot(user.CoTheta, i.featureVector) + noise
 			total += articleReward
 			rewardList.append(articleReward)
 		return (total/self.k), rewardList
 
-	# def getOptimalRecommendationReward(self, user, articlePool, k):
-	# 	total = 0
-	# 	prev_selections = []
-	# 	for x in range(k):
-	# 		articleReward, articlePicked = self.getOptimalReward(user, articlePool, prev_selections)
-	# 		total += articleReward
-	# 		prev_selections.append(articlePicked)
-	# 		#local_pool.remove(articlePicked)
-	# 	return total/k
-
-	# def getOptimalReward(self, user, articlePool, exclude = []):		
-	# 	maxReward = float('-inf')
-	# 	maxx = None
-	# 	for x in articlePool:	 
-	# 		reward = self.getReward(user, x)
-	# 		if reward > maxReward and x not in exclude:
-	# 			maxReward = reward
-	# 			maxx = x
-	# 	return maxReward, x
+	def get_user_features(self, user):
+		return user.CoTheta
 
 	def constructLaplacianMatrix(self, W, Gepsilon):
 		G = W.copy()

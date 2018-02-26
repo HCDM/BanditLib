@@ -7,7 +7,7 @@ from Users import User, UserManager
 class CoUser(User):
 	def __init__(self, id, theta = None, CoTheta = None):
 		User.__init__(self, id, theta = theta)
-		self.CoTheta = CoTheta
+		#self.CoTheta = CoTheta
 
 
 class CoUserManager(UserManager):
@@ -97,4 +97,4 @@ class CoUserManager(UserManager):
 			ui.CoTheta = np.zeros(self.dimension)
 			for uj in self.users:
 				ui.CoTheta += self.W[uj.id][ui.id] * np.asarray(uj.theta)
-			#print 'Users', ui.id, 'CoTheta', ui.CoTheta	
+			print 'Users', ui.id, 'CoTheta', ui.CoTheta, 'Theta', ui.theta

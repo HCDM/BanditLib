@@ -122,12 +122,12 @@ class HLinUCBAlgorithm(BaseAlg):
 		self.max_window_size = max_window_size
 		self.window = []
 		self.time = 0
-		self.estimates['CanEstimateUserPreference'] = False
-		self.estimates['CanEstimateCoUserPreference'] = True 
-		self.estimates['CanEstimateW'] = False
-		self.estimates['CanEstimateV'] = True
+		# self.estimates['CanEstimateUserPreference'] = False
+		# self.estimates['CanEstimateCoUserPreference'] = True 
+		# self.estimates['CanEstimateW'] = False
+		# self.estimates['CanEstimateV'] = True
 
-	def decide(self, pool_articles, userID):
+	def decide(self, pool_articles, userID, exclude = []):
 		maxPTA = float('-inf')
 		articlePicked = None
 
@@ -176,6 +176,8 @@ class HLinUCBAlgorithm(BaseAlg):
 			if self.increase_window == True:
 				self.window_size = min(self.window_size+1, self.max_window_size)
 	def getCoTheta(self, userID):
+		return self.users[userID].U
+	def getTheta(self, userID):
 		return self.users[userID].U
 	def getV(self, articleID):
 		return self.articles[articleID].V

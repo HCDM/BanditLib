@@ -7,6 +7,7 @@ class User():
 	def __init__(self, id, theta = None, CoTheta = None):
 		self.id = id
 		self.theta = theta
+		self.CoTheta = CoTheta
 
 
 class UserManager():
@@ -76,11 +77,16 @@ class UserManager():
 	def constructZeroMatrix(self):
 		n = len(self.users)	
         # Identity Matrix instead, so CoLin equivalent to LinUCB
-		W = np.identity(n)
-		W0 = np.identity(n)
+		W = np.identity(n = n)
+		W0 = np.identity(n = n)
 		return [W, W0] 
 
 	def getW(self):
 		return self.W
 	def getW0(self):
 		return self.W0
+
+	def CoTheta(self):
+		for ui in self.users:
+			ui.CoTheta = ui.theta
+			print 'Users', ui.id, 'CoTheta', ui.CoTheta

@@ -28,8 +28,9 @@ class GOBLinSharedStruct:
 		featureVectorV = vectorize(featureVectorM)
 
 		CoFeaV = np.dot(self.STBigWInv, featureVectorV)
-		self.A += np.outer(CoFeaV, CoFeaV)
-		self.b += click * CoFeaV
+		result = np.outer(CoFeaV, CoFeaV)
+		self.A = self.A + result
+		self.b = self.b + click * CoFeaV
 
 		self.AInv = np.linalg.inv(self.A)
 
@@ -58,6 +59,21 @@ class GOBLinAlgorithm(CoLinUCBAlgorithm):
 	def getLearntParameters(self, userID):
 		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
 		return thetaMatrix.T[userID]
+
+	def decide(self, pool_articles, userID, exclude = []):
+		# MEAN
+		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector)*self.n_users])
+		for i in range(len(pool_articles)):
+			TempFeatureM = np.zeros(shape =(len(pool_articles[0].contextFeatureVector), self.n_users))
+			TempFeatureM.T[userID] = pool_articles[i].contextFeatureVector
+			art_features[i, :] = vectorize(TempFeatureM)
+		CoFeaV = np.dot(art_features, self.USERS.STBigWInv)
+		mean_matrix = np.dot(CoFeaV, self.USERS.theta)
+		var_matrix = np.sqrt(np.dot(np.dot(CoFeaV, self.USERS.AInv), CoFeaV.T).clip(0))
+		pta_matrix = mean_matrix + self.alpha*np.diag(var_matrix)
+
+		pool_position = np.argmax(pta_matrix)
+		return pool_articles[pool_position]
 
 #inherite from CoLinUCB_SelectUserAlgorithm
 # class GOBLin_SelectUserAlgorithm(CoLinUCB_SelectUserAlgorithm):

@@ -12,7 +12,9 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 # local address to save simulated users, simulated articles, and results
 from conf import sim_files_folder, save_address
-from util_functions import featureUniform, gaussianFeature, createLinUCBDict, createCoLinDict, createHLinUCBDict
+from util_functions import featureUniform, gaussianFeature, createLinUCBDict, \
+	createCoLinDict, createHLinUCBDict, createUCBPMFDict, createFactorUCBDict, \
+	createCLUBDict, createPTSDict
 from Articles import ArticleManager
 from Users.Users import UserManager
 from Users.CoUsers import CoUserManager
@@ -49,24 +51,38 @@ def pca_articles(articles, order):
 		articles[i].featureVector = X_new[i]
 	return
 
-def generate_algorithms(alg_dict, W):
+
+def generate_algorithms(alg_dict, W, system_params):
+	gen = alg_dict['general'] if alg_dict.has_key('general') and alg_dict['general'] else {}
 	algorithms = {}
 	diffLists = DiffManager()
-	for i in alg_dict:
+	for i in alg_dict['specific']:
 		print str(i)
 		if i == 'linUCB':
-			linUCBDict = createLinUCBDict(alg_dict[i])
+			linUCBDict = createLinUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
 			algorithms[i] = N_LinUCBAlgorithm(linUCBDict)
 		elif i == 'CoLin':
-			coLinDict = createCoLinDict(alg_dict[i], W)
+			coLinDict = createCoLinDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
 			algorithms[i] = CoLinUCBAlgorithm(coLinDict)
 		elif i == 'GOBLin':
 			# uses the same arguments as colin
-			GOBLinDict = createCoLinDict(alg_dict[i], W)
+			GOBLinDict = createCoLinDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
 			algorithms[i] = GOBLinAlgorithm(GOBLinDict)
 		elif i == 'HLinUCB':
-			hlinUCBDict = createHLinUCBDict(alg_dict[i])
+			hlinUCBDict = createHLinUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
 			algorithms[i] = HLinUCBAlgorithm(hlinUCBDict)
+		elif i == 'UCBPMF':
+			UCBPMFDict = createUCBPMFDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
+			algorithms[i] = UCBPMFAlgorithm(UCBPMFDict)
+		elif i == 'FactorUCB':
+			factorDict = createFactorUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+			algorithms[i] = FactorUCBAlgorithm(factorDict)
+		elif i == 'CLUB':
+			clubDict = createCLUBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
+			algorithms[i] = CLUBAlgorithm(clubDict)
+		elif i == 'PTS':
+			ptsDict = createPTSDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
+			algorithms[i] = PTSAlgorithm(ptsDict)
 		else:
 			# Do not know that algorithm name, so skip it
 			continue
@@ -112,19 +128,19 @@ if __name__ == '__main__':
 
 	
 
-	alpha  = 0.3
-	lambda_ = 0.1   # Initialize A
+	# alpha  = 0.3
+	# lambda_ = 0.1   # Initialize A
 	rewardManagerDict['epsilon'] = 0 # initialize W
-	eta_ = 0.5
+	# eta_ = 0.5
 
-	n_articles = 1000
-	ArticleGroups = 5
+	n_articles = article['number'] if article.has_key('number') else 1000
+	ArticleGroups = article['groups'] if article.has_key('groups') else 5
 
 	n_users = user['number'] if user.has_key('number') else 10
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
-	rewardManagerDict['poolArticleSize'] = 10
-	rewardManagerDict['batchSize'] = 1
+	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
+	rewardManagerDict['batchSize'] = gen['batch_size'] if gen.has_key('batch_size') else 1
 
 	# Matrix parameters
 	matrixNoise = 0.01
@@ -133,16 +149,15 @@ if __name__ == '__main__':
 
 
 	# Parameters for GOBLin
-	G_alpha = alpha
-	G_lambda_ = lambda_
 	rewardManagerDict['Gepsilon'] = 1
 	
 	user['default_file'] = os.path.join(sim_files_folder, "users_"+str(n_users)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Ugroups" + str(UserGroups)+".json")
 	if user.has_key('collaborative') and user['collaborative']:
 		UM = CoUserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1, 'sparseLevel': n_users, 'matrixNoise': rewardManagerDict['matrixNoise']})
-		UM.CoTheta()
 	else:
 		UM = UserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1})
+	UM.CoTheta()
+
 	rewardManagerDict['W'] = UM.getW()
 	rewardManagerDict['users'] = UM.getUsers()
 	
@@ -161,7 +176,7 @@ if __name__ == '__main__':
 	#PCA
 	pca_articles(articles, 'random')
 	rewardManagerDict['articles'] = articles
-	rewardManagerDict['testing_method'] = "online"
+	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
 	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])
 	rewardManagerDict['type'] = "UniformTheta"
 	rewardManagerDict['simulation_signature'] = AM.signature
@@ -172,39 +187,16 @@ if __name__ == '__main__':
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
 	# TODO: Add in reward options dictionary
-	simExperiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type, reward_options = reco['options'])
+	simExperiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
 
 	print "Starting for ", simExperiment.simulation_signature
+	system_params = {
+		'context_dim': context_dimension,
+		'latent_dim': latent_dimension,
+		'n_users': n_users,
+		'n_articles': n_articles
+	}
 
-	algorithms, diffLists = generate_algorithms(cfg['alg'], UM.getW())
-	# algorithms = {}
-	
-	# if algName == 'LinUCB':
-	# 	algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
-	# if algName == 'hLinUCB':
-	# 	algorithms['hLinUCB'] = HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = latent_dimension, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, n = n_users, itemNum=n_articles, init='zero', window_size = -1)	
-	# 	algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
-	# if algName == 'PTS':
-	# 	algorithms['PTS'] = PTSAlgorithm(particle_num = 10, dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1)
-	# if algName == 'HybridLinUCB':
-	# 	algorithms['HybridLinUCB'] = Hybrid_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, userFeatureList=simExperiment.reward.generateUserFeature(UM.getW()))
-	# if args.alg == 'UCBPMF':
-	# 	algorithms['UCBPMF'] = UCBPMFAlgorithm(dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1, alpha = 0.1) 
-	# if args.alg == 'factorUCB':
-	# 	algorithms['FactorUCB'] = FactorUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.05, alpha2 = 0.025, lambda_ = lambda_, n = n_users, itemNum=n_articles, W = UM.getW(), init='random', window_size = -1)	
-	# 	algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
-	# if args.alg == 'CoLin':
-	# 	algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = UM.getW())
-	# 	algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
-	# if algName == 'CLUB':
-	# 	algorithms['CLUB'] = CLUBAlgorithm(dimension =context_dimension,alpha = alpha, lambda_ = lambda_, n = n_users, alpha_2 = 0.5, cluster_init = 'Erdos-Renyi')	
-	# if algName == 'All':
-	# 	algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
-	# 	algorithms['hLinUCB'] = HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, n = n_users, itemNum=n_articles, init='random', window_size = -1)	
-	# 	algorithms['PTS'] = PTSAlgorithm(particle_num = 10, dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1)
-	# 	algorithms['HybridLinUCB'] = Hybrid_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, userFeatureList=simExperiment.reward.generateUserFeature(UM.getW()))
-	# 	algorithms['UCBPMF'] = UCBPMFAlgorithm(dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1, alpha = 0.1) 
-	# 	algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = UM.getW())
-	# 	algorithms['factorUCB'] = FactorUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.05, alpha2 = 0.025, lambda_ = lambda_, n = n_users, itemNum=n_articles, W = UM.getW(), init='zero', window_size = -1)	
+	algorithms, diffLists = generate_algorithms(cfg['alg'], UM.getW(), system_params)
 
 	simExperiment.runAlgorithms(algorithms, diffLists)

@@ -3,6 +3,8 @@ from LinUCB import *
 import math
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse import csr_matrix
+from BaseAlg import BaseAlg
+
 class CLUBUserStruct(LinUCBUserStruct):
 	def __init__(self,featureDimension,  lambda_, userID):
 		LinUCBUserStruct.__init__(self,featureDimension = featureDimension, lambda_= lambda_)
@@ -43,36 +45,29 @@ class CLUBUserStruct(LinUCBUserStruct):
 		pta = mean +  alpha * var*np.sqrt(math.log10(time+1))
 		return pta
 
-class CLUBAlgorithm():
-	def __init__(self,dimension,alpha,lambda_,n,alpha_2, cluster_init="Complete"):
+class CLUBAlgorithm(BaseAlg):
+	def __init__(self, arg_dict):
+		BaseAlg.__init__(self, arg_dict)
 		self.time = 0
 		#N_LinUCBAlgorithm.__init__(dimension = dimension, alpha=alpha,lambda_ = lambda_,n=n)
 		self.users = []
 		#algorithm have n users, each user has a user structure
-		for i in range(n):
-			self.users.append(CLUBUserStruct(dimension,lambda_, i)) 
-
-		self.dimension = dimension
-		self.alpha = alpha
-		self.alpha_2 = alpha_2
-		if (cluster_init=="Erdos-Renyi"):
-			p = 3*math.log(n)/n
-			self.Graph = np.random.choice([0, 1], size=(n,n), p=[1-p, p])
+		for i in range(self.n):
+			self.users.append(CLUBUserStruct(self.dimension,self.lambda_, i)) 
+		if (self.cluster_init=="Erdos-Renyi"):
+			p = 3*math.log(self.n)/self.n
+			self.Graph = np.random.choice([0, 1], size=(self.n,self.n), p=[1-p, p])
 			self.clusters = []
 			g = csr_matrix(self.Graph)
 			N_components, components = connected_components(g)
 		else:
-			self.Graph = np.ones([n,n]) 
+			self.Graph = np.ones([self.n,self.n]) 
 			self.clusters = []
 			g = csr_matrix(self.Graph)
 			N_components, components = connected_components(g)
 
-		self.CanEstimateCoUserPreference = False
-		self.CanEstimateUserPreference = False
-		self.CanEstimateW = False
-		self.CanEstimateV = False
 			
-	def decide(self,pool_articles,userID):
+	def decide(self,pool_articles,userID, exclude = []):
 		self.users[userID].updateParametersofClusters(self.clusters,userID,self.Graph, self.users)
 		maxPTA = float('-inf')
 		articlePicked = None

@@ -1,15 +1,18 @@
 from Recommendation import Recommendation
+import numpy as np
+
 
 class BaseAlg():
 	def __init__(self, arg_dict):  # n is number of users
+		self.dimension = 0
 		for key in arg_dict:
 			setattr(self, key, arg_dict[key])
 
 		self.estimates = {}
-		self.estimates['CanEstimateUserPreference'] = False
-		self.estimates['CanEstimateCoUserPreference'] = False 
-		self.estimates['CanEstimateW'] = False
-		self.estimates['CanEstimateV'] = False
+		self.estimates['CanEstimateUserPreference'] = arg_dict['parameters']['Theta']
+		self.estimates['CanEstimateCoUserPreference'] = arg_dict['parameters']['CoTheta']
+		self.estimates['CanEstimateW'] = arg_dict['parameters']['W']
+		self.estimates['CanEstimateV'] = arg_dict['parameters']['V']
 
 	def getEstimateSettings(self):
 		return self.estimates
@@ -31,3 +34,12 @@ class BaseAlg():
 	def updateRecommendationParameters(self, recommendation, reward, userID):
 		for i in range(recommendation.k):
 			self.updateParameters(recommendation.articles[i], reward[i], userID)
+
+	def getV(self, articleID):
+		if self.dimension == 0:
+			return np.zeros(self.context_dimension + self.hidden_dimension)
+		else: 
+			return np.zeros(self.dimension)
+
+	def getW(self, userID):
+		return np.identity(n = self.n_users)

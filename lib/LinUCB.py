@@ -78,13 +78,8 @@ class N_LinUCBAlgorithm(BaseAlg):
 		for i in range(arg_dict['n_users']):
 			self.users.append(LinUCBUserStruct(arg_dict['dimension'], arg_dict['lambda_'] , init)) 
 
-		self.estimates['CanEstimateUserPreference'] = False
-		self.estimates['CanEstimateCoUserPreference'] = True 
-		self.estimates['CanEstimateW'] = False
-		self.estimates['CanEstimateV'] = False
 
-
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide_old(self, pool_articles, userID, exclude = []):
 		maxPTA = float('-inf')
 		articlePicked = None
 
@@ -95,6 +90,21 @@ class N_LinUCBAlgorithm(BaseAlg):
 				maxPTA = x_pta
 
 		return articlePicked
+
+	def decide(self, pool_articles, userID, exclude = []):
+		# MEAN
+		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector[:self.dimension])])
+		for i in range(len(pool_articles)):
+			art_features[i, :] = pool_articles[i].contextFeatureVector[:self.dimension]
+		user_features = self.users[userID].UserTheta
+		mean_matrix = np.dot(art_features, user_features)
+
+		# VARIANCE
+		var_matrix = np.sqrt(np.dot(np.dot(art_features, self.users[userID].AInv), art_features.T).clip(0))
+		pta_matrix = mean_matrix + self.alpha*np.diag(var_matrix)
+
+		pool_position = np.argmax(pta_matrix)
+		return pool_articles[pool_position]
 
 	def getProb(self, pool_articles, userID):
 		means = []
@@ -115,6 +125,9 @@ class N_LinUCBAlgorithm(BaseAlg):
 
 	def getTheta(self, userID):
 		return self.users[userID].UserTheta
+
+	# def getW(self, userID):
+	# 	return np.identity(n = len(self.users))
 
 
 #-----------LinUCB select user algorithm-----------

@@ -9,14 +9,14 @@ from random import sample, shuffle
 import matplotlib.pyplot as plt
 
 class RewardManager():
-	def __init__(self, arg_dict, reward_type = 'linear', reward_options = {}):
+	def __init__(self, arg_dict, reward_type = 'linear'):
 		for key in arg_dict:
 			setattr(self, key, arg_dict[key])
 		#self.W, self.W0 = self.constructAdjMatrix(self.sparseLevel)
 		if(reward_type == 'social_linear'):
 			self.reward = SocialLinearReward(self.k, self.W)
 		else:
-			self.reward = LinearReward(self.k, reward_options)
+			self.reward = LinearReward(self.k)
 	
 	def batchRecord(self, iter_):
 		print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
@@ -38,18 +38,10 @@ class RewardManager():
 		tim_ = []
 		BatchCumlateRegret = {}
 		AlgRegret = {}
-		ThetaDiffList = {}
-		CoThetaDiffList = {}
-		WDiffList = {}
-		VDiffList = {}
 		CoThetaVDiffList = {}
 		RDiffList ={}
 		RVDiffList = {}
 
-		ThetaDiff = {}
-		CoThetaDiff = {}
-		WDiff = {}
-		VDiff = {}
 		CoThetaVDiff = {}
 		RDiff ={}
 		RVDiff = {}
@@ -90,19 +82,6 @@ class RewardManager():
 
 		#Testing
 		for iter_ in range(self.testing_iterations):
-			# prepare to record theta estimation error
-			# for alg_name, alg in algorithms.items():
-			# 	if alg.CanEstimateUserPreference:
-			# 		ThetaDiff[alg_name] = 0
-			# 	if alg.CanEstimateCoUserPreference:
-			# 		CoThetaDiff[alg_name] = 0
-			# 	if alg.CanEstimateW:
-			# 		WDiff[alg_name] = 0
-			# 	if alg.CanEstimateV:
-			# 		VDiff[alg_name]	= 0	
-			# 		CoThetaVDiff[alg_name] = 0	
-			# 		RVDiff[alg_name]	= 0	
-			# 	RDiff[alg_name]	= 0	
 				
 			for u in self.users:
 				self.regulateArticlePool() # select random articles
@@ -115,22 +94,15 @@ class RewardManager():
 				OptimalReward += noise
 							
 				for alg_name, alg in algorithms.items():
-					if alg_name == 'linUCB' or alg_name == 'CoLin':
-						recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
+					recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
 						
-						pickedArticle = recommendation.articles[0]
-						reward, rewardList = self.reward.getRecommendationReward(u, recommendation, noise)
-						if (self.testing_method=="online"):
-							#alg.updateParameters(pickedArticle, reward, u.id)
-							alg.updateRecommendationParameters(recommendation, rewardList, u.id)
-
-					else:
-						pickedArticle = alg.decide(self.articlePool, u.id)
-						reward = self.reward.getReward(u, pickedArticle) + noise
-						if (self.testing_method=="online"): # for batch test, do not update while testing
-							alg.updateParameters(pickedArticle, reward, u.id)
-							if alg_name =='CLUB':
-								n_components= alg.updateGraphClusters(u.id,'False')
+					pickedArticle = recommendation.articles[0]
+					reward, rewardList = self.reward.getRecommendationReward(u, recommendation, noise)
+					if (self.testing_method=="online"):
+						#alg.updateParameters(pickedArticle, reward, u.id)
+						alg.updateRecommendationParameters(recommendation, rewardList, u.id)
+						if alg_name =='CLUB':
+							n_components= alg.updateGraphClusters(u.id,'False')
 
 					regret = OptimalReward - reward
 					AlgRegret[alg_name].append(regret)
@@ -142,17 +114,7 @@ class RewardManager():
 
 					# #update parameter estimation record
 					diffLists.update_parameters(alg_name, self, u, alg, pickedArticle, reward, noise)
-					# if alg.CanEstimateUserPreference:
-					# 	ThetaDiff[alg_name] += self.getL2Diff(u.theta, alg.getTheta(u.id))
-					# if alg.CanEstimateCoUserPreference:
-					# 	CoThetaDiff[alg_name] += self.getL2Diff(u.CoTheta[:self.context_dimension], alg.getCoTheta(u.id)[:self.context_dimension])
-					# if alg.CanEstimateW:
-					# 	WDiff[alg_name] += self.getL2Diff(self.W.T[u.id], alg.getW(u.id))	
-					# if alg.CanEstimateV:
-					# 	VDiff[alg_name]	+= self.getL2Diff(self.articles[pickedArticle.id].featureVector, alg.getV(pickedArticle.id))
-					# 	CoThetaVDiff[alg_name]	+= self.getL2Diff(u.CoTheta[self.context_dimension:], alg.getCoTheta(u.id)[self.context_dimension:])
-					# 	RVDiff[alg_name] += abs(u.CoTheta[self.context_dimension:].dot(self.articles[pickedArticle.id].featureVector[self.context_dimension:]) - alg.getCoTheta(u.id)[self.context_dimension:].dot(alg.getV(pickedArticle.id)[self.context_dimension:]))
-					# 	RDiff[alg_name] += reward-noise -  alg.getCoTheta(u.id).dot(alg.getV(pickedArticle.id))
+
 			if 'syncCoLinUCB' in algorithms:
 				algorithms['syncCoLinUCB'].LateUpdate()	
 			diffLists.append_to_lists(userSize)

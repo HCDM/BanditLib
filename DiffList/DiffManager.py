@@ -20,7 +20,11 @@ class DiffManager():
 			else:
 				self.lists_dict['W'] = WDiffList(alg_name)
 
-		# if pref_dict['CanEstimateV']:
+		if pref_dict['CanEstimateV']:
+			if self.lists_dict.has_key('V'):
+				self.lists_dict['V'].add(alg_name)
+			else:
+				self.lists_dict['V'] = VDiffList(alg_name)
 
 	def initial_write(self, f):
 		for value in self.lists_dict.values():
@@ -33,7 +37,7 @@ class DiffManager():
 	def update_parameters(self, alg_name, reward_manager, user, alg, pickedArticle, reward, noise):
 		for value in self.lists_dict.values():
 			if value.includes(alg_name):
-				value.update_parameters(alg_name, reward_manager, user, alg, pickedArticle, reward, noise)
+				value.update_class_parameters(alg_name, reward_manager, user, alg, pickedArticle, reward, noise)
 
 	def append_to_lists(self, userSize):
 		for value in self.lists_dict.values():

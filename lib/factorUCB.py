@@ -1,5 +1,7 @@
 import numpy as np
 from util_functions import vectorize, matrixize
+from BaseAlg import BaseAlg
+
 class FactorUCBArticleStruct:
 	def __init__(self, id, context_dimension, latent_dimension, lambda_, W, init="zero", context_feature=None):
 		self.W = W
@@ -116,22 +118,15 @@ class FactorUCBUserStruct:
 		else:
 			return 0
 
-class FactorUCBAlgorithm:
-	def __init__(self, context_dimension, latent_dimension, alpha, alpha2, lambda_, n, itemNum, W, init="zero", window_size = 1, max_window_size = 10):  # n is number of users
-
-		self.context_dimension = context_dimension
-		self.latent_dimension = latent_dimension
-		self.d = context_dimension + latent_dimension
-		self.W = W
+class FactorUCBAlgorithm(BaseAlg):
+	def __init__(self, arg_dict, init='random', window_size = 1, max_window_size = 10):  # n is number of users
+		BaseAlg.__init__(self, arg_dict)
+		self.d = self.context_dimension + self.latent_dimension
 		
-		self.USERS = FactorUCBUserStruct(context_dimension, latent_dimension, lambda_ , n, W, init)
+		self.USERS = FactorUCBUserStruct(self.context_dimension, self.latent_dimension, self.lambda_ , self.n, self.W, init)
 		self.articles = []
-		for i in range(itemNum):
-			# print (i)
-			self.articles.append(FactorUCBArticleStruct(i, context_dimension, latent_dimension, lambda_, W, init)) 
-
-		self.alpha = alpha
-		self.alpha2 = alpha2
+		for i in range(self.itemNum):
+			self.articles.append(FactorUCBArticleStruct(i, self.context_dimension, self.latent_dimension, self.lambda_, self.W, init)) 
 
 		if window_size == -1:
 			self.increase_window = True
@@ -142,11 +137,8 @@ class FactorUCBAlgorithm:
 		self.max_window_size = max_window_size
 		self.window = []
 		self.time = 0
-		self.CanEstimateUserPreference = False
-		self.CanEstimateCoUserPreference = True 
-		self.CanEstimateW = False
-		self.CanEstimateV = True
-	def decide(self, pool_articles, userID):
+
+	def decide(self, pool_articles, userID, exclude = []):
 		maxPTA = float('-inf')
 		articlePicked = None
 

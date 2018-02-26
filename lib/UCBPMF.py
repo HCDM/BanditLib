@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.stats
+from BaseAlg import BaseAlg
+
 
 class UCBPMFArticleStruct:
 	def __init__(self, id, dimension, sigma, sigmaV, init="zero"):
@@ -72,24 +74,19 @@ class UCBPMFUserStruct:
 		var = np.sqrt(np.trace(self.AInv.T.dot(article.A2Inv) + self.AInv.T.dot(np.outer(article.V, article.V)) + np.outer(self.U, self.U).dot(article.A2Inv)))
 		pta = mean + alpha * var
 		return pta
-class UCBPMFAlgorithm:
-	def __init__(self, dimension,  n, itemNum, sigma, sigmaU, sigmaV,alpha=0.0):  # n is number of users
-		self.alpha = alpha
-		self.sigma = sigma
-		self.dimension = dimension
+
+class UCBPMFAlgorithm(BaseAlg):
+	def __init__(self, arg_dict):  # n is number of users
+		BaseAlg.__init__(self, arg_dict)
 		self.users = []
-		for i in range(n):
-			self.users.append(UCBPMFUserStruct(i, dimension, sigma, sigmaU,))
+		for i in range(self.n):
+			self.users.append(UCBPMFUserStruct(i, self.dimension, self.sigma, self.sigmaU,))
 		self.articles = []
-		for i in range(itemNum):
-			self.articles.append(UCBPMFArticleStruct(i, dimension, sigma, sigmaV,))
+		for i in range(self.itemNum):
+			self.articles.append(UCBPMFArticleStruct(i, self.dimension, self.sigma, self.sigmaV,))
 		self.time = 0
 
-		self.CanEstimateUserPreference = False
-		self.CanEstimateCoUserPreference = False
-		self.CanEstimateW = False
-		self.CanEstimateV = False
-	def decide(self, pool_articles, userID):
+	def decide(self, pool_articles, userID, exclude = []):
 
 		maxPTA = float('-inf')
 		articlePicked = None
