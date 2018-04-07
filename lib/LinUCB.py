@@ -16,6 +16,7 @@ class LinUCBUserStruct:
 		self.time = 0
 
 	def updateParameters(self, articlePicked_FeatureVector, click):
+		change = np.outer(articlePicked_FeatureVector,articlePicked_FeatureVector)
 		self.A += np.outer(articlePicked_FeatureVector,articlePicked_FeatureVector)
 		self.b += articlePicked_FeatureVector*click
 		self.AInv = np.linalg.inv(self.A)
@@ -91,7 +92,7 @@ class N_LinUCBAlgorithm(BaseAlg):
 
 		return articlePicked
 
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide(self, pool_articles, userID, k = 1):
 		# MEAN
 		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector[:self.dimension])])
 		for i in range(len(pool_articles)):
@@ -103,8 +104,12 @@ class N_LinUCBAlgorithm(BaseAlg):
 		var_matrix = np.sqrt(np.dot(np.dot(art_features, self.users[userID].AInv), art_features.T).clip(0))
 		pta_matrix = mean_matrix + self.alpha*np.diag(var_matrix)
 
-		pool_position = np.argmax(pta_matrix)
-		return pool_articles[pool_position]
+
+		pool_positions = np.argsort(pta_matrix)[(k*-1):]
+		articles = []
+		for i in range(k):
+			articles.append(pool_articles[pool_positions[i]])
+		return articles
 
 	def getProb(self, pool_articles, userID):
 		means = []
@@ -117,7 +122,6 @@ class N_LinUCBAlgorithm(BaseAlg):
 
 	def updateParameters(self, articlePicked, click, userID):
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
-	
 
 	##### SHOULD THIS BE CALLED GET COTHETA #####
 	def getCoTheta(self, userID):

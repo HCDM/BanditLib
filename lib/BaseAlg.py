@@ -21,10 +21,7 @@ class BaseAlg():
 		return pool_articles[len(exclude)]
 
 	def createRecommendation(self, pool_articles, userID, k):
-		articles = []
-		for x in range(k):
-			articlePicked = self.decide(pool_articles, userID, articles)
-			articles.append(articlePicked)
+		articles = self.decide(pool_articles, userID, k)
 		recommendation = Recommendation(k, articles)
 		return recommendation
 

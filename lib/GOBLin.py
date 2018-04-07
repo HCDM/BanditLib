@@ -20,6 +20,7 @@ class GOBLinSharedStruct:
 		self.AInv = np.linalg.inv(self.A)
 
 		self.theta = np.dot(self.AInv , self.b)
+		print np.kron(W, np.identity(n=featureDimension))
 		self.STBigWInv = sqrtm( np.linalg.inv(np.kron(W, np.identity(n=featureDimension))) )
 		self.STBigW = sqrtm(np.kron(W, np.identity(n=featureDimension)))
 	def updateParameters(self, articlePicked, click, userID, update):
@@ -55,12 +56,12 @@ class GOBLinAlgorithm(CoLinUCBAlgorithm):
 	def __init__(self, arg_dict):
 		CoLinUCBAlgorithm.__init__(self, arg_dict)
 		self.USERS = GOBLinSharedStruct(self.dimension, self.lambda_, self.n_users, self.W)
-		self.estimates['CanEstimateCoUserPreference'] = False
+		#self.estimates['CanEstimateCoUserPreference'] = False
 	def getLearntParameters(self, userID):
 		thetaMatrix =  matrixize(self.USERS.theta, self.dimension) 
 		return thetaMatrix.T[userID]
 
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide(self, pool_articles, userID, k = 1):
 		# MEAN
 		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector)*self.n_users])
 		for i in range(len(pool_articles)):
@@ -72,8 +73,14 @@ class GOBLinAlgorithm(CoLinUCBAlgorithm):
 		var_matrix = np.sqrt(np.dot(np.dot(CoFeaV, self.USERS.AInv), CoFeaV.T).clip(0))
 		pta_matrix = mean_matrix + self.alpha*np.diag(var_matrix)
 
-		pool_position = np.argmax(pta_matrix)
-		return pool_articles[pool_position]
+
+		pool_positions = np.argsort(pta_matrix)[(k*-1):]
+		articles = []
+		for i in range(k):
+			articles.append(pool_articles[pool_positions[i]])
+		return articles
+		# pool_position = np.argmax(pta_matrix)
+		# return pool_articles[pool_position]
 
 #inherite from CoLinUCB_SelectUserAlgorithm
 # class GOBLin_SelectUserAlgorithm(CoLinUCB_SelectUserAlgorithm):

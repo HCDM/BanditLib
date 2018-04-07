@@ -86,19 +86,20 @@ class UCBPMFAlgorithm(BaseAlg):
 			self.articles.append(UCBPMFArticleStruct(i, self.dimension, self.sigma, self.sigmaV,))
 		self.time = 0
 
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide(self, pool_articles, userID, k = 1):
+		articles = []
+		for i in range(k):
+			maxPTA = float('-inf')
+			articlePicked = None
 
-		maxPTA = float('-inf')
-		articlePicked = None
-
-		for x in pool_articles:
-			x_pta = self.users[userID].getProb(self.alpha, self.articles[x.id])
-			# pick article with highest Prob
-			# print x_pta 
-			if maxPTA < x_pta:
-				articlePicked = x
-				maxPTA = x_pta				
-		return articlePicked
+			for x in pool_articles:
+				x_pta = self.users[userID].getProb(self.alpha, self.articles[x.id])
+				# pick article with highest Prob
+				if maxPTA < x_pta and x not in articles:
+					articlePicked = x
+					maxPTA = x_pta
+			articles.append(articlePicked)
+		return articles
 
 	def updateParameters(self, articlePicked, click, userID):
 		self.time += 1

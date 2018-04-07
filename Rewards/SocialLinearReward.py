@@ -11,14 +11,14 @@ class SocialLinearReward(Reward):
 		# How to conditionally change
 		return np.dot(user.CoTheta, pickedArticle.featureVector)
 
-	def getRecommendationReward(self, user, recommendation, noise, cotheta = False):
-		total = 0
-		rewardList = []
-		for i in recommendation.articles:
-			articleReward = np.dot(user.CoTheta, i.featureVector) + noise
-			total += articleReward
-			rewardList.append(articleReward)
-		return (total/self.k), rewardList
+	# def getRecommendationReward(self, user, recommendation, noise, cotheta = False):
+	# 	total = 0
+	# 	rewardList = []
+	# 	for i in recommendation.articles:
+	# 		articleReward = np.dot(user.CoTheta, i.featureVector) + noise
+	# 		total += articleReward
+	# 		rewardList.append(articleReward)
+	# 	return (total/self.k), rewardList
 
 	def get_user_features(self, user):
 		return user.CoTheta

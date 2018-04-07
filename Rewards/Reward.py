@@ -23,14 +23,13 @@ class Reward():
 		pool_position = np.argmax(reward_matrix)
 		return reward_matrix[pool_position], articlePool[pool_position]
 
- #    ### Broadcasting Here #######
-	# def getOptimalReward(self, user, articlePool, exclude = []):
-	# 	maxReward = float('-inf')
-	# 	maxx = None
-	# 	for x in articlePool:
-	# 		reward = self.getReward(user, x)
-	# 		if reward > maxReward and x not in exclude:
-	# 		#if reward > maxReward:
-	# 			maxReward = reward
-	# 			maxx = x
-	# 	return maxReward, x
+	def getRecommendationReward(self, user, recommendation, noise):
+		max_reward = float('-inf')
+		max_article = None
+		for i in recommendation.articles:
+			articleReward = self.getReward(user, i) + noise
+			if articleReward > max_reward:
+				max_reward = articleReward
+				max_article = i
+		return max_reward, max_article
+

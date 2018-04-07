@@ -28,6 +28,7 @@ def createCoLinDict(specific, general, W, system_params):
 		'dimension': system_params['context_dim'],
 		'alpha': 0.3,
 		'lambda_': 0.1,
+		'use_alpha_t': False,
 		'n_users': system_params['n_users'],
 		'parameters': {
 			'Theta': False,
@@ -147,7 +148,7 @@ def update_dict(a, b):
 			for j in a[i]:
 				if j in b['parameters']:
 					c[i][j] = a[i][j]
-		elif i in b:
+		else:
 			c[i] = a[i]
 	return c
 

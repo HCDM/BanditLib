@@ -15,7 +15,7 @@ class ThetaDiffList(BaseDiffList):
 		self.name = 'Theta'
 
 	def update_class_parameters(self, alg_name, reward_manager, user, alg, pickedArticle, reward, noise):
-		self.diff[alg_name] += reward_manager.getL2Diff(user.theta, alg.getTheta(user.id))
+		self.diff[alg_name] += reward_manager.getL2Diff(user.theta[:reward_manager.context_dimension], alg.getTheta(user.id))
 
 class WDiffList(BaseDiffList):
 	def __init__(self, alg_name):

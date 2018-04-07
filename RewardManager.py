@@ -95,12 +95,13 @@ class RewardManager():
 							
 				for alg_name, alg in algorithms.items():
 					recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
-						
-					pickedArticle = recommendation.articles[0]
-					reward, rewardList = self.reward.getRecommendationReward(u, recommendation, noise)
+
+					# Assuming that the user will always be selecting one item for each iteration
+					#pickedArticle = recommendation.articles[0]
+					reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation, noise)
 					if (self.testing_method=="online"):
-						#alg.updateParameters(pickedArticle, reward, u.id)
-						alg.updateRecommendationParameters(recommendation, rewardList, u.id)
+						alg.updateParameters(pickedArticle, reward, u.id)
+						#alg.updateRecommendationParameters(recommendation, rewardList, u.id)
 						if alg_name =='CLUB':
 							n_components= alg.updateGraphClusters(u.id,'False')
 

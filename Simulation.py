@@ -152,7 +152,21 @@ if __name__ == '__main__':
 	rewardManagerDict['Gepsilon'] = 1
 	
 	user['default_file'] = os.path.join(sim_files_folder, "users_"+str(n_users)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Ugroups" + str(UserGroups)+".json")
-	if user.has_key('collaborative') and user['collaborative']:
+	# Override User type 
+	if gen.has_key('collaborative'):
+		if gen['collaborative']:
+			use_coUsers = True
+			reward_type = 'social_linear'
+		else:
+			use_coUsers = False
+			reward_type = 'linear'
+	else:
+		use_coUsers = user.has_key('collaborative') and user['collaborative']
+		reward_type = reco['type'] if reco.has_key('type') else 'linear'
+
+
+	#if user.has_key('collaborative') and user['collaborative']:
+	if use_coUsers:
 		UM = CoUserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1, 'sparseLevel': n_users, 'matrixNoise': rewardManagerDict['matrixNoise']})
 	else:
 		UM = UserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1})
@@ -171,7 +185,7 @@ if __name__ == '__main__':
 		if article.has_key('save') and article['save']:
 			AM.saveArticles(articles, articlesFilename, force=False) 
 	rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
-	reward_type = reco['type'] if reco.has_key('type') else 'linear'
+	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
 	
 	#PCA
 	pca_articles(articles, 'random')

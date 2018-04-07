@@ -67,22 +67,25 @@ class CLUBAlgorithm(BaseAlg):
 			N_components, components = connected_components(g)
 
 			
-	def decide(self,pool_articles,userID, exclude = []):
+	def decide(self,pool_articles,userID, k = 1):
 		self.users[userID].updateParametersofClusters(self.clusters,userID,self.Graph, self.users)
-		maxPTA = float('-inf')
-		articlePicked = None
+		articles = []
+		for i in range(k):
+			maxPTA = float('-inf')
+			articlePicked = None
 
-		for x in pool_articles:
-			x_pta = self.users[userID].getProb(self.alpha, x.contextFeatureVector[:self.dimension],self.time)
-			# pick article with highest Prob
-			if maxPTA < x_pta:
-				articlePicked = x.id
-				featureVectorPicked = x.contextFeatureVector[:self.dimension]
-				picked = x
-				maxPTA = x_pta
+			for x in pool_articles:
+				x_pta = self.users[userID].getProb(self.alpha, x.contextFeatureVector[:self.dimension],self.time)
+				# pick article with highest Prob
+				if maxPTA < x_pta and x not in articles:
+					articlePicked = x.id
+					featureVectorPicked = x.contextFeatureVector[:self.dimension]
+					picked = x
+					maxPTA = x_pta
+			articles.append(picked)
 		self.time +=1
 
-		return picked
+		return articles
 	def updateParameters(self, articlePicked, click,userID):
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click, self.alpha_2)
 	def updateGraphClusters(self,userID, binaryRatio):

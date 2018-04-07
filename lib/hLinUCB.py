@@ -122,26 +122,23 @@ class HLinUCBAlgorithm(BaseAlg):
 		self.max_window_size = max_window_size
 		self.window = []
 		self.time = 0
-		# self.estimates['CanEstimateUserPreference'] = False
-		# self.estimates['CanEstimateCoUserPreference'] = True 
-		# self.estimates['CanEstimateW'] = False
-		# self.estimates['CanEstimateV'] = True
 
-	def decide(self, pool_articles, userID, exclude = []):
-		maxPTA = float('-inf')
-		articlePicked = None
+	def decide(self, pool_articles, userID, k = 1):
+		articles = []
+		for i in range(k):
+			maxPTA = float('-inf')
+			articlePicked = None
+			for x in pool_articles:
+				self.articles[x.id].V[:self.context_dimension] = x.contextFeatureVector[:self.context_dimension]
+				x_pta = self.users[userID].getProb(self.alpha, self.alpha2, self.articles[x.id])
 
-		for x in pool_articles:
-			self.articles[x.id].V[:self.context_dimension] = x.contextFeatureVector[:self.context_dimension]
-			x_pta = self.users[userID].getProb(self.alpha, self.alpha2, self.articles[x.id])
-
-			# pick article with highest Prob
-			# print x_pta 
-			if maxPTA < x_pta:
-				articlePicked = x
-				maxPTA = x_pta
-				
-		return articlePicked
+				# pick article with highest Prob
+				# print x_pta 
+				if maxPTA < x_pta and x not in articles:
+					articlePicked = x
+					maxPTA = x_pta
+			articles.append(articlePicked)
+		return articles
 
 	def getProb(self, pool_articles, userID):
 		means = []

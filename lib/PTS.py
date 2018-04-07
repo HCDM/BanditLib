@@ -86,25 +86,25 @@ class PTSAlgorithm(BaseAlg):
 			self.particles.append(PTSParticleStruct(self.dimension, self.n, self.itemNum, self.sigma, self.sigmaU, self.sigmaV, 1.0/self.particle_num))
 		self.time = 0
 
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide(self, pool_articles, userID, k = 1):
 
 		#Sample a Particle
 		d = np.random.choice(self.particle_num, p = [p.weight for p in self.particles])
 		p = self.particles[d]
 		#For PTS-B
+		articles = []
+		for i in range(k):
+			maxPTA = float('-inf')
+			articlePicked = None
 
-
-		maxPTA = float('-inf')
-		articlePicked = None
-
-		for x in pool_articles:
-			x_pta = p.users[userID].U.dot(p.articles[x.id].V)
-			# pick article with highest Prob
-			# print x_pta 
-			if maxPTA < x_pta:
-				articlePicked = x
-				maxPTA = x_pta				
-		return articlePicked
+			for x in pool_articles:
+				x_pta = p.users[userID].U.dot(p.articles[x.id].V)
+				# pick article with highest Prob
+				if maxPTA < x_pta and x not in articles:
+					articlePicked = x
+					maxPTA = x_pta
+			articles.append(articlePicked)
+		return articles
 
 	def updateParameters(self, articlePicked, click, userID):
 		self.time += 1

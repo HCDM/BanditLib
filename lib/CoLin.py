@@ -89,13 +89,13 @@ class CoLinUCBAlgorithm(BaseAlg):
 		for x in pool_articles:
 			x_pta = self.USERS.getProb(self.alpha, x, userID)
 			# pick article with highest Prob
-			if maxPTA < x_pta and x not in exclude:
+			if maxPTA < x_pta:
 				articlePicked = x
 				maxPTA = x_pta
 
-		return articlePicked
+		return [articlePicked]
 
-	def decide(self, pool_articles, userID, exclude = []):
+	def decide(self, pool_articles, userID, k = 1):
 		# MEAN
 		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector)])
 		for i in range(len(pool_articles)):
@@ -110,11 +110,20 @@ class CoLinUCBAlgorithm(BaseAlg):
 			TempFeatureM.T[userID] = pool_articles[i].contextFeatureVector
 			art_temp_features[i, :] = vectorize(TempFeatureM)
 		var_matrix = np.sqrt(np.dot(np.dot(art_temp_features, self.USERS.CCA), art_temp_features.T))
-		self.USERS.calculateAlphaT()
-		pta_matrix = mean_matrix + self.USERS.alpha_t*np.diag(var_matrix)
+		#self.USERS.calculateAlphaT()
+		if self.use_alpha_t:
 
-		pool_position = np.argmax(pta_matrix)
-		return pool_articles[pool_position]
+			self.USERS.calculateAlphaT()
+			pta_matrix = mean_matrix + self.USERS.alpha_t*np.diag(var_matrix)
+		else:
+			pta_matrix = mean_matrix + self.alpha*np.diag(var_matrix)
+
+		pool_positions = np.argsort(pta_matrix)[(k*-1):]
+		articles = []
+		for i in range(k):
+			articles.append(pool_articles[pool_positions[i]])
+		return articles
+		#return pool_articles[pool_position]
 
 	def updateParameters(self, articlePicked, click, userID, update='Inv'):
 		self.USERS.updateParameters(articlePicked, click, userID, update)
