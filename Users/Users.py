@@ -8,7 +8,41 @@ class User():
 		self.id = id
 		self.theta = theta
 		self.CoTheta = CoTheta
+		self.estimatedTheta = None
 
+	def chooseArticle(self, recommendation):
+		if self.estimatedTheta is None:
+			self.initializeEstimatedTheta(len(self.theta), 0.1)
+		bestArticle = None
+		bestIncentive = 0
+		bestReward = float('-inf')
+		for i in range(len(recommendation.articles)):
+			reward = np.dot(self.estimatedTheta, recommendation.articles[i].featureVector)
+			# var = np.sqrt(np.dot(np.dot(recommendation.articles[i].featureVector, self.AInv),  recommendation.articles[i].featureVector))
+			if bestReward < reward + recommendation.incentives[i]:
+				bestReward = reward + recommendation.incentives[i]
+				bestArticle = recommendation.articles[i]
+				bestIncentive = recommendation.incentives[i]
+		return bestArticle, bestIncentive
+
+	def initializeEstimatedTheta(self, featureDimension, lambda_, init="zero"):
+		self.d = featureDimension
+		self.A = lambda_*np.identity(n = self.d)
+		self.b = np.zeros(self.d)
+		self.AInv = np.linalg.inv(self.A)
+		if (init=="random"):
+			self.estimatedTheta = np.random.rand(self.d)
+		else:
+			self.estimatedTheta = np.zeros(self.d)
+		self.time = 0
+
+	def updateParameters(self, articlePicked_FeatureVector, click):
+		change = np.outer(articlePicked_FeatureVector,articlePicked_FeatureVector)
+		self.A += np.outer(articlePicked_FeatureVector,articlePicked_FeatureVector)
+		self.b += articlePicked_FeatureVector*click
+		self.AInv = np.linalg.inv(self.A)
+		self.estimatedTheta = np.dot(self.AInv, self.b)
+		self.time += 1
 
 class UserManager():
 	def __init__(self, dimension, user_dict, argv = None):

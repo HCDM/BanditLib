@@ -1,18 +1,19 @@
 import numpy as np
 
 class Reward():
-	def __init__(self, k):
-		self.k = k
+	def __init__(self, arg_dict = {}):
+		for key in arg_dict:
+			setattr(self, key, arg_dict[key])
 
-	def getOptimalRecommendationReward(self, user, articlePool, k):
-		total = 0
-		prev_selections = []
-		for x in range(k):
-			articleReward, articlePicked = self.getOptimalReward(user, articlePool, prev_selections)
-			total += articleReward
-			prev_selections.append(articlePicked)
-			#local_pool.remove(articlePicked)
-		return total/k
+	# def getOptimalRecommendationReward(self, user, articlePool, k):
+	# 	total = 0
+	# 	prev_selections = []
+	# 	for x in range(k):
+	# 		articleReward, articlePicked = self.getOptimalReward(user, articlePool, prev_selections)
+	# 		total += articleReward
+	# 		prev_selections.append(articlePicked)
+	# 		#local_pool.remove(articlePicked)
+	# 	return total/k
 
 	def getOptimalReward(self, user, articlePool, exclude = []):
 		art_features = np.empty([len(articlePool), len(articlePool[0].featureVector)])

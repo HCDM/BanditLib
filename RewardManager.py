@@ -1,5 +1,7 @@
 from Rewards.LinearReward import LinearReward
 from Rewards.SocialLinearReward import SocialLinearReward
+from Rewards.FairReward import FairReward
+from Recommendation import Recommendation
 import numpy as np 
 import datetime
 import os.path
@@ -9,14 +11,24 @@ from random import sample, shuffle
 import matplotlib.pyplot as plt
 
 class RewardManager():
-	def __init__(self, arg_dict, reward_type = 'linear'):
+	def __init__(self, arg_dict, reward_type = 'Linear'):
 		for key in arg_dict:
 			setattr(self, key, arg_dict[key])
 		#self.W, self.W0 = self.constructAdjMatrix(self.sparseLevel)
-		if(reward_type == 'social_linear'):
-			self.reward = SocialLinearReward(self.k, self.W)
-		else:
-			self.reward = LinearReward(self.k)
+
+		# Pass arguments to the reward functions using a dictionary
+		reward_arg_dict = {}
+		try:
+			self.reward = globals()[reward_type + 'Reward'](reward_arg_dict)
+		except KeyError:
+			self.reward = LinearReward(reward_arg_dict)
+
+		# if(reward_type == 'social_linear'):
+		# 	self.reward = SocialLinearReward(self.k, self.W)
+		# elif(reward_type == 'fair'):
+		# 	self.reward = FairReward(self.k)
+		# else:
+		# 	self.reward = LinearReward(self.k)
 	
 	def batchRecord(self, iter_):
 		print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
@@ -82,29 +94,44 @@ class RewardManager():
 
 		#Testing
 		for iter_ in range(self.testing_iterations):
-				
+			total = 0
+			counter = 0
 			for u in self.users:
 				self.regulateArticlePool() # select random articles
 
 				noise = self.noise()
 				#get optimal reward for user x at time t
-				pool_copy = copy.deepcopy(self.articlePool)
-				#OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, pool_copy) 
-				OptimalReward = self.reward.getOptimalRecommendationReward(u, self.articlePool, self.k)
+				#pool_copy = copy.deepcopy(self.articlePool)
+				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
+				# print "Optimal Reward", OptimalReward
+				#OptimalReward = self.reward.getOptimalRecommendationReward(u, self.articlePool, self.k)
 				OptimalReward += noise
-							
-				for alg_name, alg in algorithms.items():
-					recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
 
-					# Assuming that the user will always be selecting one item for each iteration
-					#pickedArticle = recommendation.articles[0]
-					reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation, noise)
+				for alg_name, alg in algorithms.items():
+					if alg_name == 'FairUCB':
+						recommendation = alg.createIncentivizedRecommendation(self.articlePool, u.id, self.k)
+						total += recommendation.k
+						counter += 1
+						# Have the user choose what is the best article for them
+						article, incentive = u.chooseArticle(recommendation)
+						# Tell the system the users choice
+						best_rec = Recommendation(1, [article])
+						reward, pickedArticle = self.reward.getRecommendationReward(u, best_rec, noise)
+						u.updateParameters(pickedArticle.contextFeatureVector, reward)
+					else:
+						recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
+
+						# Assuming that the user will always be selecting one item for each iteration
+						#pickedArticle = recommendation.articles[0]
+						reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation, noise)
+						# print "ActualReward", reward
 					if (self.testing_method=="online"):
 						alg.updateParameters(pickedArticle, reward, u.id)
 						#alg.updateRecommendationParameters(recommendation, rewardList, u.id)
 						if alg_name =='CLUB':
 							n_components= alg.updateGraphClusters(u.id,'False')
 
+					# print "Regret", float(OptimalReward - reward)
 					regret = OptimalReward - reward
 					AlgRegret[alg_name].append(regret)
 
@@ -115,7 +142,6 @@ class RewardManager():
 
 					# #update parameter estimation record
 					diffLists.update_parameters(alg_name, self, u, alg, pickedArticle, reward, noise)
-
 			if 'syncCoLinUCB' in algorithms:
 				algorithms['syncCoLinUCB'].LateUpdate()	
 			diffLists.append_to_lists(userSize)

@@ -71,7 +71,7 @@ class Uniform_LinUCBAlgorithm(object):
 
 
 #---------------LinUCB(fixed user order) algorithm---------------
-class N_LinUCBAlgorithm(BaseAlg):
+class LinUCBAlgorithm(BaseAlg):
 	def __init__(self, arg_dict, init="zero"):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
 		self.users = []
@@ -80,17 +80,17 @@ class N_LinUCBAlgorithm(BaseAlg):
 			self.users.append(LinUCBUserStruct(arg_dict['dimension'], arg_dict['lambda_'] , init)) 
 
 
-	def decide_old(self, pool_articles, userID, exclude = []):
+	def decide_old(self, pool_articles, userID, k = 1):
 		maxPTA = float('-inf')
 		articlePicked = None
 
 		for x in pool_articles:
 			x_pta = self.users[userID].getProb(self.alpha, x.contextFeatureVector[:self.dimension])
-			if maxPTA < x_pta and x not in exclude:
+			if maxPTA < x_pta:
 				articlePicked = x
 				maxPTA = x_pta
 
-		return articlePicked
+		return [articlePicked]
 
 	def decide(self, pool_articles, userID, k = 1):
 		# MEAN
@@ -122,6 +122,7 @@ class N_LinUCBAlgorithm(BaseAlg):
 
 	def updateParameters(self, articlePicked, click, userID):
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
+	
 
 	##### SHOULD THIS BE CALLED GET COTHETA #####
 	def getCoTheta(self, userID):
@@ -135,9 +136,9 @@ class N_LinUCBAlgorithm(BaseAlg):
 
 
 #-----------LinUCB select user algorithm-----------
-class LinUCB_SelectUserAlgorithm(N_LinUCBAlgorithm):
+class LinUCB_SelectUserAlgorithm(LinUCBAlgorithm):
 	def __init__(self, dimension, alpha, lambda_, n):  # n is number of users
-		N_LinUCBAlgorithm.__init__(self, dimension, alpha, lambda_, n)
+		LinUCBAlgorithm.__init__(self, dimension, alpha, lambda_, n)
 
 	def decide(self, pool_articles, AllUsers):
 		maxPTA = float('-inf')

@@ -2,8 +2,8 @@ from Reward import Reward
 import numpy as np
 
 class SocialLinearReward(Reward):
-	def __init__(self, k, W, Gepsilon = 1):
-		Reward.__init__(self, k)
+	def __init__(self, arg_dict = {}, Gepsilon = 1):
+		Reward.__init__(self, arg_dict)
 
 		#self.GW = self.constructLaplacianMatrix(W, Gepsilon)
 

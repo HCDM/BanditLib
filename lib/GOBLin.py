@@ -81,6 +81,9 @@ class GOBLinAlgorithm(CoLinUCBAlgorithm):
 		return articles
 		# pool_position = np.argmax(pta_matrix)
 		# return pool_articles[pool_position]
+	def getCoTheta(self, userID):
+		thetaMatrix =  matrixize(self.USERS.theta, self.dimension)
+		return thetaMatrix.T[userID]
 
 #inherite from CoLinUCB_SelectUserAlgorithm
 # class GOBLin_SelectUserAlgorithm(CoLinUCB_SelectUserAlgorithm):

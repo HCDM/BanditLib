@@ -25,7 +25,81 @@ The results will be written under folder `./SimulationResults`, including accumu
 
 ![image](SimulationResults/regret.png "regret")
 ![image](SimulationResults/ParameterEstimation.png "ParameterEstimation")
-##Reference
+
+## Redesign
+
+### Configuration Files
+A configuration yaml file can now be used to specify system level parameters for the simulation.
+The simulator will use a config file using the following command:
+```
+python Simulation.py --config <config file name>.yaml
+```
+An example config file can be found below:
+```yaml
+general:
+  testing_iterations: 1000
+  context_dimension: 16
+  pool_article_size: 10
+  plot: True
+
+user:
+  number: 10
+  collaborative: yes
+
+article:
+  number: 1000
+
+reward:
+  type: SocialLinear
+
+alg:
+  general:
+    alpha: 0.3
+    lambda_: 0.1
+    parameters:
+      Theta: True
+      CoTheta: False
+      W: False
+      V: False
+  specific:
+     CoLinUCB:
+       parameters:
+         Theta: False
+         CoTheta: True
+```
+Each section defines parameters for different modules in the system. In the alg section, two sub-headers are present: `specific` and `general`. `general` defines parameters which will be used in every algorithm. `specific` defines the algorithms which should be run and any parameters specific to that algorithm. The `config.yaml` files contains all possible options and explanations for each of the fields
+
+### Adding New Algorithms
+A new algorithm can be defined by extending the BaseAlg class and implementing the following methods:
+```python
+class ExampleAlgorithm(BaseAlg):
+
+	def decide(self, pool_articles, userID, k = 1):
+		articles = []
+		return articles
+
+
+	def updateParameters(self, articlePicked, click, userID):
+```
+`def decide(self, pool\_articles, userID, k = 1)}` : returns a list of `k` article items found in `pool_articles` which the algorithm predicts will give the highest reward to the user with id of `userID`. This entails making some prediction of the users valuation of an article, but that is not required initially.
+
+`def updateParameters(self, articlePicked, click, userID):` updates the algorithm’s understanding of the preference of `userID` user given the reward, `click`, provided by the system for the article picked. The system notifies the algorithm of the true reward with this method. In this way, the algorithm can learn more about the user through online learning.
+
+To define the default parameters for a new algorithm, a dictionary function can be defined in `util_functions.py`. It will take the form of:
+```python
+def create<Example>Dict(specific, general, W, system_params):
+	base_dict = {
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+```
+Where variables like `alpha` and `lambda_` are variables needed in the Example Algorithm. The parameters sections defines which variables should be tracked, such as `Theta`, `CoTheta`, `W`, and `V`.
+
+## References
 [1]: Qingyun Wu, Huazheng Wang, Quanquan Gu and Hongning Wang. Contextual Bandits in A Collaborative Environment. The 39th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR'2016), p529-538, 2016.
 
 [2]: Huazheng Wang, Qingyun Wu and Hongning Wang. Learning Hidden Features for Contextual Bandits. The 25th ACM International Conference on Information and Knowledge Management (CIKM 2016), p1633-1642, 2016.

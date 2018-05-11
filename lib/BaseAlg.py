@@ -1,7 +1,6 @@
 from Recommendation import Recommendation
 import numpy as np
 
-
 class BaseAlg():
 	def __init__(self, arg_dict):  # n is number of users
 		self.dimension = 0
@@ -17,8 +16,8 @@ class BaseAlg():
 	def getEstimateSettings(self):
 		return self.estimates
 
-	def decide(self, pool_articles, userID, exclude = []):
-		return pool_articles[len(exclude)]
+	def decide(self, pool_articles, userID, k = 1):
+		pass
 
 	def createRecommendation(self, pool_articles, userID, k):
 		articles = self.decide(pool_articles, userID, k)

@@ -5,14 +5,14 @@ import copy
 from random import *
 from custom_errors import FileExists 
 
-def createLinUCBDict(specific, general, system_params):
+# specific : dictionary of arguments specific to the algorithm and supersedes all other parameter settings
+# general : dictionary of arguments shared between all algorithms, supersedes everything except specific parameters
+def createBaseAlgDict(specific, general, W, system_params):
 	base_dict = {
 		'dimension': system_params['context_dim'],
-		'alpha': 0.3,
-		'lambda_': 0.1,
 		'n_users': system_params['n_users'],
 		'parameters': {
-			'Theta': True,
+			'Theta': False,
 			'CoTheta': False,
 			'W': False,
 			'V': False
@@ -22,64 +22,69 @@ def createLinUCBDict(specific, general, system_params):
 	return_dict = update_dict(middle, base_dict)
 	return return_dict
 
-def createCoLinDict(specific, general, W, system_params):
+# base_dict: dictionary of any additional default arguments required for that algorithm
+def createSpecificAlgDict(specific, general, W, system_params, base_dict):
+	# Define all of the required default arguments across all algorithms
+	starter = createBaseAlgDict(specific, general, W, system_params)
+	tmp = update_dict(specific, general)
+	tmp2 = update_dict(tmp, base_dict)
+	final_dict = update_dict(tmp2, starter)
+	print final_dict
+	return final_dict
+
+def createLinUCBDict(specific, general, W, system_params):
+	base_dict = {
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createFairUCBDict(specific, general, W, system_params):
+	return createLinUCBDict(specific, general, W, system_params)
+
+def createCoLinUCBDict(specific, general, W, system_params):
 	base_dict = {
 		'W': W,
-		'dimension': system_params['context_dim'],
 		'alpha': 0.3,
 		'lambda_': 0.1,
 		'use_alpha_t': False,
-		'n_users': system_params['n_users'],
 		'parameters': {
-			'Theta': False,
 			'CoTheta': True,
-			'W': False,
-			'V': False
 		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
-def createHLinUCBDict(specific, general, system_params):
+def createGOBLinDict(specific, general, W, system_params):
+	return createCoLinUCBDict(specific, general, W, system_params)
+
+def createHLinUCBDict(specific, general, W, system_params):
 	base_dict = {
 		'context_dimension': system_params['context_dim'],
 		'latent_dimension': system_params['latent_dim'],
-		'alpha': 0.1,
+		'alpha': 0.3,
 		'alpha2': 0.1,
 		'lambda_': 0.1,
-		'n_users': system_params['n_users'],
 		'n_articles': system_params['n_articles'],
 		'parameters': {
-			'Theta': False,
 			'CoTheta': True,
-			'W': False,
 			'V': True
 		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
-def createUCBPMFDict(specific, general, system_params):
+def createUCBPMFDict(specific, general, W, system_params):
 	base_dict = {
-		'dimension' : system_params['context_dim'],
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
 		'sigma' : np.sqrt(.5),
 		'sigmaU' : 1,
 		'sigmaV' : 1,
 		'alpha' : 0.1,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
 def createFactorUCBDict(specific, general, W, system_params):
 	base_dict = {
@@ -91,55 +96,29 @@ def createFactorUCBDict(specific, general, W, system_params):
 		'lambda_' : 0.1,
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
-		'parameters': {
-			'Theta': False,
-			'CoTheta': True,
-			'W': False,
-			'V': True
-		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
-def createCLUBDict(specific, general, system_params):
+def createCLUBDict(specific, general, W, system_params):
 	base_dict = {
-		'dimension' : system_params['context_dim'],
 		'alpha' : 0.1,
 		'lambda_' : 0.1,
 		'n' : system_params['n_users'],
 		'alpha_2' : 0.5,
 		'cluster_init' : 'Erdos-Renyi',
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
-def createPTSDict(specific, general, system_params):
+def createPTSDict(specific, general, W, system_params):
 	base_dict = {
 		'particle_num' : 10,
-		'dimension' : system_params['context_dim'],
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
 		'sigma' : np.sqrt(.5),
 		'sigmaU' : 1,
 		'sigmaV' : 1,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
 	}
-	middle = update_dict(specific, general)
-	return_dict = update_dict(middle, base_dict)
-	return return_dict
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
 def update_dict(a, b):
 	c = copy.deepcopy(b)

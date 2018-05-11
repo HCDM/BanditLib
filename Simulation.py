@@ -12,16 +12,17 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 # local address to save simulated users, simulated articles, and results
 from conf import sim_files_folder, save_address
-from util_functions import featureUniform, gaussianFeature, createLinUCBDict, \
-	createCoLinDict, createHLinUCBDict, createUCBPMFDict, createFactorUCBDict, \
-	createCLUBDict, createPTSDict
+# from util_functions import featureUniform, gaussianFeature, createLinUCBDict, \
+# 	createCoLinUCBDict, createHLinUCBDict, createUCBPMFDict, createFactorUCBDict, \
+# 	createCLUBDict, createPTSDict, createBaseAlgDict
+from util_functions import *
 from Articles import ArticleManager
 from Users.Users import UserManager
 from Users.CoUsers import CoUserManager
 from RewardManager import RewardManager
 from DiffList.DiffManager import DiffManager
 
-from lib.LinUCB import N_LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
+from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm
 from lib.factorUCB import FactorUCBAlgorithm
 from lib.CoLin import CoLinUCBAlgorithm
@@ -29,6 +30,7 @@ from lib.GOBLin import GOBLinAlgorithm
 from lib.CLUB import *
 from lib.PTS import PTSAlgorithm
 from lib.UCBPMF import UCBPMFAlgorithm
+from lib.FairUCB import FairUCBAlgorithm
 
 def pca_articles(articles, order):
 	X = []
@@ -58,35 +60,16 @@ def generate_algorithms(alg_dict, W, system_params):
 	diffLists = DiffManager()
 	for i in alg_dict['specific']:
 		print str(i)
-		if i == 'linUCB':
-			linUCBDict = createLinUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
-			algorithms[i] = N_LinUCBAlgorithm(linUCBDict)
-		elif i == 'CoLin':
-			coLinDict = createCoLinDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
-			algorithms[i] = CoLinUCBAlgorithm(coLinDict)
-		elif i == 'GOBLin':
-			# uses the same arguments as colin
-			GOBLinDict = createCoLinDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
-			algorithms[i] = GOBLinAlgorithm(GOBLinDict)
-		elif i == 'HLinUCB':
-			hlinUCBDict = createHLinUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
-			algorithms[i] = HLinUCBAlgorithm(hlinUCBDict)
-		elif i == 'UCBPMF':
-			UCBPMFDict = createUCBPMFDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
-			algorithms[i] = UCBPMFAlgorithm(UCBPMFDict)
-		elif i == 'FactorUCB':
-			factorDict = createFactorUCBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
-			algorithms[i] = FactorUCBAlgorithm(factorDict)
-		elif i == 'CLUB':
-			clubDict = createCLUBDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
-			algorithms[i] = CLUBAlgorithm(clubDict)
-		elif i == 'PTS':
-			ptsDict = createPTSDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, system_params)
-			algorithms[i] = PTSAlgorithm(ptsDict)
-		else:
-			# Do not know that algorithm name, so skip it
-			continue
+		try:
+			tmpDict = globals()['create' + i + 'Dict'](alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+		except KeyError:
+			tmpDict = createBaseAlgDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+		try:
+			algorithms[i] = globals()[i + 'Algorithm'](tmpDict)
+		except KeyError:
+			raise NotImplementedError(i + " not currently implemented")
 		diffLists.add_algorithm(i, algorithms[i].getEstimateSettings())
+	print algorithms
 	return algorithms, diffLists
 
 if __name__ == '__main__':
@@ -156,10 +139,10 @@ if __name__ == '__main__':
 	if gen.has_key('collaborative'):
 		if gen['collaborative']:
 			use_coUsers = True
-			reward_type = 'social_linear'
+			reward_type = 'SocialLinear'
 		else:
 			use_coUsers = False
-			reward_type = 'linear'
+			reward_type = 'Linear'
 	else:
 		use_coUsers = user.has_key('collaborative') and user['collaborative']
 		reward_type = reco['type'] if reco.has_key('type') else 'linear'

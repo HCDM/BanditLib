@@ -122,7 +122,9 @@ class CoLinUCBAlgorithm(BaseAlg):
 		articles = []
 		for i in range(k):
 			articles.append(pool_articles[pool_positions[i]])
+
 		return articles
+
 		#return pool_articles[pool_position]
 
 	def updateParameters(self, articlePicked, click, userID, update='Inv'):
