@@ -164,7 +164,7 @@ class simulateOnlineData(object):
 			if reward > maxReward:
 				maxReward = reward
 				maxx = x
-		return maxReward, x
+		return maxReward, maxx
 	
 	def getL2Diff(self, x, y):
 		return np.linalg.norm(x-y) # L2 norm
