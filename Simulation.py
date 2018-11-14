@@ -496,7 +496,7 @@ if __name__ == '__main__':
 		algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = simExperiment.getW())	
 	if algName == 'hLinUCB':
 		algorithms['hLinUCB'] = HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = latent_dimension, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, n = n_users, itemNum=n_articles, init='zero', window_size = -1)	
-		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
+		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_,)
 	if algName == 'PTS':
 		algorithms['PTS'] = PTSAlgorithm(particle_num = 10, dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1)
 	if algName == 'HybridLinUCB':
@@ -505,7 +505,7 @@ if __name__ == '__main__':
 		algorithms['UCBPMF'] = UCBPMFAlgorithm(dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1, alpha = 0.1) 
 	if args.alg == 'factorUCB':
 		algorithms['FactorUCB'] = FactorUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.05, alpha2 = 0.025, lambda_ = lambda_, n = n_users, itemNum=n_articles, W = simExperiment.getW(), init='random', window_size = -1)	
-		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
+		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, )
 	if args.alg == 'CoLin':
 		algorithms['CoLin'] = AsyCoLinUCBAlgorithm(dimension=context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users, W = simExperiment.getW())
 		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, n = n_users)
@@ -514,7 +514,7 @@ if __name__ == '__main__':
 		algorithms['CLUB'] = CLUBAlgorithm(dimension =context_dimension,alpha = alpha, lambda_ = lambda_, n = n_users, alpha_2 = 0.5, cluster_init = 'Erdos-Renyi')	
 	if algName == 'All':
 		algorithms['LinUCB'] = N_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_)
-		algorithms['hLinUCB'] = HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, n = n_users, itemNum=n_articles, init='random', window_size = -1)	
+		algorithms['hLinUCB'] = HLinUCBAlgorithm(context_dimension = context_dimension, latent_dimension = 5, alpha = 0.1, alpha2 = 0.1, lambda_ = lambda_, itemNum=n_articles, init='random', window_size = -1)	
 		algorithms['PTS'] = PTSAlgorithm(particle_num = 10, dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1)
 		algorithms['HybridLinUCB'] = Hybrid_LinUCBAlgorithm(dimension = context_dimension, alpha = alpha, lambda_ = lambda_, userFeatureList=simExperiment.generateUserFeature(simExperiment.getW()))
 		algorithms['UCBPMF'] = UCBPMFAlgorithm(dimension = 10, n = n_users, itemNum=n_articles, sigma = np.sqrt(.5), sigmaU = 1, sigmaV = 1, alpha = 0.1) 
