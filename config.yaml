@@ -67,7 +67,10 @@ alg:
     PrivateLinUCB:
       alpha: 0.3
       lambda_: 0.1
-      eps: 100
+      eps: 75
+      variance: 0.01
+      noise_type: gaussian
+      protect_context: True
       parameters:
         Theta: True
         CoTheta: False

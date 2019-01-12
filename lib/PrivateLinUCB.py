@@ -7,7 +7,7 @@ from BaseAlg import BaseAlg
 
 
 class PrivateLinUCBUserStruct:
-    def __init__(self, featureDimension, lambda_, eps, testing_iterations, init="zero"):
+    def __init__(self, featureDimension, lambda_, eps, testing_iterations, variance, protect_context, noise_type, init="zero"):
         """In the paper, V = A, u = b
         """
         self.d = featureDimension
@@ -18,6 +18,9 @@ class PrivateLinUCBUserStruct:
         self.Zs = []
         self.T = testing_iterations
         self.eps = eps
+        self.variance = variance  # TODO: calculate from epsilon
+        self.protect_context = protect_context
+        self.noise_type = noise_type.lower()
 
         if (init == "random"):
             self.UserTheta = np.random.rand(self.d)
@@ -28,28 +31,23 @@ class PrivateLinUCBUserStruct:
     def updateParameters(self, articlePicked_FeatureVector, click):
         change = np.outer(articlePicked_FeatureVector,
                           articlePicked_FeatureVector)
-        # TODO: extract NIPS code into another algorithm
-        self.noise_type = 'laplacian'  # temporary variable for incomplete NIPS impl
-        should_protect_context = False  # ^
 
+        num_partial_sums = bin(self.time).count('1')
+        N = np.zeros(shape=(self.d + 1, self.d + 1))
         # Calculate noise
         if self.noise_type == 'gaussian':
-            delta = 3
-            action_norm_bound = 1
-            reward_bound = 1
-            m = np.ceil(np.log2(self.time)) + 1
-            L_tilde = np.sqrt(action_norm_bound**2 + reward_bound**2)
-            variance = 16 * m * L_tilde**4 * np.log(4 / delta)**2 / self.eps**2
-            Z = np.random.normal(scale=np.sqrt(variance),
-                                 size=(self.d + 1, self.d + 1))
-            N = (Z + Z.T) / np.sqrt(2)
+            for _ in range(num_partial_sums):
+                Z = np.random.normal(scale=np.sqrt(self.variance),
+                                    size=(self.d + 1, self.d + 1))
+                N += (Z + Z.T) / np.sqrt(2)
         elif self.noise_type == 'laplacian':
-            num_partial_sums = bin(self.time).count('1')
-            N = num_partial_sums * \
-                np.random.laplace(scale=np.log(self.T) / self.eps,
-                                  size=(self.d + 1, self.d + 1))
+            for _ in range(num_partial_sums):
+                N += np.random.laplace(scale=np.log(self.T) / self.eps,
+                                    size=(self.d + 1, self.d + 1))
+        elif self.noise_type == 'wishart':
+            raise NotImplementedError()
         else:
-            N = np.zeros(shape=(self.d + 1, self.d + 1))
+            raise NotImplementedError()
 
         # Update M which encodes previous actions and rewards
         action_and_reward_vector = np.append(
@@ -57,7 +55,7 @@ class PrivateLinUCBUserStruct:
         self.M += np.outer(action_and_reward_vector, action_and_reward_vector)
 
         # Calculate user theta
-        if should_protect_context:  # NIPS
+        if self.protect_context:
             self.V = (self.M + N)[:self.d, :self.d]
             self.u = (self.M + N)[:self.d, -1]
         else:  # ICML
@@ -92,13 +90,19 @@ class PrivateLinUCBUserStruct:
 
 class PrivateLinUCBAlgorithm(BaseAlg):
     def __init__(self, arg_dict, init="zero"):  # n is number of users
-        print(arg_dict)
         BaseAlg.__init__(self, arg_dict)
         self.users = []
         # algorithm have n users, each user has a user structure
         for i in range(arg_dict['n_users']):
             self.users.append(PrivateLinUCBUserStruct(
-                arg_dict['dimension'], arg_dict['lambda_'], arg_dict['eps'], arg_dict['T'], init))
+                arg_dict['dimension'],
+                arg_dict['lambda_'],
+                arg_dict['eps'],
+                arg_dict['T'],
+                arg_dict['variance'],
+                arg_dict['protect_context'],
+                arg_dict['noise_type'],
+                init))
 
     def decide(self, pool_articles, userID, k=1):
         # theta = user_features
