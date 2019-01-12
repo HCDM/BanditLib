@@ -23,6 +23,7 @@ from RewardManager import RewardManager
 from DiffList.DiffManager import DiffManager
 
 from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
+from lib.PrivateLinUCB import PrivateLinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm
 from lib.factorUCB import FactorUCBAlgorithm
 from lib.CoLin import CoLinUCBAlgorithm
@@ -54,16 +55,17 @@ def pca_articles(articles, order):
 	return
 
 
-def generate_algorithms(alg_dict, W, system_params):
+def generate_algorithms(global_dict, alg_dict, W, system_params):
+	print(global_dict)
 	gen = alg_dict['general'] if alg_dict.has_key('general') and alg_dict['general'] else {}
 	algorithms = {}
 	diffLists = DiffManager()
 	for i in alg_dict['specific']:
 		print str(i)
 		try:
-			tmpDict = globals()['create' + i + 'Dict'](alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+			tmpDict = globals()['create' + i + 'Dict'](global_dict, alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
 		except KeyError:
-			tmpDict = createBaseAlgDict(alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+			tmpDict = createBaseAlgDict(global_dict, alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
 		try:
 			algorithms[i] = globals()[i + 'Algorithm'](tmpDict)
 		except KeyError:
@@ -194,6 +196,6 @@ if __name__ == '__main__':
 		'n_articles': n_articles
 	}
 
-	algorithms, diffLists = generate_algorithms(cfg['alg'], UM.getW(), system_params)
+	algorithms, diffLists = generate_algorithms(gen, cfg['alg'], UM.getW(), system_params)
 
 	simExperiment.runAlgorithms(algorithms, diffLists)

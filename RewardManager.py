@@ -1,6 +1,6 @@
 from Rewards.LinearReward import LinearReward
 from Rewards.SocialLinearReward import SocialLinearReward
-from Rewards.FairReward import FairReward
+# from Rewards.FairReward import FairReward
 from Recommendation import Recommendation
 import numpy as np 
 import datetime

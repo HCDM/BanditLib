@@ -7,7 +7,7 @@ from custom_errors import FileExists
 
 # specific : dictionary of arguments specific to the algorithm and supersedes all other parameter settings
 # general : dictionary of arguments shared between all algorithms, supersedes everything except specific parameters
-def createBaseAlgDict(specific, general, W, system_params):
+def createBaseAlgDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'dimension': system_params['context_dim'],
 		'n_users': system_params['n_users'],
@@ -23,16 +23,16 @@ def createBaseAlgDict(specific, general, W, system_params):
 	return return_dict
 
 # base_dict: dictionary of any additional default arguments required for that algorithm
-def createSpecificAlgDict(specific, general, W, system_params, base_dict):
+def createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict):
 	# Define all of the required default arguments across all algorithms
-	starter = createBaseAlgDict(specific, general, W, system_params)
+	starter = createBaseAlgDict(global_settings, specific, general, W, system_params)
 	tmp = update_dict(specific, general)
 	tmp2 = update_dict(tmp, base_dict)
 	final_dict = update_dict(tmp2, starter)
 	print final_dict
 	return final_dict
 
-def createLinUCBDict(specific, general, W, system_params):
+def createDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'alpha': 0.3,
 		'lambda_': 0.1,
@@ -40,12 +40,18 @@ def createLinUCBDict(specific, general, W, system_params):
 			'Theta': True,
 		}
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createFairUCBDict(specific, general, W, system_params):
-	return createLinUCBDict(specific, general, W, system_params)
+def createFairUCBDict(global_settings, specific, general, W, system_params):
+	return createDict(global_settings, specific, general, W, system_params)
 
-def createCoLinUCBDict(specific, general, W, system_params):
+def createPrivateLinUCBDict(global_settings, specific, general, W, system_params):
+	base_dict = {
+		'T': global_settings['testing_iterations'] if global_settings.has_key('testing_iterations') else 100
+	}
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
+
+def createCoDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'W': W,
 		'alpha': 0.3,
@@ -55,12 +61,12 @@ def createCoLinUCBDict(specific, general, W, system_params):
 			'CoTheta': True,
 		}
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createGOBLinDict(specific, general, W, system_params):
-	return createCoLinUCBDict(specific, general, W, system_params)
+def createGOBLinDict(global_settings, specific, general, W, system_params):
+	return createCoDict(global_settings, specific, general, W, system_params)
 
-def createHLinUCBDict(specific, general, W, system_params):
+def createHDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'context_dimension': system_params['context_dim'],
 		'latent_dimension': system_params['latent_dim'],
@@ -73,9 +79,9 @@ def createHLinUCBDict(specific, general, W, system_params):
 			'V': True
 		}
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createUCBPMFDict(specific, general, W, system_params):
+def createUCBPMFDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
@@ -84,9 +90,9 @@ def createUCBPMFDict(specific, general, W, system_params):
 		'sigmaV' : 1,
 		'alpha' : 0.1,
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createFactorUCBDict(specific, general, W, system_params):
+def createFactorUCBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'W': W,
 		'context_dimension' : system_params['context_dim'],
@@ -97,9 +103,9 @@ def createFactorUCBDict(specific, general, W, system_params):
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createCLUBDict(specific, general, W, system_params):
+def createCLUBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'alpha' : 0.1,
 		'lambda_' : 0.1,
@@ -107,9 +113,9 @@ def createCLUBDict(specific, general, W, system_params):
 		'alpha_2' : 0.5,
 		'cluster_init' : 'Erdos-Renyi',
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createPTSDict(specific, general, W, system_params):
+def createPTSDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'particle_num' : 10,
 		'n' : system_params['n_users'],
@@ -118,15 +124,16 @@ def createPTSDict(specific, general, W, system_params):
 		'sigmaU' : 1,
 		'sigmaV' : 1,
 	}
-	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
 def update_dict(a, b):
 	c = copy.deepcopy(b)
 	for i in a:
 		if i == 'parameters':
 			for j in a[i]:
-				if j in b['parameters']:
-					c[i][j] = a[i][j]
+				if 'parameters' in b:
+					if j in b['parameters']:
+						c[i][j] = a[i][j]
 		else:
 			c[i] = a[i]
 	return c

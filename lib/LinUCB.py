@@ -242,4 +242,3 @@ class Hybrid_LinUCBAlgorithm(object):
 		self.USER.updateParameters(articlePicked.contextFeatureVector, click, userID)
 	def getCoTheta(self, userID):
 		return self.USER.users[userID].UserTheta
-
