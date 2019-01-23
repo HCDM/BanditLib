@@ -80,25 +80,17 @@ class PrivateLinUCBUserStruct:
                 del self.noise[time]
                 self.consolidate_partial_sums(prev_p_sum_time)
 
-    def updateParameters(self, articlePicked_FeatureVector, click):
-        change = np.outer(articlePicked_FeatureVector,
-                          articlePicked_FeatureVector)
-
-        # Calculate noise for this time step only
+    def update_noise_tree(self):
         self.noise[self.time] = PartialSum(self.time, 1, self.generate_noise())
         self.consolidate_partial_sums(self.time)
 
-        # Calculate total noise for p-sum
+    def get_total_noise(self):
         N = np.zeros(shape=(self.d + 1, self.d + 1))
         for p_sum in self.noise.values():
             N += p_sum.noise
+        return N
 
-        # Update M which encodes previous actions and rewards
-        action_and_reward_vector = np.append(
-            articlePicked_FeatureVector, click)
-        self.M += np.outer(action_and_reward_vector, action_and_reward_vector)
-
-        # Calculate user theta
+    def update_user_theta(self, N):
         self.V = (self.M + N)[:self.d, :self.d]
         if self.protect_context:  # NIPS
             self.u = (self.M + N)[:self.d, -1]
@@ -106,6 +98,13 @@ class PrivateLinUCBUserStruct:
             self.u = self.M[:self.d, -1]
         self.Vinv = np.linalg.inv(self.V)
         self.UserTheta = np.dot(self.Vinv, self.u)
+
+    def updateParameters(self, articlePicked_FeatureVector, click):
+        self.update_noise_tree()
+        N = self.get_total_noise()
+        action_and_reward_vector = np.append(articlePicked_FeatureVector, click)
+        self.M += np.outer(action_and_reward_vector, action_and_reward_vector)
+        self.update_user_theta(N)
         self.time += 1
 
     def getProb(self, alpha, article_FeatureVector):
