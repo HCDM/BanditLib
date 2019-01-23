@@ -67,11 +67,9 @@ alg:
     PrivateLinUCB:
       alpha: 0.3
       lambda_: 0.1
-      delta: 5.6
-      eps: 50  # laplacian
-      df: 5  # wishart
-      scale: 0.01  # wishart
-      noise_type: gaussian
+      delta: 1.5
+      eps: 75
+      noise_type: wishart
       protect_context: True
       parameters:
         Theta: True

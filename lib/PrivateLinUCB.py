@@ -20,10 +20,6 @@ class PrivateLinUCBUserStruct:
         self.eps = hyperparameters['eps']
         self.delta = hyperparameters['delta']
 
-        # TODO: calculate from epsilon
-        self.df = hyperparameters['df']
-        self.scale = hyperparameters['scale']
-
         self.protect_context = protect_context
         self.noise_type = noise_type.lower()
 
@@ -40,6 +36,8 @@ class PrivateLinUCBUserStruct:
         num_partial_sums = bin(self.time).count('1')
         N = np.zeros(shape=(self.d + 1, self.d + 1))
         if self.noise_type == 'gaussian':
+            # Does NOT preserve (eps, delta)-DP
+            #   Rather preserves (eps / sqrt(8mln(2/delta)), delta / 2m)-DP
             # For testing, try T = 200, delta = 5.6, eps = 75
             m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
             max_feature_vector_l2_norm = 1  # assumed, but noise added to reward might be problematic
@@ -61,8 +59,16 @@ class PrivateLinUCBUserStruct:
                 N += np.random.laplace(scale=np.log(self.T) / self.eps,
                                     size=(self.d + 1, self.d + 1))
         elif self.noise_type == 'wishart':
+            # Does NOT preserve (eps, delta)-DP
+            #   Rather preserves (eps / sqrt(8mln(2/delta)), delta / 2m)-DP
+            m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
+            max_feature_vector_l2_norm = 1  # assumed, but noise added to reward might be problematic
+            max_reward_l1_norm = 1  # assumed
+            L_tilde = np.sqrt(max_feature_vector_l2_norm**2 + max_reward_l1_norm**2)
+            df = int(self.d + 1 + np.ceil(224 * m * self.eps**-2 * np.log(8 * m / self.delta) * np.log(2 / self.delta)))
+            scale = L_tilde * np.identity(self.d + 1)
             for _ in range(num_partial_sums):
-                N += wishart.rvs(self.df, self.scale, size=(self.d + 1, self.d + 1))
+                N += wishart.rvs(df, scale)
         else:
             raise NotImplementedError()
 
@@ -112,8 +118,6 @@ class PrivateLinUCBAlgorithm(BaseAlg):
             'eps': arg_dict['eps'],
             'delta': arg_dict['delta'],
             'T': arg_dict['T'],
-            'df': arg_dict['df'],
-            'scale': arg_dict['scale']
         }
         # algorithm have n users, each user has a user structure
         for i in range(arg_dict['n_users']):
