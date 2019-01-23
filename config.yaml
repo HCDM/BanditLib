@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 200 # (int) Number of iterations to testing and refine model upon
+  testing_iterations: 250 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -67,8 +67,10 @@ alg:
     PrivateLinUCB:
       alpha: 0.3
       lambda_: 0.1
-      eps: 75
-      variance: 0.01
+      delta: 5.6
+      eps: 50  # laplacian
+      df: 5  # wishart
+      scale: 0.01  # wishart
       noise_type: gaussian
       protect_context: True
       parameters:
