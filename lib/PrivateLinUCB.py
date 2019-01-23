@@ -6,6 +6,11 @@ from scipy.stats import wishart
 """Paper: Differentially Private Contextual Bandits
 """
 
+class PartialSum:
+    def __init__(self, start, size, noise):
+        self.start = start
+        self.size = size
+        self.noise = noise
 
 class PrivateLinUCBUserStruct:
     def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, init="zero"):
@@ -22,6 +27,7 @@ class PrivateLinUCBUserStruct:
 
         self.protect_context = protect_context
         self.noise_type = noise_type.lower()
+        self.noise = {}
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -29,12 +35,8 @@ class PrivateLinUCBUserStruct:
             self.UserTheta = np.zeros(self.d)
         self.time = 1
 
-    def updateParameters(self, articlePicked_FeatureVector, click):
-        change = np.outer(articlePicked_FeatureVector,
-                          articlePicked_FeatureVector)
-        # Calculate noise
-        num_partial_sums = bin(self.time).count('1')
-        N = np.zeros(shape=(self.d + 1, self.d + 1))
+    def generate_noise(self):
+        noise = np.zeros(shape=(self.d + 1, self.d + 1))
         if self.noise_type == 'gaussian':
             # Does NOT preserve (eps, delta)-DP
             #   Rather preserves (eps / sqrt(8mln(2/delta)), delta / 2m)-DP
@@ -44,20 +46,18 @@ class PrivateLinUCBUserStruct:
             max_reward_l1_norm = 1  # assumed
             L_tilde = np.sqrt(max_feature_vector_l2_norm**2 + max_reward_l1_norm**2)
             variance = 16 * m * L_tilde**4 * np.log(4 / self.delta)**2 / self.eps**2
-            for _ in range(num_partial_sums):
-                Z = np.random.normal(scale=np.sqrt(variance),
-                                    size=(self.d + 1, self.d + 1))
-                N += (Z + Z.T) / np.sqrt(2)
+            Z = np.random.normal(scale=np.sqrt(variance),
+                                size=(self.d + 1, self.d + 1))
+            noise = (Z + Z.T) / np.sqrt(2)
         elif self.noise_type == 'laplacian':
-            for _ in range(num_partial_sums):
-                #  Paper: Differential privacy under continual observation says add Lap(logT/e)
-                #       Lap(scale=x) + Lap(scale=x) has a lower variance than Lap(scale=2x)
-                #           So why not just add Lap(scale=1/eps) to each reward and then sum them up?
-                #           Wouldn't that be more effective than adding one big lump sum of Lap(scale=T/eps)?
-                #       Is noise resampled every time for each node or is it sampled once and stored?
-                #           Does it make a difference?
-                N += np.random.laplace(scale=np.log(self.T) / self.eps,
-                                    size=(self.d + 1, self.d + 1))
+            #  Paper: Differential privacy under continual observation says add Lap(logT/e)
+            #       Lap(scale=x) + Lap(scale=x) has a lower variance than Lap(scale=2x)
+            #           So why not just add Lap(scale=1/eps) to each reward and then sum them up?
+            #           Wouldn't that be more effective than adding one big lump sum of Lap(scale=T/eps)?
+            #       Is noise resampled every time for each node or is it sampled once and stored?
+            #           Does it make a difference?
+            noise = np.random.laplace(scale=np.log(self.T) / self.eps,
+                                size=(self.d + 1, self.d + 1))
         elif self.noise_type == 'wishart':
             # Does NOT preserve (eps, delta)-DP
             #   Rather preserves (eps / sqrt(8mln(2/delta)), delta / 2m)-DP
@@ -67,10 +67,31 @@ class PrivateLinUCBUserStruct:
             L_tilde = np.sqrt(max_feature_vector_l2_norm**2 + max_reward_l1_norm**2)
             df = int(self.d + 1 + np.ceil(224 * m * self.eps**-2 * np.log(8 * m / self.delta) * np.log(2 / self.delta)))
             scale = L_tilde * np.identity(self.d + 1)
-            for _ in range(num_partial_sums):
-                N += wishart.rvs(df, scale)
+            noise = wishart.rvs(df, scale)
         else:
             raise NotImplementedError()
+        return noise
+
+    def consolidate_partial_sums(self, time):
+        prev_p_sum_time = self.noise[time].start - self.noise[time].size
+        if prev_p_sum_time in self.noise:
+            if self.noise[time].size == self.noise[prev_p_sum_time].size:
+                self.noise[prev_p_sum_time] = PartialSum(prev_p_sum_time, self.noise[time].size*2, self.generate_noise())
+                del self.noise[time]
+                self.consolidate_partial_sums(prev_p_sum_time)
+
+    def updateParameters(self, articlePicked_FeatureVector, click):
+        change = np.outer(articlePicked_FeatureVector,
+                          articlePicked_FeatureVector)
+
+        # Calculate noise for this time step only
+        self.noise[self.time] = PartialSum(self.time, 1, self.generate_noise())
+        self.consolidate_partial_sums(self.time)
+
+        # Calculate total noise for p-sum
+        N = np.zeros(shape=(self.d + 1, self.d + 1))
+        for p_sum in self.noise.values():
+            N += p_sum.noise
 
         # Update M which encodes previous actions and rewards
         action_and_reward_vector = np.append(
