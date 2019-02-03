@@ -21,6 +21,8 @@ class PrivateLinUCBUserStruct:
         self.V = self.M[:self.d, :self.d]
         self.u = self.M[:self.d, -1]
         self.Vinv = np.linalg.inv(self.V)
+
+        self.alpha = hyperparameters['alpha']
         self.T = hyperparameters['T']
         self.eps = hyperparameters['eps']
         self.delta = hyperparameters['delta']
@@ -48,7 +50,8 @@ class PrivateLinUCBUserStruct:
             variance = 16 * m * L_tilde**4 * np.log(4 / self.delta)**2 / self.eps**2
             Z = np.random.normal(scale=np.sqrt(variance),
                                 size=(self.d + 1, self.d + 1))
-            noise = (Z + Z.T) / np.sqrt(2)
+            upsilon = np.sqrt(2 * m * variance) * (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
+            noise = (Z + Z.T) / np.sqrt(2) + 2 * upsilon * np.identity(self.d + 1)
         elif self.noise_type == 'laplacian':
             #  Paper: Differential privacy under continual observation says add Lap(logT/e)
             #       Lap(scale=x) + Lap(scale=x) has a lower variance than Lap(scale=2x)
@@ -135,6 +138,7 @@ class PrivateLinUCBAlgorithm(BaseAlg):
         BaseAlg.__init__(self, arg_dict)
         self.users = []
         hyperparameters = {
+            'alpha': arg_dict['alpha'],
             'eps': arg_dict['eps'],
             'delta': arg_dict['delta'],
             'T': arg_dict['T'],
