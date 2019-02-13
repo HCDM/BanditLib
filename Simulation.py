@@ -69,10 +69,13 @@ def generate_algorithms(global_dict, alg_dict, W, system_params):
 		except KeyError:
 			tmpDict = createBaseAlgDict(global_dict, alg if alg else {}, gen, W, system_params)
 		try:
-			algorithms[alg_id] = globals()[alg_name + 'Algorithm'](tmpDict)
+			algorithms[alg_id] = {
+				'name': alg_name,
+				'algorithm': globals()[alg_name + 'Algorithm'](tmpDict)
+			}
 		except KeyError:
 			raise NotImplementedError(alg_name + " not currently implemented")
-		diffLists.add_algorithm(alg_id, algorithms[alg_id].getEstimateSettings())
+		diffLists.add_algorithm(alg_id, algorithms[alg_id]['algorithm'].getEstimateSettings())
 	print algorithms
 	return algorithms, diffLists
 

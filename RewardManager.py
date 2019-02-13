@@ -62,15 +62,15 @@ class RewardManager():
 		
 		# Initialization
 		userSize = len(self.users)
-		for alg_name, alg in algorithms.items():
-			AlgRegret[alg_name] = []
-			BatchCumlateRegret[alg_name] = []
-			Var[alg_name] = []
+		for alg_id in algorithms:
+			AlgRegret[alg_id] = []
+			BatchCumlateRegret[alg_id] = []
+			Var[alg_id] = []
 
 		
 		with open(filenameWriteRegret, 'w') as f:
 			f.write('Time(Iteration)')
-			f.write(',' + ','.join( [str(alg_name) for alg_name in algorithms.iterkeys()]))
+			f.write(',' + ','.join( [str(alg_id) for alg_id in algorithms.iterkeys()]))
 			f.write('\n')
 		
 		with open(filenameWritePara, 'w') as f:
@@ -86,11 +86,12 @@ class RewardManager():
 				noise = self.noise()	
 				reward = self.reward.getReward(u, article)
 				reward += noise										
-				for alg_name, alg in algorithms.items():
+				for alg_id, alg in algorithms.items():
 					alg.updateParameters(article, reward, u.id)	
 
-			if 'syncCoLinUCB' in algorithms:
-				algorithms['syncCoLinUCB'].LateUpdate()	
+			for alg_block in algorithms.values():
+				if alg_block['name'] == 'syncCoLinUCB':
+					alg_block['algorithm'].LateUpdate()	
 
 		#Testing
 		for iter_ in range(self.testing_iterations):
@@ -107,7 +108,9 @@ class RewardManager():
 				#OptimalReward = self.reward.getOptimalRecommendationReward(u, self.articlePool, self.k)
 				OptimalReward += noise
 
-				for alg_name, alg in algorithms.items():
+				for alg_id, alg_block in algorithms.items():
+					alg_name = alg_block['name']
+					alg = alg_block['algorithm']
 					if alg_name == 'FairUCB':
 						recommendation = alg.createIncentivizedRecommendation(self.articlePool, u.id, self.k)
 						total += recommendation.k
@@ -133,28 +136,29 @@ class RewardManager():
 
 					# print "Regret", float(OptimalReward - reward)
 					regret = OptimalReward - reward
-					AlgRegret[alg_name].append(regret)
+					AlgRegret[alg_id].append(regret)
 
 					if u.id == 0:
 						if alg_name in ['LBFGS_random','LBFGS_random_around','LinUCB', 'LBFGS_gradient_inc']:
 							means, vars = alg.getProb(self.articlePool, u.id)
-							Var[alg_name].append(vars[0])
+							Var[alg_id].append(vars[0])
 
 					# #update parameter estimation record
-					diffLists.update_parameters(alg_name, self, u, alg, pickedArticle, reward, noise)
-			if 'syncCoLinUCB' in algorithms:
-				algorithms['syncCoLinUCB'].LateUpdate()	
+					diffLists.update_parameters(alg_id, self, u, alg, pickedArticle, reward, noise)
+			for alg_block in algorithms.values():
+				if alg_block['name'] == 'syncCoLinUCB':
+					alg_block['algorithm'].LateUpdate()
 			diffLists.append_to_lists(userSize)
 				
 			if iter_%self.batchSize == 0:
 				self.batchRecord(iter_)
 				tim_.append(iter_)
-				for alg_name in algorithms.iterkeys():
-					BatchCumlateRegret[alg_name].append(sum(AlgRegret[alg_name]))
+				for alg_id in algorithms.iterkeys():
+					BatchCumlateRegret[alg_id].append(sum(AlgRegret[alg_id]))
 
 				with open(filenameWriteRegret, 'a+') as f:
 					f.write(str(iter_))
-					f.write(',' + ','.join([str(BatchCumlateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
+					f.write(',' + ','.join([str(BatchCumlateRegret[alg_id][-1]) for alg_id in algorithms.iterkeys()]))
 					f.write('\n')
 				with open(filenameWritePara, 'a+') as f:
 					f.write(str(iter_))
@@ -164,9 +168,9 @@ class RewardManager():
 		if (self.plot==True): # only plot
 			# plot the results	
 			f, axa = plt.subplots(1, sharex=True)
-			for alg_name in algorithms.iterkeys():	
-				axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
-				print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
+			for alg_id in algorithms.iterkeys():	
+				axa.plot(tim_, BatchCumlateRegret[alg_id],label = alg_id)
+				print '%s: %.2f' % (alg_id, BatchCumlateRegret[alg_id][-1])
 			axa.legend(loc='upper left',prop={'size':9})
 			axa.set_xlabel("Iteration")
 			axa.set_ylabel("Regret")
@@ -186,6 +190,6 @@ class RewardManager():
 			plt.show()
 
 		finalRegret = {}
-		for alg_name in algorithms.iterkeys():
-			finalRegret[alg_name] = BatchCumlateRegret[alg_name][:-1]
+		for alg_id in algorithms.iterkeys():
+			finalRegret[alg_id] = BatchCumlateRegret[alg_id][:-1]
 		return finalRegret
