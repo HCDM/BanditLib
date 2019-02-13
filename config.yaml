@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 250 # (int) Number of iterations to testing and refine model upon
+  testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -56,7 +56,7 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    LinUCB:
+    - algorithm: LinUCB
       alpha: 0.3
       lambda_: 0.1
       parameters:
@@ -64,7 +64,7 @@ alg:
         CoTheta: False
         W: False
         V: False
-    PrivateLinUCB:
+    - algorithm: PrivateLinUCB
       alpha: 0.3
       lambda_: 0.1
       delta: 1.5

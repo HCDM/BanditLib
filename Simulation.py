@@ -60,12 +60,13 @@ def generate_algorithms(global_dict, alg_dict, W, system_params):
 	gen = alg_dict['general'] if alg_dict.has_key('general') and alg_dict['general'] else {}
 	algorithms = {}
 	diffLists = DiffManager()
-	for i in alg_dict['specific']:
+	for alg in alg_dict['specific']:
+		i = alg['algorithm']
 		print str(i)
 		try:
-			tmpDict = globals()['create' + i + 'Dict'](global_dict, alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+			tmpDict = globals()['create' + i + 'Dict'](global_dict, alg if alg else {}, gen, W, system_params)
 		except KeyError:
-			tmpDict = createBaseAlgDict(global_dict, alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
+			tmpDict = createBaseAlgDict(global_dict, alg if alg else {}, gen, W, system_params)
 		try:
 			algorithms[i] = globals()[i + 'Algorithm'](tmpDict)
 		except KeyError:
