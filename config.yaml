@@ -58,6 +58,7 @@ alg:
   specific:
     - algorithm: LinUCB
       alpha: 0.3
+      id: Lin
       lambda_: 0.1
       parameters:
         Theta: True
@@ -66,16 +67,30 @@ alg:
         V: False
     - algorithm: PrivateLinUCB
       alpha: 0.3
-      lambda_: 0.1
       delta: 1.5
       eps: 75
+      id: pLin - gaussian
+      lambda_: 0.1
       noise_type: gaussian
-      protect_context: True
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
+      protect_context: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 1.5
+      eps: 75
+      id: pLin - laplacian
+      lambda_: 0.1
+      noise_type: laplacian
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      protect_context: True
     # CoLinUCB:
     #   alpha: 0.3
     #   lambda_: 0.1

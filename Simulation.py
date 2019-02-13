@@ -61,17 +61,18 @@ def generate_algorithms(global_dict, alg_dict, W, system_params):
 	algorithms = {}
 	diffLists = DiffManager()
 	for alg in alg_dict['specific']:
-		i = alg['algorithm']
-		print str(i)
+		alg_name = alg['algorithm']
+		alg_id = alg['id']
+		print str(alg_name)
 		try:
-			tmpDict = globals()['create' + i + 'Dict'](global_dict, alg if alg else {}, gen, W, system_params)
+			tmpDict = globals()['create' + alg_name + 'Dict'](global_dict, alg if alg else {}, gen, W, system_params)
 		except KeyError:
 			tmpDict = createBaseAlgDict(global_dict, alg if alg else {}, gen, W, system_params)
 		try:
-			algorithms[i] = globals()[i + 'Algorithm'](tmpDict)
+			algorithms[alg_id] = globals()[alg_name + 'Algorithm'](tmpDict)
 		except KeyError:
-			raise NotImplementedError(i + " not currently implemented")
-		diffLists.add_algorithm(i, algorithms[i].getEstimateSettings())
+			raise NotImplementedError(alg_name + " not currently implemented")
+		diffLists.add_algorithm(alg_id, algorithms[alg_id].getEstimateSettings())
 	print algorithms
 	return algorithms, diffLists
 
