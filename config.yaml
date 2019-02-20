@@ -91,15 +91,16 @@ alg:
         W: False
         V: False
       protect_context: True
-    # CoLinUCB:
-    #   alpha: 0.3
-    #   lambda_: 0.1
-    #   use_alpha_t: False # Use a theoretical alpha_t value
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: False
+    - algorithm: CoLinUCB
+      alpha: 0.3
+      lambda_: 0.1
+      id: CoLin
+      use_alpha_t: False # Use a theoretical alpha_t value
+      parameters:
+        Theta: False
+        CoTheta: True
+        W: False
+        V: False
     # GOBLin:
     #   alpha: 0.3
     #   lambda_: 0.1

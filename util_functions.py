@@ -32,7 +32,7 @@ def createSpecificAlgDict(global_settings, specific, general, W, system_params, 
 	print final_dict
 	return final_dict
 
-def createDict(global_settings, specific, general, W, system_params):
+def createLinUCBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'alpha': 0.3,
 		'lambda_': 0.1,
@@ -51,7 +51,7 @@ def createPrivateLinUCBDict(global_settings, specific, general, W, system_params
 	}
 	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
-def createCoDict(global_settings, specific, general, W, system_params):
+def createCoLinUCBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
 		'W': W,
 		'alpha': 0.3,
