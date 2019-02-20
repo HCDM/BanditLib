@@ -94,11 +94,11 @@ class PrivateLinUCBUserStruct:
         return N
 
     def update_user_theta(self, N):
-        self.V = (self.M + N)[:self.d, :self.d]
+        self.u = (self.M + N)[:self.d, -1]
         if self.protect_context:  # NIPS
-            self.u = (self.M + N)[:self.d, -1]
+            self.V = (self.M + N)[:self.d, :self.d]
         else:  # ICML
-            self.u = self.M[:self.d, -1]
+            self.V = self.M[:self.d, :self.d]
         self.Vinv = np.linalg.inv(self.V)
         self.UserTheta = np.dot(self.Vinv, self.u)
 

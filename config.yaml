@@ -65,7 +65,6 @@ alg:
         CoTheta: False
         W: False
         V: False
-<<<<<<< Updated upstream
     - algorithm: PrivateLinUCB
       alpha: 0.3
       delta: 1.5
@@ -101,17 +100,6 @@ alg:
     #     CoTheta: True
     #     W: False
     #     V: False
-=======
-    CoLinUCB:
-      alpha: 0.3
-      lambda_: 0.1
-      use_alpha_t: False # Use a theoretical alpha_t value
-      parameters:
-        Theta: False
-        CoTheta: True
-        W: False
-        V: False
->>>>>>> Stashed changes
     # GOBLin:
     #   alpha: 0.3
     #   lambda_: 0.1
