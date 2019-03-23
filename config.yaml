@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
+  testing_iterations: 1000 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -67,11 +67,12 @@ alg:
         V: False
     - algorithm: PrivateLinUCB
       alpha: 0.3
-      delta: 1.5
-      eps: 75
-      id: pLin - gaussian
+      delta: 0.5
+      eps: 10
+      id: pLin - laplacian - every
       lambda_: 0.1
-      noise_type: gaussian
+      noise_type: laplacian
+      noise_method: every
       parameters:
         Theta: True
         CoTheta: False
@@ -80,27 +81,68 @@ alg:
       protect_context: True
     - algorithm: PrivateLinUCB
       alpha: 0.3
-      delta: 1.5
-      eps: 75
-      id: pLin - laplacian
+      delta: 0.5
+      eps: 10
+      id: pLin - laplacian - once
       lambda_: 0.1
       noise_type: laplacian
+      noise_method: once
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
       protect_context: True
-    - algorithm: CoLinUCB
+    - algorithm: PrivateLinUCB
       alpha: 0.3
+      delta: 0.5
+      eps: 10
+      id: pLin - laplacian - sqrt
       lambda_: 0.1
-      id: CoLin
-      use_alpha_t: False # Use a theoretical alpha_t value
+      noise_type: laplacian
+      noise_method: sqrt
       parameters:
-        Theta: False
-        CoTheta: True
+        Theta: True
+        CoTheta: False
         W: False
         V: False
+      protect_context: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 10
+      id: pLin - laplacian - tree
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      protect_context: True
+    # - algorithm: CoLinUCB
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   id: CoLin
+    #   use_alpha_t: False # Use a theoretical alpha_t value
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: False
+    # - algorithm: PrivateCoLinUCB
+    #   alpha: 0.3
+    #   delta: 1.5
+    #   eps: 50
+    #   lambda_: 0.1
+    #   id: pCoLin
+    #   use_alpha_t: False # Use a theoretical alpha_t value
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: False
     # GOBLin:
     #   alpha: 0.3
     #   lambda_: 0.1

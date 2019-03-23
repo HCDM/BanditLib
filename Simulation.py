@@ -27,6 +27,7 @@ from lib.PrivateLinUCB import PrivateLinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm
 from lib.factorUCB import FactorUCBAlgorithm
 from lib.CoLin import CoLinUCBAlgorithm
+from lib.PrivateCoLin import PrivateCoLinUCBAlgorithm
 from lib.GOBLin import GOBLinAlgorithm
 from lib.CLUB import *
 from lib.PTS import PTSAlgorithm

@@ -47,12 +47,30 @@ def createFairUCBDict(global_settings, specific, general, W, system_params):
 
 def createPrivateLinUCBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
-		'T': global_settings['testing_iterations'] if global_settings.has_key('testing_iterations') else 100
+		'T': global_settings['testing_iterations'] if global_settings.has_key('testing_iterations') else 100,
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'parameters': {
+			'Theta': True,
+		}
 	}
 	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
 
 def createCoLinUCBDict(global_settings, specific, general, W, system_params):
 	base_dict = {
+		'W': W,
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'use_alpha_t': False,
+		'parameters': {
+			'CoTheta': True,
+		}
+	}
+	return createSpecificAlgDict(global_settings, specific, general, W, system_params, base_dict)
+
+def createPrivateCoLinUCBDict(global_settings, specific, general, W, system_params):
+	base_dict = {
+		'T': global_settings['testing_iterations'] if global_settings.has_key('testing_iterations') else 100,
 		'W': W,
 		'alpha': 0.3,
 		'lambda_': 0.1,

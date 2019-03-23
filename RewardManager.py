@@ -31,7 +31,8 @@ class RewardManager():
 		# 	self.reward = LinearReward(self.k)
 	
 	def batchRecord(self, iter_):
-		print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
+		if iter_ % 25 == 0:
+			print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
 
 	def regulateArticlePool(self):
 		# Randomly generate articles
