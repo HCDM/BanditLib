@@ -16,8 +16,52 @@ class PrivateLinUCBNoiseGenerator:
         self.alpha = alpha
         self.d = context_dimension
 
-    def generate_laplace_noise(self, denominator):
+    def laplacian(self, denominator):
+        """Generate a matrix with noise sampled from a laplacian.
+
+        The scale of the laplacian noise is 1 divided by the provided denominator.
+        The size of the matrix is (context dimension + 1, context dimension + 1).
+
+        Args:
+            denominator (float): defines scale of noise as 1 / denominator
+
+        Returns:
+            A numpy matrix of noise smapled from the computed laplacian distribution
+
+        """
         return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
+
+    def gaussian(self, shifted=True):
+        """Generate a symmetric matrix with noise sampled from a gaussian.
+
+        The variance of the gaussian distributed is calculated based on the setting
+        variables - epsilon, delta, alpha, and T. The size of the matrix is
+        (context dimension + 1, context dimension + 1). If shifted, then the matrix
+        will maintain its positive semi-definiteness throughout the algorithm.
+
+        Args:
+            shifted (bool): if should maintain positive semi-definiteness of matrix
+
+        Returns:
+            A numpy matrix of noise sampled from the computed gaussian distribution
+        """
+        max_feature_vector_L2 = 1  # an assumed constant
+        max_reward_L1 = 1  # an assumed constant
+        L_tilde = np.sqrt(max_feature_vector_L2**2 + max_reward_L1**2)
+
+        m = int(np.ceil(np.log2(self.T))) + 1  # max number of p sums
+        variance = 16 * m * L_tilde**4 * \
+            np.log(4 / self.delta)**2 / self.eps**2
+        Z = np.random.normal(scale=np.sqrt(variance),
+                             size=(self.d + 1, self.d + 1))
+        sym_Z = (Z + Z.T) / np.sqrt(2)
+        if not shifted:
+            return sym_Z
+
+        upsilon = np.sqrt(
+            2 * m * variance) * (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
+        shifted_Z = sym_Z + 2 * upsilon * np.identity(self.d + 1)
+        return shifted_Z
 
 
 class NoisePartialSum:
@@ -49,7 +93,8 @@ class PrivateLinUCBUserStruct:
         self.noise_type = noise_type.lower()
         self.noise_method = noise_method.lower()
         self.noise = {}
-        self.noise_generator = PrivateLinUCBNoiseGenerator(self.eps, self.delta, self.T, self.alpha, self.d)
+        self.noise_generator = PrivateLinUCBNoiseGenerator(
+            self.eps, self.delta, self.T, self.alpha, self.d)
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -67,22 +112,9 @@ class PrivateLinUCBUserStruct:
         """
         noise = np.zeros(shape=(self.d + 1, self.d + 1))
         if noise_type == 'gaussian':
-            m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
-            # below constants are assumed, but noise added to reward might be problematic
-            max_feature_vector_l2_norm = 1
-            max_reward_l1_norm = 1
-            L_tilde = np.sqrt(max_feature_vector_l2_norm **
-                              2 + max_reward_l1_norm**2)
-            variance = 16 * m * L_tilde**4 * \
-                np.log(4 / self.delta)**2 / self.eps**2
-            Z = np.random.normal(scale=np.sqrt(variance),
-                                 size=(self.d + 1, self.d + 1))
-            upsilon = np.sqrt(
-                2 * m * variance) * (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
-            noise = (Z + Z.T) / np.sqrt(2) + 2 * \
-                upsilon * np.identity(self.d + 1)
+            noise = self.noise_generator.gaussian(shifted=True)
         elif noise_type == 'laplacian':
-            noise = self.noise_generator.generate_laplace_noise(self.eps / np.log(self.T))
+            noise = self.noise_generator.laplacian(self.eps / np.log(self.T))
         elif noise_type == 'wishart':
             m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
             # below constants are assumed, but noise added to reward might be problematic
@@ -118,7 +150,7 @@ class PrivateLinUCBUserStruct:
         if block_start in self.noise:
             for _t in range(block_start, time + 1):
                 del self.noise[_t]
-            block_noise = self.noise_generator.generate_laplace_noise(self.eps)
+            block_noise = self.noise_generator.laplacian(self.eps)
             if block_start == self.START_TIME:
                 self.noise[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, block_size, block_noise)
@@ -150,15 +182,15 @@ class PrivateLinUCBUserStruct:
         """
         if self.noise_method == 'once':
             if len(self.noise) == 0:
-                noise = self.noise_generator.generate_laplace_noise(self.eps / self.T)
+                noise = self.noise_generator.laplacian(self.eps / self.T)
                 self.noise[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, self.T, noise)
         elif self.noise_method == 'every':
-            noise = self.noise_generator.generate_laplace_noise(self.eps)
+            noise = self.noise_generator.laplacian(self.eps)
             self.noise[self.time] = NoisePartialSum(self.time, 1, noise)
             self.consolidate_partials_sums_every(self.time)
         elif self.noise_method == 'sqrt':
-            noise = self.noise_generator.generate_laplace_noise(self.eps / 2)
+            noise = self.noise_generator.laplacian(self.eps / 2)
             self.noise[self.time] = NoisePartialSum(self.time, 1, noise)
             self.consolidate_partial_sums_sqrt(
                 self.time, block_size=int(np.sqrt(self.T)))
