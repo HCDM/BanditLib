@@ -1,7 +1,5 @@
 from __future__ import division  # enforce float division with `/`
 import numpy as np
-from util_functions import vectorize
-from Recommendation import Recommendation
 from BaseAlg import BaseAlg
 from scipy.stats import wishart
 """Paper: Differentially Private Contextual Bandits
