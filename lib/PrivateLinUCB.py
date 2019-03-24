@@ -15,6 +15,8 @@ class PrivateLinUCBNoiseGenerator:
         self.T = T
         self.alpha = alpha
         self.d = context_dimension
+        self.max_feature_vector_L2 = 1  # an assumed constant
+        self.max_reward_L1 = 1  # an assumed constant
 
     def laplacian(self, denominator):
         """Generate a matrix with noise sampled from a laplacian.
@@ -34,7 +36,7 @@ class PrivateLinUCBNoiseGenerator:
     def gaussian(self, shifted=True):
         """Generate a symmetric matrix with noise sampled from a gaussian.
 
-        The variance of the gaussian distributed is calculated based on the setting
+        The variance of the gaussian distribution is calculated based on the setting
         variables - epsilon, delta, alpha, and T. The size of the matrix is
         (context dimension + 1, context dimension + 1). If shifted, then the matrix
         will maintain its positive semi-definiteness throughout the algorithm.
@@ -45,9 +47,8 @@ class PrivateLinUCBNoiseGenerator:
         Returns:
             A numpy matrix of noise sampled from the computed gaussian distribution
         """
-        max_feature_vector_L2 = 1  # an assumed constant
-        max_reward_L1 = 1  # an assumed constant
-        L_tilde = np.sqrt(max_feature_vector_L2**2 + max_reward_L1**2)
+        L_tilde = np.sqrt(self.max_feature_vector_L2**2 +
+                          self.max_reward_L1**2)
 
         m = int(np.ceil(np.log2(self.T))) + 1  # max number of p sums
         variance = 16 * m * L_tilde**4 * \
@@ -58,10 +59,41 @@ class PrivateLinUCBNoiseGenerator:
         if not shifted:
             return sym_Z
 
-        upsilon = np.sqrt(
-            2 * m * variance) * (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
+        upsilon = np.sqrt(2 * m * variance) * \
+            (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
         shifted_Z = sym_Z + 2 * upsilon * np.identity(self.d + 1)
         return shifted_Z
+
+    def wishart(self, shifted=True):
+        """Generate a matrix with noise sampled from a wishart distribution.
+
+        The degrees of freedom and scale of the wishart distribution is calculated based on the setting
+        variables - epsilon, delta, alpha, and T. The size of the matrix is (context dimension + 1,
+        context dimension + 1). If shifted, then the matrix will be shifted down by a computed factor.
+
+        Args:
+            shifted (bool): if noise matrix should be shifted down
+
+        Returns:
+            A numpy matrix of noise sampled from the computed wishart distribution
+        """
+        m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
+        L_tilde = np.sqrt(self.max_feature_vector_l2**2 +
+                          self.max_reward_l1**2)
+        df = int(self.d + 1 +
+                 np.ceil(224 * m * self.eps**-2 * np.log(8 * m / self.delta) * np.log(2 / self.delta)))
+        scale = L_tilde * np.identity(self.d + 1)
+        noise = wishart.rvs(df, scale)
+        if not shifted:
+            return noise
+
+        sqrt_m_df = np.sqrt(m * df)
+        sqrt_d = np.sqrt(self.d)
+        sqrt_2_ln8T_a = np.sqrt(2 * np.log2(8 * self.T / self.alpha))
+        shift_factor = L_tilde**2 * (sqrt_m_df - sqrt_d - sqrt_2_ln8T_a)**2 - \
+            4 * L_tilde**2 * sqrt_m_df * (sqrt_d + sqrt_2_ln8T_a)
+        shifted_noise = noise - shift_factor * np.identity(self.d + 1)
+        return shifted_noise
 
 
 class NoisePartialSum:
@@ -116,16 +148,7 @@ class PrivateLinUCBUserStruct:
         elif noise_type == 'laplacian':
             noise = self.noise_generator.laplacian(self.eps / np.log(self.T))
         elif noise_type == 'wishart':
-            m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
-            # below constants are assumed, but noise added to reward might be problematic
-            max_feature_vector_l2_norm = 1
-            max_reward_l1_norm = 1
-            L_tilde = np.sqrt(max_feature_vector_l2_norm **
-                              2 + max_reward_l1_norm**2)
-            df = int(self.d + 1 + np.ceil(224 * m * self.eps**-2 *
-                                          np.log(8 * m / self.delta) * np.log(2 / self.delta)))
-            scale = L_tilde * np.identity(self.d + 1)
-            noise = wishart.rvs(df, scale)
+            noise = self.noise_generator.wishart(shifted=True)
         else:
             raise NotImplementedError()
         return noise
