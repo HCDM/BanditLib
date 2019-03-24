@@ -1,3 +1,4 @@
+from __future__ import division  # enforce float division with `/`
 import numpy as np
 from util_functions import vectorize
 from Recommendation import Recommendation
@@ -7,14 +8,26 @@ from scipy.stats import wishart
 """
 
 
-class PartialSum:
+class PrivateLinUCBNoiseGenerator:
+    def __init__(self, eps, delta, T, alpha, context_dimension):
+        self.eps = eps
+        self.delta = delta
+        self.T = T
+        self.alpha = alpha
+        self.d = context_dimension
+
+    def generate_laplace_noise(self, denominator):
+        return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
+
+
+class NoisePartialSum:
     def __init__(self, start, size, noise):
         self.start = start
         self.size = size
         self.noise = noise
 
     def __str__(self):
-        return 'PartialSum(start=%i, size=%i)' % (self.start, self.size)
+        return 'NoisePartialSum(start=%i, size=%i)' % (self.start, self.size)
 
 
 class PrivateLinUCBUserStruct:
@@ -36,6 +49,7 @@ class PrivateLinUCBUserStruct:
         self.noise_type = noise_type.lower()
         self.noise_method = noise_method.lower()
         self.noise = {}
+        self.noise_generator = PrivateLinUCBNoiseGenerator(self.eps, self.delta, self.T, self.alpha, self.d)
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -68,7 +82,7 @@ class PrivateLinUCBUserStruct:
             noise = (Z + Z.T) / np.sqrt(2) + 2 * \
                 upsilon * np.identity(self.d + 1)
         elif noise_type == 'laplacian':
-            noise = self.generate_laplace_noise(self.eps / np.log(self.T))
+            noise = self.noise_generator.generate_laplace_noise(self.eps / np.log(self.T))
         elif noise_type == 'wishart':
             m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
             # below constants are assumed, but noise added to reward might be problematic
@@ -84,14 +98,11 @@ class PrivateLinUCBUserStruct:
             raise NotImplementedError()
         return noise
 
-    def generate_laplace_noise(self, denominator):
-        return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
-
     def consolidate_partials_sums_every(self, time):
         """Collapse all partial sums into one."""
         cur_psum = self.noise[time]
         accumulated_psum = self.noise[self.START_TIME]
-        self.noise[self.START_TIME] = PartialSum(
+        self.noise[self.START_TIME] = NoisePartialSum(
             1, time, cur_psum.noise + accumulated_psum.noise)
         if time != self.START_TIME:
             del self.noise[time]
@@ -107,12 +118,12 @@ class PrivateLinUCBUserStruct:
         if block_start in self.noise:
             for _t in range(block_start, time + 1):
                 del self.noise[_t]
-            block_noise = self.generate_laplace_noise(self.eps)
+            block_noise = self.noise_generator.generate_laplace_noise(self.eps)
             if block_start == self.START_TIME:
-                self.noise[self.START_TIME] = PartialSum(
+                self.noise[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, block_size, block_noise)
             else:
-                self.noise[self.START_TIME] = PartialSum(
+                self.noise[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, self.noise[self.START_TIME].size + block_size, self.noise[self.START_TIME].noise + block_noise)
 
     def consolidate_partial_sums_tree(self, time):
@@ -120,7 +131,7 @@ class PrivateLinUCBUserStruct:
         prev_p_sum_time = self.noise[time].start - self.noise[time].size
         if prev_p_sum_time in self.noise:
             if self.noise[time].size == self.noise[prev_p_sum_time].size:
-                self.noise[prev_p_sum_time] = PartialSum(
+                self.noise[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, self.noise[time].size * 2, self.generate_noise(self.noise_type))
                 del self.noise[time]
                 self.consolidate_partial_sums_tree(prev_p_sum_time)
@@ -139,20 +150,20 @@ class PrivateLinUCBUserStruct:
         """
         if self.noise_method == 'once':
             if len(self.noise) == 0:
-                noise = self.generate_laplace_noise(self.eps / self.T)
-                self.noise[self.START_TIME] = PartialSum(
+                noise = self.noise_generator.generate_laplace_noise(self.eps / self.T)
+                self.noise[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, self.T, noise)
         elif self.noise_method == 'every':
-            noise = self.generate_laplace_noise(self.eps)
-            self.noise[self.time] = PartialSum(self.time, 1, noise)
+            noise = self.noise_generator.generate_laplace_noise(self.eps)
+            self.noise[self.time] = NoisePartialSum(self.time, 1, noise)
             self.consolidate_partials_sums_every(self.time)
         elif self.noise_method == 'sqrt':
-            noise = self.generate_laplace_noise(self.eps / 2)
-            self.noise[self.time] = PartialSum(self.time, 1, noise)
+            noise = self.noise_generator.generate_laplace_noise(self.eps / 2)
+            self.noise[self.time] = NoisePartialSum(self.time, 1, noise)
             self.consolidate_partial_sums_sqrt(
                 self.time, block_size=int(np.sqrt(self.T)))
         elif self.noise_method == 'tree':
-            self.noise[self.time] = PartialSum(
+            self.noise[self.time] = NoisePartialSum(
                 self.time, 1, self.generate_noise(self.noise_type))
             self.consolidate_partial_sums_tree(self.time)
         else:
