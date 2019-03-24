@@ -78,8 +78,8 @@ class PrivateLinUCBNoiseGenerator:
             A numpy matrix of noise sampled from the computed wishart distribution
         """
         m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
-        L_tilde = np.sqrt(self.max_feature_vector_l2**2 +
-                          self.max_reward_l1**2)
+        L_tilde = np.sqrt(self.max_feature_vector_L2**2 +
+                          self.max_reward_L1**2)
         df = int(self.d + 1 +
                  np.ceil(224 * m * self.eps**-2 * np.log(8 * m / self.delta) * np.log(2 / self.delta)))
         scale = L_tilde * np.identity(self.d + 1)
@@ -145,10 +145,14 @@ class PrivateLinUCBUserStruct:
         noise = np.zeros(shape=(self.d + 1, self.d + 1))
         if noise_type == 'gaussian':
             noise = self.noise_generator.gaussian(shifted=True)
+        elif noise_type == 'unshifted gaussian':
+            noise = self.noise_generator.gaussian(shifted=False)
         elif noise_type == 'laplacian':
             noise = self.noise_generator.laplacian(self.eps / np.log(self.T))
         elif noise_type == 'wishart':
             noise = self.noise_generator.wishart(shifted=True)
+        elif noise_type == 'unshifted wishart':
+            noise = self.noise_generator.wishart(shifted=False)
         else:
             raise NotImplementedError()
         return noise
