@@ -282,9 +282,9 @@ class PrivateLinUCBUserStruct:
     def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, release_method, init="zero"):
         self.d = featureDimension
         self.M = lambda_ * np.identity(self.d + 1)
-        self.V = self.M[:self.d, :self.d]
-        self.u = self.M[:self.d, -1]
-        self.Vinv = np.linalg.inv(self.V)
+        self.A = self.M[:self.d, :self.d]
+        self.b = self.M[:self.d, -1]
+        self.Ainv = np.linalg.inv(self.A)
 
         self.alpha = hyperparameters['alpha']
         self.T = hyperparameters['T']
@@ -303,17 +303,16 @@ class PrivateLinUCBUserStruct:
             self.UserTheta = np.random.rand(self.d)
         else:
             self.UserTheta = np.zeros(self.d)
-        self.START_TIME = 1
-        self.time = self.START_TIME
+        self.time = 1
 
     def update_user_theta(self, N):
-        self.u = (self.M + N)[:self.d, -1]
+        self.b = (self.M + N)[:self.d, -1]
         if self.protect_context:  # NIPS
-            self.V = (self.M + N)[:self.d, :self.d]
+            self.A = (self.M + N)[:self.d, :self.d]
         else:  # ICML
-            self.V = self.M[:self.d, :self.d]
-        self.Vinv = np.linalg.inv(self.V)
-        self.UserTheta = np.dot(self.Vinv, self.u)
+            self.A = self.M[:self.d, :self.d]
+        self.Ainv = np.linalg.inv(self.A)
+        self.UserTheta = np.dot(self.Ainv, self.b)
 
     def updateParameters(self, articlePicked_FeatureVector, click):
         self.noise_store.add_noise(self.time)
@@ -329,14 +328,14 @@ class PrivateLinUCBUserStruct:
             alpha = alpha = 0.1 * np.sqrt(np.log(self.time + 1))
         mean = np.dot(self.UserTheta, article_FeatureVector)
         var = np.sqrt(np.dot(np.dot(article_FeatureVector,
-                                    self.Vinv),  article_FeatureVector))
+                                    self.Ainv),  article_FeatureVector))
         pta = mean + alpha * var
         return pta
 
     def getProb_plot(self, alpha, article_FeatureVector):
         mean = np.dot(self.UserTheta,  article_FeatureVector)
         var = np.sqrt(np.dot(np.dot(article_FeatureVector,
-                                    self.Vinv),  article_FeatureVector))
+                                    self.Ainv),  article_FeatureVector))
         pta = mean + alpha * var
         return pta, mean, alpha * var
 
