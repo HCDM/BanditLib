@@ -96,6 +96,37 @@ class PrivateLinUCBNoiseGenerator:
         return shifted_noise
 
 
+    def generate_noise(self, noise_type):
+        """Generate one noise matrix N.
+
+        If noise_type is "gaussian", then generate a shifted, symmetric, gaussian noise matrix.
+        If noise_type is "unshifted gaussian", then generate a symmetric, gaussian noise matrix.
+        If noise_type is "laplacian", then generate a Laplacian(log(T)/eps) noise matrix.
+        If noise_type is "wishart", then generate a shifted, wishart noise matrix.
+        If noise_type is "unshifted wishart", then generate a wishart noise matrix.
+        If noise_type is anything else, raise an error.
+
+        Args:
+            noise_type (str): defines the type of noise matrix
+
+        Returns:
+            A numpy array with noise sampled from the specified distribution
+        """
+        noise = np.zeros(shape=(self.d + 1, self.d + 1))
+        if noise_type == 'gaussian':
+            noise = self.gaussian(shifted=True)
+        elif noise_type == 'unshifted gaussian':
+            noise = self.gaussian(shifted=False)
+        elif noise_type == 'laplacian':
+            noise = self.laplacian(self.eps / np.log(self.T))
+        elif noise_type == 'wishart':
+            noise = self.wishart(shifted=True)
+        elif noise_type == 'unshifted wishart':
+            noise = self.wishart(shifted=False)
+        else:
+            raise NotImplementedError()
+        return noise
+
 class NoisePartialSum:
     def __init__(self, start, size, noise):
         self.start = start
@@ -135,28 +166,6 @@ class PrivateLinUCBUserStruct:
         self.START_TIME = 1
         self.time = self.START_TIME
 
-    def generate_noise(self, noise_type):
-        """Generate one noise matrix N.
-
-        If noise_type is gaussian, then generate a shifted, symmetric, gaussian noise matrix.
-        If noise_type is laplacian, then generate a Laplacian(log(T)/eps) noise matrix.
-        If noise_type is wishart, then generate an unshifted wishart noise matrix.
-        """
-        noise = np.zeros(shape=(self.d + 1, self.d + 1))
-        if noise_type == 'gaussian':
-            noise = self.noise_generator.gaussian(shifted=True)
-        elif noise_type == 'unshifted gaussian':
-            noise = self.noise_generator.gaussian(shifted=False)
-        elif noise_type == 'laplacian':
-            noise = self.noise_generator.laplacian(self.eps / np.log(self.T))
-        elif noise_type == 'wishart':
-            noise = self.noise_generator.wishart(shifted=True)
-        elif noise_type == 'unshifted wishart':
-            noise = self.noise_generator.wishart(shifted=False)
-        else:
-            raise NotImplementedError()
-        return noise
-
     def consolidate_partials_sums_every(self, time):
         """Collapse all partial sums into one."""
         cur_psum = self.noise[time]
@@ -191,7 +200,7 @@ class PrivateLinUCBUserStruct:
         if prev_p_sum_time in self.noise:
             if self.noise[time].size == self.noise[prev_p_sum_time].size:
                 self.noise[prev_p_sum_time] = NoisePartialSum(
-                    prev_p_sum_time, self.noise[time].size * 2, self.generate_noise(self.noise_type))
+                    prev_p_sum_time, self.noise[time].size * 2, self.noise_generator.generate_noise(self.noise_type))
                 del self.noise[time]
                 self.consolidate_partial_sums_tree(prev_p_sum_time)
 
@@ -223,7 +232,7 @@ class PrivateLinUCBUserStruct:
                 self.time, block_size=int(np.sqrt(self.T)))
         elif self.noise_method == 'tree':
             self.noise[self.time] = NoisePartialSum(
-                self.time, 1, self.generate_noise(self.noise_type))
+                self.time, 1, self.noise_generator.generate_noise(self.noise_type))
             self.consolidate_partial_sums_tree(self.time)
         else:
             raise NotImplementedError()
