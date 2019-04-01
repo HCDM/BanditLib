@@ -23,6 +23,9 @@ class NoisePartialSumStore:
         self.store = {}
         self.START_TIME = 1
 
+    def is_power_of_two(self, val):
+        return ((val & (val - 1)) == 0) and val > 0
+
     def consolidate_for_once(self, time):
         """Delete all partial sums except at start.
 
@@ -97,7 +100,8 @@ class NoisePartialSumStore:
                 new_size = self.store[time].size * 2
                 eps = self.noise_generator.eps
                 delta = self.noise_generator.delta
-                new_noise = self.noise_generator.generate_noise_tree(eps, delta)
+                T = self.noise_generator.T
+                new_noise = self.noise_generator.generate_noise_tree(eps, delta, T)
                 self.store[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, new_size, new_noise)
                 del self.store[time]
@@ -111,7 +115,26 @@ class NoisePartialSumStore:
         Args:
             time (int): time of newly added partial sum
         """
-        pass
+        if self.is_power_of_two(time) and time > self.START_TIME:
+            new_size = time
+            new_noise = self.store[self.START_TIME].noise + self.store[time].noise
+            self.store = {
+                self.START_TIME: NoisePartialSum(self.START_TIME, new_size, new_noise)
+            }
+        else:
+            prev_p_sum_time = self.store[time].start - self.store[time].size
+            if prev_p_sum_time in self.store:
+                if self.store[time].size == self.store[prev_p_sum_time].size:
+                    new_size = self.store[time].size * 2
+                    eps = self.noise_generator.eps
+                    delta = self.noise_generator.delta
+                    T = 2**int(np.log2(time))
+                    new_noise = self.noise_generator.generate_noise_tree(eps, delta, T)
+                    self.store[prev_p_sum_time] = NoisePartialSum(
+                        prev_p_sum_time, new_size, new_noise)
+                    del self.store[time]
+                    self.consolidate_for_hybrid(prev_p_sum_time)
+
 
     def consolidate_store(self, time):
         if self.release_method == 'once':
@@ -138,9 +161,13 @@ class NoisePartialSumStore:
         elif self.release_method == 'sqrt':
             noise = self.noise_generator.laplacian(eps / 2)
         elif self.release_method == 'tree':
-            noise = self.noise_generator.generate_noise_tree(eps, delta)
+            noise = self.noise_generator.generate_noise_tree(eps, delta, T)
         elif self.release_method == 'hybrid':
-            noise = self.noise_generator.generate_noise_tree(eps, delta)
+            if self.is_power_of_two(time):
+                noise = self.noise_generator.laplacian(2 * eps)
+            else:
+                time_horizon = 2**int(np.log2(time))
+                noise = self.noise_generator.laplacian((eps / 2) / np.log2(time_horizon))
         self.store[time] = NoisePartialSum(start=time, size=1, noise=noise)
         self.consolidate_store(time)
 

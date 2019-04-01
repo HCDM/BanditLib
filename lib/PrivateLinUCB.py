@@ -38,7 +38,7 @@ class PrivateLinUCBNoiseGenerator:
         """
         return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
 
-    def laplacian_tree(self, eps):
+    def laplacian_tree(self, eps, T):
         """Generate a matrix with noise sampled from a laplacian for tree-based algorithm.
 
         The scale of the laplacian noise is log2(T) / epsilon. The size of the matrix is
@@ -48,9 +48,9 @@ class PrivateLinUCBNoiseGenerator:
             A numpy matrix of noise sampled from the computed laplacian distribution
 
         """
-        return self.laplacian(eps / np.log2(self.T))
+        return self.laplacian(eps / np.log2(T))
 
-    def gaussian_tree(self, eps, delta, shifted=True):
+    def gaussian_tree(self, eps, delta, T, shifted=True):
         """Generate a symmetric matrix with noise sampled from a gaussian for tree-based algorithm.
 
         The variance of the gaussian distribution is calculated based on the setting
@@ -67,7 +67,7 @@ class PrivateLinUCBNoiseGenerator:
         L_tilde = np.sqrt(self.max_feature_vector_L2**2 +
                           self.max_reward_L1**2)
 
-        m = int(np.ceil(np.log2(self.T))) + 1  # max number of p sums
+        m = int(np.ceil(np.log2(T))) + 1  # max number of p sums
         variance = 16 * m * L_tilde**4 * \
             np.log(4 / delta)**2 / eps**2
         Z = np.random.normal(scale=np.sqrt(variance),
@@ -77,11 +77,11 @@ class PrivateLinUCBNoiseGenerator:
             return sym_Z
 
         upsilon = np.sqrt(2 * m * variance) * \
-            (4 * np.sqrt(self.d) + 2 * np.log(2 * self.T / self.alpha))
+            (4 * np.sqrt(self.d) + 2 * np.log(2 * T / self.alpha))
         shifted_Z = sym_Z + 2 * upsilon * np.identity(self.d + 1)
         return shifted_Z
 
-    def wishart_tree(self, eps, delta, shifted=True):
+    def wishart_tree(self, eps, delta, T, shifted=True):
         """Generate a matrix with noise sampled from a wishart distribution for tree-based algorithm.
 
         The degrees of freedom and scale of the wishart distribution is calculated based on the setting
@@ -94,7 +94,7 @@ class PrivateLinUCBNoiseGenerator:
         Returns:
             A numpy matrix of noise sampled from the computed wishart distribution
         """
-        m = int(np.ceil(np.log2(self.T))) + 1  # max_number_of_p_sums
+        m = int(np.ceil(np.log2(T))) + 1  # max_number_of_p_sums
         L_tilde = np.sqrt(self.max_feature_vector_L2**2 +
                           self.max_reward_L1**2)
         df = int(self.d + 1 +
@@ -106,13 +106,13 @@ class PrivateLinUCBNoiseGenerator:
 
         sqrt_m_df = np.sqrt(m * df)
         sqrt_d = np.sqrt(self.d)
-        sqrt_2_ln8T_a = np.sqrt(2 * np.log2(8 * self.T / self.alpha))
+        sqrt_2_ln8T_a = np.sqrt(2 * np.log2(8 * T / self.alpha))
         shift_factor = L_tilde**2 * (sqrt_m_df - sqrt_d - sqrt_2_ln8T_a)**2 - \
             4 * L_tilde**2 * sqrt_m_df * (sqrt_d + sqrt_2_ln8T_a)
         shifted_noise = noise - shift_factor * np.identity(self.d + 1)
         return shifted_noise
 
-    def generate_noise_tree(self, eps, delta = 0):
+    def generate_noise_tree(self, eps, delta, T):
         """Generate one noise matrix N.
 
         If noise_type is "gaussian", then generate a shifted, symmetric, gaussian noise matrix.
@@ -131,15 +131,15 @@ class PrivateLinUCBNoiseGenerator:
         """
         noise = np.zeros(shape=(self.d + 1, self.d + 1))
         if self.noise_type == 'gaussian':
-            noise = self.gaussian_tree(eps, delta, shifted=True)
+            noise = self.gaussian_tree(eps, delta, T, shifted=True)
         elif self.noise_type == 'unshifted gaussian':
-            noise = self.gaussian_tree(eps, delta, shifted=False)
+            noise = self.gaussian_tree(eps, delta, T, shifted=False)
         elif self.noise_type == 'laplacian':
-            noise = self.laplacian_tree(eps)
+            noise = self.laplacian_tree(eps, T)
         elif self.noise_type == 'wishart':
-            noise = self.wishart_tree(eps, delta, shifted=True)
+            noise = self.wishart_tree(eps, delta, T, shifted=True)
         elif self.noise_type == 'unshifted wishart':
-            noise = self.wishart_tree(eps, delta, shifted=False)
+            noise = self.wishart_tree(eps, delta, T, shifted=False)
         else:
             raise NotImplementedError()
         return noise
