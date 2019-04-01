@@ -16,7 +16,7 @@ class NoisePartialSumStore:
     def __init__(self, noise_generator, release_method='tree'):
         if release_method != 'tree' and noise_generator.noise_type != 'laplacian':
             raise NotImplementedError
-        if release_method not in ['tree', 'every', 'once', 'sqrt']:
+        if release_method not in ['tree', 'every', 'once', 'sqrt', 'hybrid']:
             raise NotImplementedError
         self.noise_generator = noise_generator
         self.release_method = release_method
@@ -95,11 +95,23 @@ class NoisePartialSumStore:
         if prev_p_sum_time in self.store:
             if self.store[time].size == self.store[prev_p_sum_time].size:
                 new_size = self.store[time].size * 2
-                new_noise = self.noise_generator.generate_noise_tree()
+                eps = self.noise_generator.eps
+                delta = self.noise_generator.delta
+                new_noise = self.noise_generator.generate_noise_tree(eps, delta)
                 self.store[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, new_size, new_noise)
                 del self.store[time]
                 self.consolidate_for_tree(prev_p_sum_time)
+
+    def consolidate_for_hybrid(self, time):
+        """Collapse all partial sums into one "power of two"-sized block with a tree.
+
+        This is used for the 'hybrid' release method.
+
+        Args:
+            time (int): time of newly added partial sum
+        """
+        pass
 
     def consolidate_store(self, time):
         if self.release_method == 'once':
@@ -110,10 +122,13 @@ class NoisePartialSumStore:
             self.consolidate_for_sqrt(time)
         elif self.release_method == 'tree':
             self.consolidate_for_tree(time)
+        elif self.release_method == 'hybrid':
+            self.consolidate_for_hybrid(time)
 
     def add_noise(self, time):
         T = self.noise_generator.T
         eps = self.noise_generator.eps
+        delta = self.noise_generator.delta
         noise = self.noise_generator.zeros()
         if self.release_method == 'once':
             if len(self.store) == 0:
@@ -123,7 +138,9 @@ class NoisePartialSumStore:
         elif self.release_method == 'sqrt':
             noise = self.noise_generator.laplacian(eps / 2)
         elif self.release_method == 'tree':
-            noise = self.noise_generator.generate_noise_tree()
+            noise = self.noise_generator.generate_noise_tree(eps, delta)
+        elif self.release_method == 'hybrid':
+            noise = self.noise_generator.generate_noise_tree(eps, delta)
         self.store[time] = NoisePartialSum(start=time, size=1, noise=noise)
         self.consolidate_store(time)
 

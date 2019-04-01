@@ -38,7 +38,7 @@ class PrivateLinUCBNoiseGenerator:
         """
         return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
 
-    def laplacian_tree(self):
+    def laplacian_tree(self, eps):
         """Generate a matrix with noise sampled from a laplacian for tree-based algorithm.
 
         The scale of the laplacian noise is log2(T) / epsilon. The size of the matrix is
@@ -48,9 +48,9 @@ class PrivateLinUCBNoiseGenerator:
             A numpy matrix of noise sampled from the computed laplacian distribution
 
         """
-        return self.laplacian(self.eps / np.log2(self.T))
+        return self.laplacian(eps / np.log2(self.T))
 
-    def gaussian_tree(self, shifted=True):
+    def gaussian_tree(self, eps, delta, shifted=True):
         """Generate a symmetric matrix with noise sampled from a gaussian for tree-based algorithm.
 
         The variance of the gaussian distribution is calculated based on the setting
@@ -69,7 +69,7 @@ class PrivateLinUCBNoiseGenerator:
 
         m = int(np.ceil(np.log2(self.T))) + 1  # max number of p sums
         variance = 16 * m * L_tilde**4 * \
-            np.log(4 / self.delta)**2 / self.eps**2
+            np.log(4 / delta)**2 / eps**2
         Z = np.random.normal(scale=np.sqrt(variance),
                              size=(self.d + 1, self.d + 1))
         sym_Z = (Z + Z.T) / np.sqrt(2)
@@ -81,7 +81,7 @@ class PrivateLinUCBNoiseGenerator:
         shifted_Z = sym_Z + 2 * upsilon * np.identity(self.d + 1)
         return shifted_Z
 
-    def wishart_tree(self, shifted=True):
+    def wishart_tree(self, eps, delta, shifted=True):
         """Generate a matrix with noise sampled from a wishart distribution for tree-based algorithm.
 
         The degrees of freedom and scale of the wishart distribution is calculated based on the setting
@@ -98,7 +98,7 @@ class PrivateLinUCBNoiseGenerator:
         L_tilde = np.sqrt(self.max_feature_vector_L2**2 +
                           self.max_reward_L1**2)
         df = int(self.d + 1 +
-                 np.ceil(224 * m * self.eps**-2 * np.log(8 * m / self.delta) * np.log(2 / self.delta)))
+                 np.ceil(224 * m * eps**-2 * np.log(8 * m / delta) * np.log(2 / delta)))
         scale = L_tilde * np.identity(self.d + 1)
         noise = wishart.rvs(df, scale)
         if not shifted:
@@ -112,7 +112,7 @@ class PrivateLinUCBNoiseGenerator:
         shifted_noise = noise - shift_factor * np.identity(self.d + 1)
         return shifted_noise
 
-    def generate_noise_tree(self):
+    def generate_noise_tree(self, eps, delta = 0):
         """Generate one noise matrix N.
 
         If noise_type is "gaussian", then generate a shifted, symmetric, gaussian noise matrix.
@@ -123,22 +123,23 @@ class PrivateLinUCBNoiseGenerator:
         If noise_type is anything else, raise an error.
 
         Args:
-            noise_type (str): defines the type of noise matrix
+            eps (float): defining level of differential privacy
+            delta (float): defining level of differential privacy
 
         Returns:
             A numpy array with noise sampled from the specified distribution
         """
         noise = np.zeros(shape=(self.d + 1, self.d + 1))
         if self.noise_type == 'gaussian':
-            noise = self.gaussian_tree(shifted=True)
+            noise = self.gaussian_tree(eps, delta, shifted=True)
         elif self.noise_type == 'unshifted gaussian':
-            noise = self.gaussian_tree(shifted=False)
+            noise = self.gaussian_tree(eps, delta, shifted=False)
         elif self.noise_type == 'laplacian':
-            noise = self.laplacian_tree()
+            noise = self.laplacian_tree(eps)
         elif self.noise_type == 'wishart':
-            noise = self.wishart_tree(shifted=True)
+            noise = self.wishart_tree(eps, delta, shifted=True)
         elif self.noise_type == 'unshifted wishart':
-            noise = self.wishart_tree(shifted=False)
+            noise = self.wishart_tree(eps, delta, shifted=False)
         else:
             raise NotImplementedError()
         return noise

@@ -121,6 +121,20 @@ alg:
         W: False
         V: False
       protect_context: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 10
+      id: pLin - laplacian - hybrid
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: hybrid
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      protect_context: True
     # - algorithm: CoLinUCB
     #   alpha: 0.3
     #   lambda_: 0.1
