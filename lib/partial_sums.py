@@ -75,7 +75,7 @@ class NoisePartialSumStore:
         if block_start in self.store:
             for _t in range(block_start, time + 1):
                 del self.store[_t]
-            block_noise = self.noise_generator.laplacian(eps)
+            block_noise = self.noise_generator.laplacian(2*eps)
             if block_start == self.START_TIME:
                 self.store[self.START_TIME] = NoisePartialSum(
                     self.START_TIME, block_size, block_noise)
@@ -117,7 +117,7 @@ class NoisePartialSumStore:
         """
         if self.is_power_of_two(time) and time > self.START_TIME:
             new_size = time
-            new_noise = self.store[self.START_TIME].noise + self.store[time].noise
+            new_noise = self.store[self.START_TIME].noise + self.store[time].noise # should be 1 /eps
             self.store = {
                 self.START_TIME: NoisePartialSum(self.START_TIME, new_size, new_noise)
             }
@@ -159,16 +159,20 @@ class NoisePartialSumStore:
         elif self.release_method == 'every':
             noise = self.noise_generator.laplacian(eps)
         elif self.release_method == 'sqrt':
-            noise = self.noise_generator.laplacian(eps / 2)
+            noise = self.noise_generator.laplacian(eps)
         elif self.release_method == 'tree':
             noise = self.noise_generator.generate_noise_tree(eps, delta, T)
         elif self.release_method == 'hybrid':
             if self.is_power_of_two(time):
-                noise = self.noise_generator.laplacian(2 * eps)
+                noise = self.noise_generator.laplacian(eps / 2)
             else:
                 time_horizon = 2**int(np.log2(time))
                 noise = self.noise_generator.laplacian((eps / 2) / np.log2(time_horizon))
         self.store[time] = NoisePartialSum(start=time, size=1, noise=noise)
+        self.consolidate_store(time)
+
+    def add_noise_custom(self, N, time):
+        self.store[time] = NoisePartialSum(start=time, size=1, noise=N)
         self.consolidate_store(time)
 
     def release_noise(self):

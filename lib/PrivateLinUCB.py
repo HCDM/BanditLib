@@ -9,13 +9,14 @@ from .partial_sums import NoisePartialSumStore
 
 
 class PrivateLinUCBNoiseGenerator:
-    def __init__(self, eps, delta, T, alpha, context_dimension, noise_type):
+    def __init__(self, eps, delta, T, alpha, context_dimension, noise_type, is_theta_level):
         self.eps = eps
         self.delta = delta
         self.T = T
         self.alpha = alpha
         self.d = context_dimension
         self.noise_type = noise_type
+        self.is_theta_level = is_theta_level
         self.max_feature_vector_L2 = 1  # an assumed constant
         self.max_reward_L1 = 1  # an assumed constant
 
@@ -130,7 +131,9 @@ class PrivateLinUCBNoiseGenerator:
             A numpy array with noise sampled from the specified distribution
         """
         noise = np.zeros(shape=(self.d + 1, self.d + 1))
-        if self.noise_type == 'gaussian':
+        if self.is_theta_level:
+            noise = self.laplacian()
+        elif self.noise_type == 'gaussian':
             noise = self.gaussian_tree(eps, delta, T, shifted=True)
         elif self.noise_type == 'unshifted gaussian':
             noise = self.gaussian_tree(eps, delta, T, shifted=False)
@@ -146,7 +149,7 @@ class PrivateLinUCBNoiseGenerator:
 
 
 class PrivateLinUCBUserStruct:
-    def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, release_method, init="zero"):
+    def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, release_method, is_theta_level, init="zero"):
         self.d = featureDimension
         self.M = lambda_ * np.identity(self.d + 1)
         self.A = self.M[:self.d, :self.d]
@@ -159,35 +162,46 @@ class PrivateLinUCBUserStruct:
         self.delta = hyperparameters['delta']
 
         self.protect_context = protect_context
+        self.is_theta_level = is_theta_level
 
         noise_type = noise_type.lower()
         release_method = release_method.lower()
-        noise_generator = PrivateLinUCBNoiseGenerator(
-            self.eps, self.delta, self.T, self.alpha, self.d, noise_type)
-        self.noise_store = NoisePartialSumStore(noise_generator, release_method)
+        noise_dim = self.d - 1 if self.is_theta_level else self.d
+        self.noise_generator = PrivateLinUCBNoiseGenerator(
+            self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
+        self.noise_store = NoisePartialSumStore(self.noise_generator, release_method)
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
         else:
             self.UserTheta = np.zeros(self.d)
+        self.UserThetaNoise = np.zeros(self.d)
         self.time = 1
 
-    def update_user_theta(self, N):
-        self.b = (self.M + N)[:self.d, -1]
-        if self.protect_context:  # NIPS
-            self.A = (self.M + N)[:self.d, :self.d]
-        else:  # ICML
+    def update_user_theta(self):
+        if self.is_theta_level:
+            N = self.noise_generator.laplacian(np.sqrt(self.time) * self.eps / self.T)
+            self.UserThetaNoise = N[0]
+            self.b = self.M[:self.d, -1]
             self.A = self.M[:self.d, :self.d]
-        self.Ainv = np.linalg.inv(self.A)
-        self.UserTheta = np.dot(self.Ainv, self.b)
+            self.Ainv = np.linalg.inv(self.A)
+            self.UserTheta = np.dot(self.Ainv, self.b) + self.UserThetaNoise
+        else:
+            self.noise_store.add_noise(self.time)
+            N = self.noise_store.release_noise()
+            self.b = (self.M + N)[:self.d, -1]
+            if self.protect_context:  # NIPS
+                self.A = (self.M + N)[:self.d, :self.d]
+            else:  # ICML
+                self.A = self.M[:self.d, :self.d]
+            self.Ainv = np.linalg.inv(self.A)
+            self.UserTheta = np.dot(self.Ainv, self.b)
 
     def updateParameters(self, articlePicked_FeatureVector, click):
-        self.noise_store.add_noise(self.time)
-        N = self.noise_store.release_noise()
         action_and_reward_vector = np.append(
             articlePicked_FeatureVector, click)
         self.M += np.outer(action_and_reward_vector, action_and_reward_vector)
-        self.update_user_theta(N)
+        self.update_user_theta()
         self.time += 1
 
     def getProb(self, alpha, article_FeatureVector):
@@ -200,7 +214,7 @@ class PrivateLinUCBUserStruct:
         return pta
 
     def getProb_plot(self, alpha, article_FeatureVector):
-        mean = np.dot(self.UserTheta,  article_FeatureVector)
+        mean = np.dot(self.UserTheta, article_FeatureVector)
         var = np.sqrt(np.dot(np.dot(article_FeatureVector,
                                     self.Ainv),  article_FeatureVector))
         pta = mean + alpha * var
@@ -229,9 +243,10 @@ class PrivateLinUCBAlgorithm(BaseAlg):
                 arg_dict['dimension'],
                 arg_dict['lambda_'],
                 hyperparameters,
-                arg_dict['protect_context'],
+                arg_dict.get('protect_context', None),
                 arg_dict['noise_type'],
                 arg_dict['noise_method'],
+                arg_dict.get('is_theta_level', None),
                 init))
 
     def decide(self, pool_articles, userID, k=1):
