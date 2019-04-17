@@ -13,13 +13,14 @@ class NoisePartialSum:
 
 
 class NoisePartialSumStore:
-    def __init__(self, noise_generator, release_method='tree'):
+    def __init__(self, noise_generator, release_method='tree', is_theta_level=False):
         if release_method != 'tree' and noise_generator.noise_type != 'laplacian':
             raise NotImplementedError
         if release_method not in ['tree', 'every', 'once', 'sqrt', 'hybrid']:
             raise NotImplementedError
         self.noise_generator = noise_generator
         self.release_method = release_method
+        self.is_theta_level = is_theta_level
         self.store = {}
         self.START_TIME = 1
 

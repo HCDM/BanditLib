@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 1000 #(int) Number of iterations to testing and refine model upon
+  testing_iterations: 1500 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -68,7 +68,7 @@ alg:
     - algorithm: PrivateLinUCB
       alpha: 0.3
       delta: 0.5
-      eps: 10
+      eps: 990
       id: pLin - laplacian - once - theta
       lambda_: 0.1
       noise_type: laplacian
@@ -82,7 +82,7 @@ alg:
     # - algorithm: PrivateLinUCB
     #   alpha: 0.3
     #   delta: 0.5
-    #   eps: 10
+    #   eps: 990
     #   id: pLin - laplacian - every
     #   lambda_: 0.1
     #   noise_type: laplacian
@@ -96,7 +96,7 @@ alg:
     - algorithm: PrivateLinUCB
       alpha: 0.3
       delta: 0.5
-      eps: 10
+      eps: 990
       id: pLin - laplacian - once
       lambda_: 0.1
       noise_type: laplacian
@@ -110,7 +110,7 @@ alg:
     # - algorithm: PrivateLinUCB
     #   alpha: 0.3
     #   delta: 0.5
-    #   eps: 10
+    #   eps: 990
     #   id: pLin - laplacian - sqrt
     #   lambda_: 0.1
     #   noise_type: laplacian
@@ -124,7 +124,7 @@ alg:
     # - algorithm: PrivateLinUCB
     #   alpha: 0.3
     #   delta: 0.5
-    #   eps: 10
+    #   eps: 990
     #   id: pLin - laplacian - tree
     #   lambda_: 0.1
     #   noise_type: laplacian
@@ -138,7 +138,7 @@ alg:
     # - algorithm: PrivateLinUCB
     #   alpha: 0.3
     #   delta: 0.5
-    #   eps: 10
+    #   eps: 990
     #   id: pLin - laplacian - hybrid
     #   lambda_: 0.1
     #   noise_type: laplacian

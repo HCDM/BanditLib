@@ -185,7 +185,7 @@ class PrivateLinUCBUserStruct:
             self.b = self.M[:self.d, -1]
             self.A = self.M[:self.d, :self.d]
             self.Ainv = np.linalg.inv(self.A)
-            self.UserTheta = np.dot(self.Ainv, self.b) + self.UserThetaNoise
+            self.UserTheta = np.dot(self.Ainv, self.b)
         else:
             self.noise_store.add_noise(self.time)
             N = self.noise_store.release_noise()
@@ -207,24 +207,24 @@ class PrivateLinUCBUserStruct:
     def getProb(self, alpha, article_FeatureVector):
         if alpha == -1:
             alpha = alpha = 0.1 * np.sqrt(np.log(self.time + 1))
-        mean = np.dot(self.UserTheta, article_FeatureVector)
+        mean = np.dot(self.UserTheta + self.UserThetaNoise, article_FeatureVector)
         var = np.sqrt(np.dot(np.dot(article_FeatureVector,
                                     self.Ainv),  article_FeatureVector))
         pta = mean + alpha * var
         return pta
 
     def getProb_plot(self, alpha, article_FeatureVector):
-        mean = np.dot(self.UserTheta, article_FeatureVector)
+        mean = np.dot(self.UserTheta + self.UserThetaNoise, article_FeatureVector)
         var = np.sqrt(np.dot(np.dot(article_FeatureVector,
                                     self.Ainv),  article_FeatureVector))
         pta = mean + alpha * var
         return pta, mean, alpha * var
 
     def getTheta(self):
-        return self.UserTheta
+        return self.UserTheta + self.UserThetaNoise
 
-    def getA(self):
-        return self.A
+    # def getA(self):
+    #     return self.A
 
 
 class PrivateLinUCBAlgorithm(BaseAlg):
@@ -257,9 +257,8 @@ class PrivateLinUCBAlgorithm(BaseAlg):
         article_features = np.empty([len(pool_articles), len(
             pool_articles[0].contextFeatureVector[:self.dimension])])
         for i in range(len(pool_articles)):
-            article_features[i,
-                             :] = pool_articles[i].contextFeatureVector[:self.dimension]
-        user_features = self.users[userID].UserTheta
+            article_features[i, :] = pool_articles[i].contextFeatureVector[:self.dimension]
+        user_features = self.users[userID].getTheta()
         mean_matrix = np.dot(article_features, user_features)
 
         # VARIANCE
@@ -289,10 +288,10 @@ class PrivateLinUCBAlgorithm(BaseAlg):
 
     ##### SHOULD THIS BE CALLED GET COTHETA #####
     def getCoTheta(self, userID):
-        return self.users[userID].UserTheta
+        return self.users[userID].getTheta()
 
     def getTheta(self, userID):
-        return self.users[userID].UserTheta
+        return self.users[userID].getTheta()
 
     # def getW(self, userID):
     # 	return np.identity(n = len(self.users))
