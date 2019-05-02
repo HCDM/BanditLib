@@ -3,7 +3,7 @@ import numpy as np
 from BaseAlg import BaseAlg
 from scipy.stats import wishart
 
-from .partial_sums import NoisePartialSumStore
+from .partial_sums import *
 """Paper: Differentially Private Contextual Bandits
 """
 
@@ -169,7 +169,13 @@ class PrivateLinUCBUserStruct:
         noise_dim = self.d - 1 if self.is_theta_level else self.d
         self.noise_generator = PrivateLinUCBNoiseGenerator(
             self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
-        self.noise_store = NoisePartialSumStore(self.noise_generator, release_method)
+        # self.noise_store = NoisePartialSumStore(self.noise_generator, release_method)
+        if release_method == 'once':
+            self.noise_store = OncePartialSumStore()
+        elif release_method == 'every':
+            self.noise_store = EveryPartialSumStore()
+        else:
+            raise NotImplementedError
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -187,8 +193,9 @@ class PrivateLinUCBUserStruct:
             self.Ainv = np.linalg.inv(self.A)
             self.UserTheta = np.dot(self.Ainv, self.b)
         else:
-            self.noise_store.add_noise(self.time)
-            N = self.noise_store.release_noise()
+            tmp_noise = self.noise_generator.laplacian(self.eps)
+            self.noise_store.add(self.time, tmp_noise)
+            N = self.noise_store.release()
             self.b = (self.M + N)[:self.d, -1]
             if self.protect_context:  # NIPS
                 self.A = (self.M + N)[:self.d, :self.d]

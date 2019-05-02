@@ -182,3 +182,65 @@ class NoisePartialSumStore:
         for p_sum in self.store.values():
             N += p_sum.noise
         return N
+
+
+class _NoisePartialSumStore:
+    def __init__(self):
+        self.store = {}
+        self.START = 1
+
+    def add(self, time, noise):
+        self.store[time] = NoisePartialSum(start=time, size=1, noise=noise)
+
+    def consolidate(self):
+        pass
+
+    def release(self):
+        if len(self.store) == 0:
+            return np.zeros(shape=(1, 1))
+        
+        noise_shape = self.store.values()[0].noise.shape
+        total_noise = np.zeros(shape=noise_shape)
+        for psum in self.store.values():
+            total_noise += psum.noise
+        return total_noise
+
+class OncePartialSumStore(_NoisePartialSumStore):
+    def __init(self):
+        super(OncePartialSumStore, self).__init__()
+    
+    def consolidate(self):
+        """Delete all partial sums except at start.
+
+        This is used for the 'once' release method. The first noise added
+        will be of a magnitude great enough to protect privacy throughout
+        the rest of the algorithm.
+        """
+        if self.START in self.store:
+            self.store = {
+                self.START: self.store[self.START]
+            }
+        else:
+            self.store = {}
+
+class EveryPartialSumStore(_NoisePartialSumStore):
+    def __init(self):
+        super(EveryPartialSumStore, self).__init__()
+    
+    def consolidate(self):
+        """Collapse all partial sums into one partial sum.
+
+        This is used for the 'every' release method. Each new partial sum
+        will have a small amount of noise that will accumulate in a bigger
+        and bigger partial sum.
+        """
+        if len(self.store) == 0:
+            return
+        
+        noise_shape = self.store.values()[0].noise.shape
+        total_noise = np.zeros(shape=noise_shape)
+        for psum in self.store.values():
+            total_noise += psum.noise
+        self.store = {
+            self.START: NoisePartialSum(start=self.START, size=1, noise=total_noise)
+        }
