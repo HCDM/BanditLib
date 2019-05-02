@@ -180,11 +180,13 @@ class PrivateLinUCBUserStruct:
         self.is_theta_level = is_theta_level
 
         noise_type = noise_type.lower()
+        if noise_type != 'laplacian':
+            raise NotImplementedError  # more refactoring needs to be done
         self.release_method = release_method.lower()
         noise_dim = self.d - 1 if self.is_theta_level else self.d
         self.noise_generator = PrivateLinUCBNoiseGenerator(
             self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
-        # self.noise_store = NoisePartialSumStore(self.noise_generator, release_method)
+
         if self.release_method == 'once':
             self.noise_store = OncePartialSumStore()
         elif self.release_method == 'every':
@@ -201,39 +203,31 @@ class PrivateLinUCBUserStruct:
         self.UserThetaNoise = np.zeros(self.d)
         self.time = 1
 
+    def update_noise_store(self):
+        if self.release_method == 'once':
+            noise = self.noise_generator.laplacian(self.eps / self.T, sens=self.time)
+            self.noise_store.add(self.noise_store.START, noise)
+        elif self.release_method == 'every':
+            noise = self.noise_generator.laplacian(self.eps, sens=self.time)
+            self.noise_store.add(self.time, noise)
+        elif self.release_method == 'tree':
+            noise = self.noise_generator.laplacian(self.eps / np.log2(self.T), sens=self.time)
+            self.noise_store.add(self.time, noise)
+        else:
+            raise NotImplementedError
+        self.noise_store.consolidate(noise_generator=self.noise_generator)
+
     def update_user_theta(self):
+        self.update_noise_store()
+        N = self.noise_store.release()
+
         if self.is_theta_level:
-            if self.release_method == 'once':
-                noise = self.noise_generator.laplacian(self.eps / self.T, sens=self.time)
-                self.noise_store.add(self.noise_store.START, noise)
-            elif self.release_method == 'every':
-                noise = self.noise_generator.laplacian(self.eps, sens=self.time)
-                self.noise_store.add(self.time, noise)
-            elif self.release_method == 'tree':
-                noise = self.noise_generator.laplacian(self.eps / np.log2(self.T), sens=self.time)
-                self.noise_store.add(self.time, noise)
-            else:
-                raise NotImplementedError
-            self.noise_store.consolidate(noise_generator=self.noise_generator)
-            N = self.noise_store.release()
             self.UserThetaNoise = N[0]
             self.b = self.M[:self.d, -1]
             self.A = self.M[:self.d, :self.d]
             self.Ainv = np.linalg.inv(self.A)
             self.UserTheta = np.dot(self.Ainv, self.b)
         else:
-            if self.release_method == 'once':
-                if self.time == self.noise_store.START:
-                    noise = self.noise_generator.laplacian(self.eps / self.T)
-                    self.noise_store.add(self.time, noise)
-            elif self.release_method == 'every':
-                noise = self.noise_generator.laplacian(self.eps)
-                self.noise_store.add(self.time, noise)
-            elif self.release_method == 'tree':
-                noise = self.noise_generator.generate_noise_tree(self.eps, self.delta, self.T)
-                self.noise_store.add(self.time, noise)
-            else:
-                raise NotImplementedError
             self.noise_store.consolidate(noise_generator=self.noise_generator)
             N = self.noise_store.release()
             self.b = (self.M + N)[:self.d, -1]
