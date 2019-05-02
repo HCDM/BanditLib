@@ -24,7 +24,7 @@ class PrivateLinUCBNoiseGenerator:
         """Generate a matrix of zeros."""
         return np.zeros(shape=(self.d + 1, self.d + 1))
 
-    def laplacian(self, denominator):
+    def laplacian(self, denominator, sens = 1):
         """Generate a matrix with noise sampled from a laplacian.
 
         The scale of the laplacian noise is 1 divided by the provided denominator.
@@ -32,12 +32,13 @@ class PrivateLinUCBNoiseGenerator:
 
         Args:
             denominator (float): defines scale of noise as 1 / denominator
+            sens (float): sensitivity
 
         Returns:
             A numpy matrix of noise sampled from the computed laplacian distribution
 
         """
-        return np.random.laplace(scale=1 / denominator, size=(self.d + 1, self.d + 1))
+        return np.random.laplace(scale=1 / (denominator * sens), size=(self.d + 1, self.d + 1))
 
     def laplacian_tree(self, eps, T):
         """Generate a matrix with noise sampled from a laplacian for tree-based algorithm.
@@ -148,6 +149,17 @@ class PrivateLinUCBNoiseGenerator:
         return noise
 
 
+"""
+# noise types
+
+1/eps
+T/eps
+logT/eps
+1/2eps
+1/eps sqrt(j)
+
+"""
+
 class PrivateLinUCBUserStruct:
     def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, release_method, is_theta_level, init="zero"):
         self.d = featureDimension
@@ -165,14 +177,14 @@ class PrivateLinUCBUserStruct:
         self.is_theta_level = is_theta_level
 
         noise_type = noise_type.lower()
-        release_method = release_method.lower()
+        self.release_method = release_method.lower()
         noise_dim = self.d - 1 if self.is_theta_level else self.d
         self.noise_generator = PrivateLinUCBNoiseGenerator(
             self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
         # self.noise_store = NoisePartialSumStore(self.noise_generator, release_method)
-        if release_method == 'once':
+        if self.release_method == 'once':
             self.noise_store = OncePartialSumStore()
-        elif release_method == 'every':
+        elif self.release_method == 'every':
             self.noise_store = EveryPartialSumStore()
         else:
             raise NotImplementedError
@@ -186,15 +198,32 @@ class PrivateLinUCBUserStruct:
 
     def update_user_theta(self):
         if self.is_theta_level:
-            N = self.noise_generator.laplacian(np.sqrt(self.time) * self.eps / self.T)
+            if self.release_method == 'once':
+                noise = self.noise_generator.laplacian(self.time * self.eps / self.T)
+                self.noise_store.add(self.noise_store.START, noise)
+            elif self.release_method == 'every':
+                noise = self.noise_generator.laplacian(self.time * self.eps)
+                self.noise_store.add(self.time, noise)
+            else:
+                raise NotImplementedError
+            self.noise_store.consolidate()
+            N = self.noise_store.release()
             self.UserThetaNoise = N[0]
             self.b = self.M[:self.d, -1]
             self.A = self.M[:self.d, :self.d]
             self.Ainv = np.linalg.inv(self.A)
             self.UserTheta = np.dot(self.Ainv, self.b)
         else:
-            tmp_noise = self.noise_generator.laplacian(self.eps)
-            self.noise_store.add(self.time, tmp_noise)
+            if self.release_method == 'once':
+                if self.time == self.noise_store.START:
+                    noise = self.noise_generator.laplacian(self.eps / self.T)
+                    self.noise_store.add(self.time, noise)
+            elif self.release_method == 'every':
+                noise = self.noise_generator.laplacian(self.eps)
+                self.noise_store.add(self.time, noise)
+            else:
+                raise NotImplementedError
+            self.noise_store.consolidate()
             N = self.noise_store.release()
             self.b = (self.M + N)[:self.d, -1]
             if self.protect_context:  # NIPS
