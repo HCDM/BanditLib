@@ -211,7 +211,7 @@ class OncePartialSumStore(_NoisePartialSumStore):
     def __init__(self, noise_generator=None):
         super(OncePartialSumStore, self).__init__(noise_generator)
     
-    def consolidate(self, noise_generator=None):
+    def consolidate(self):
         """Delete all partial sums except at start.
 
         This is used for the 'once' release method. The first noise added
@@ -229,7 +229,7 @@ class EveryPartialSumStore(_NoisePartialSumStore):
     def __init__(self, noise_generator=None):
         super(EveryPartialSumStore, self).__init__(noise_generator)
     
-    def consolidate(self, noise_generator=None):
+    def consolidate(self):
         """Collapse all partial sums into one partial sum.
 
         This is used for the 'every' release method. Each new partial sum
@@ -247,11 +247,69 @@ class EveryPartialSumStore(_NoisePartialSumStore):
             self.START: NoisePartialSum(start=self.START, size=1, noise=total_noise)
         }
 
+class TwoLevelPartialSumStore(_NoisePartialSumStore):
+    def __init__(self, noise_generator, block_size):
+        super(TwoLevelPartialSumStore, self).__init__(noise_generator)
+        self.block_size = block_size
+        self.block_level_store = None
+        self.single_level_store = None
+        self.new_psum = None
+    
+    def add(self, time, noise):
+        self.new_psum = NoisePartialSum(start=time, size=1, noise=noise)
+        self.consolidate()
+
+    def consolidate(self):
+        """Collapse all block partial sums into one partial sum.
+
+        This is used for the 'two-level' release method. Theoretically, we compute partial sums
+        of either a block's size or of a single item. If there are enough single items to
+        create a block, consolidate them into one block. To achieve O(1) storage, we
+        consolidate all block-level partial sums as well.
+        """
+        # Consolidate new psum into size-1 psum store
+        if self.single_level_store:
+            start = self.single_level_store.start
+            size = self.single_level_store.size + 1
+            noise = self.single_level_store.noise + self.new_psum.noise
+        else:
+            start = self.new_psum.start
+            size = self.new_psum.size
+            noise = self.new_psum.noise
+        self.single_level_store = NoisePartialSum(start=start, size=size, noise=noise)
+        self.new_psum = None
+
+        # Consolidate size-1 psum store into block-level psum store
+        if self.single_level_store.size >= self.block_size:
+            new_noise_sens = self.single_level_store.start + self.single_level_store.size - 1
+            new_noise = self.noise_generator.laplacian(2 * self.noise_generator.eps, sens=new_noise_sens)
+            if self.block_level_store:
+                start = self.block_level_store.start
+                size = self.block_level_store.size + self.single_level_store.size
+                noise = self.block_level_store.noise + new_noise
+            else:
+                start = self.START
+                size = self.single_level_store.size
+                noise = new_noise
+            self.block_level_store = NoisePartialSum(start=start, size=size, noise=noise)
+            self.single_level_store = None
+
+    def release(self):
+        if self.block_level_store and self.single_level_store:
+            return self.block_level_store.noise + self.single_level_store.noise
+        elif self.block_level_store:
+            return self.block_level_store.noise
+        elif self.single_level_store:
+            return self.single_level_store.noise
+        else:
+            raise RuntimeError('Single or block noise store must exist')
+
+
 class TreePartialSumStore(_NoisePartialSumStore):
     def __init__(self, noise_generator=None):
         super(TreePartialSumStore, self).__init__(noise_generator)
     
-    def consolidate(self, noise_generator=None):        
+    def consolidate(self):        
         """Collapse all partial sums into "power of two"-sized blocks.
 
         This is used for the 'tree' release method. Instead of fixed-sized blocks like
@@ -260,19 +318,19 @@ class TreePartialSumStore(_NoisePartialSumStore):
         partial sums until there are no more.
         """
         max_psum_start = max([psum.start for psum in self.store.values()])
-        self._consolidate_helper(max_psum_start, noise_generator)
+        self._consolidate_helper(max_psum_start)
 
-    def _consolidate_helper(self, time, noise_generator):
+    def _consolidate_helper(self, time):
         prev_p_sum_time = self.store[time].start - self.store[time].size
         if prev_p_sum_time in self.store:
             if self.store[time].size == self.store[prev_p_sum_time].size:
                 new_size = self.store[time].size * 2
-                eps = noise_generator.eps  # this doesn't make sense
-                delta = noise_generator.delta  # that these hyperparams
-                T = noise_generator.T  # are in noise generator
-                right_time_bound = self.store[prev_p_sum_time].start + new_size
-                new_noise = noise_generator.laplacian(eps / np.log2(T), sens=right_time_bound)  # yet are decoupled
+                eps = self.noise_generator.eps  # this doesn't make sense
+                delta = self.noise_generator.delta  # that these hyperparams
+                T = self.noise_generator.T  # are in noise generator
+                right_time_bound = self.store[prev_p_sum_time].start + new_size - 1
+                new_noise = self.noise_generator.laplacian(eps / np.log2(T), sens=right_time_bound)  # yet are decoupled
                 self.store[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, new_size, new_noise)
                 del self.store[time]
-                self._consolidate_helper(prev_p_sum_time, noise_generator)
+                self._consolidate_helper(prev_p_sum_time)

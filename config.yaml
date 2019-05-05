@@ -68,87 +68,59 @@ alg:
     - algorithm: PrivateLinUCB
       alpha: 0.3
       delta: 0.5
-      eps: 990
-      id: pLin - laplacian - once - theta
+      eps: 100
+      id: pLin - laplacian - tree - theta
       lambda_: 0.1
       noise_type: laplacian
-      noise_method: once
+      noise_method: tree
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
       is_theta_level: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 990
-    #   id: pLin - laplacian - every
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: every
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
     - algorithm: PrivateLinUCB
       alpha: 0.3
       delta: 0.5
-      eps: 990
-      id: pLin - laplacian - once
+      eps: 100
+      id: pLin - laplacian - tree
       lambda_: 0.1
       noise_type: laplacian
-      noise_method: once
+      noise_method: tree
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
       protect_context: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 990
-    #   id: pLin - laplacian - sqrt
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: sqrt
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 990
-    #   id: pLin - laplacian - tree
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: tree
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 990
-    #   id: pLin - laplacian - hybrid
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: hybrid
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 100
+      id: pLin - laplacian - sqrt - theta
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: sqrt
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      is_theta_level: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 100
+      id: pLin - laplacian - sqrt
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: sqrt
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      protect_context: True
     # GOBLin:
     #   alpha: 0.3
     #   lambda_: 0.1
