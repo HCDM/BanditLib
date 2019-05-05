@@ -188,11 +188,11 @@ class PrivateLinUCBUserStruct:
             self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
 
         if self.release_method == 'once':
-            self.noise_store = OncePartialSumStore()
+            self.noise_store = OncePartialSumStore(noise_generator=self.noise_generator)
         elif self.release_method == 'every':
-            self.noise_store = EveryPartialSumStore()
+            self.noise_store = EveryPartialSumStore(noise_generator=self.noise_generator)
         elif self.release_method == 'tree':
-            self.noise_store = TreePartialSumStore()
+            self.noise_store = TreePartialSumStore(noise_generator=self.noise_generator)
         else:
             raise NotImplementedError
 
@@ -215,7 +215,6 @@ class PrivateLinUCBUserStruct:
             self.noise_store.add(self.time, noise)
         else:
             raise NotImplementedError
-        self.noise_store.consolidate(noise_generator=self.noise_generator)
 
     def update_user_theta(self):
         self.update_noise_store()
@@ -228,7 +227,6 @@ class PrivateLinUCBUserStruct:
             self.Ainv = np.linalg.inv(self.A)
             self.UserTheta = np.dot(self.Ainv, self.b)
         else:
-            self.noise_store.consolidate(noise_generator=self.noise_generator)
             N = self.noise_store.release()
             self.b = (self.M + N)[:self.d, -1]
             if self.protect_context:  # NIPS

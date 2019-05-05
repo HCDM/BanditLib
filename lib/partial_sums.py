@@ -185,14 +185,16 @@ class NoisePartialSumStore:
 
 
 class _NoisePartialSumStore(object):
-    def __init__(self):
+    def __init__(self, noise_generator=None):
         self.store = {}
         self.START = 1
+        self.noise_generator = noise_generator
 
     def add(self, time, noise):
         self.store[time] = NoisePartialSum(start=time, size=1, noise=noise)
+        self.consolidate()
 
-    def consolidate(self, noise_generator=None):
+    def consolidate(self):
         pass
 
     def release(self):
@@ -206,8 +208,8 @@ class _NoisePartialSumStore(object):
         return total_noise
 
 class OncePartialSumStore(_NoisePartialSumStore):
-    def __init__(self):
-        super(OncePartialSumStore, self).__init__()
+    def __init__(self, noise_generator=None):
+        super(OncePartialSumStore, self).__init__(noise_generator)
     
     def consolidate(self, noise_generator=None):
         """Delete all partial sums except at start.
@@ -224,8 +226,8 @@ class OncePartialSumStore(_NoisePartialSumStore):
             self.store = {}
 
 class EveryPartialSumStore(_NoisePartialSumStore):
-    def __init__(self):
-        super(EveryPartialSumStore, self).__init__()
+    def __init__(self, noise_generator=None):
+        super(EveryPartialSumStore, self).__init__(noise_generator)
     
     def consolidate(self, noise_generator=None):
         """Collapse all partial sums into one partial sum.
@@ -246,8 +248,8 @@ class EveryPartialSumStore(_NoisePartialSumStore):
         }
 
 class TreePartialSumStore(_NoisePartialSumStore):
-    def __init__(self):
-        super(TreePartialSumStore, self).__init__()
+    def __init__(self, noise_generator=None):
+        super(TreePartialSumStore, self).__init__(noise_generator)
     
     def consolidate(self, noise_generator=None):        
         """Collapse all partial sums into "power of two"-sized blocks.
