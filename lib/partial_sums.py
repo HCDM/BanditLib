@@ -302,8 +302,7 @@ class TwoLevelPartialSumStore(_NoisePartialSumStore):
         elif self.single_level_store:
             return self.single_level_store.noise
         else:
-            raise RuntimeError('Single or block noise store must exist')
-
+            return np.zeros(shape=(1, 1))
 
 class TreePartialSumStore(_NoisePartialSumStore):
     def __init__(self, noise_generator=None):
@@ -334,3 +333,58 @@ class TreePartialSumStore(_NoisePartialSumStore):
                     prev_p_sum_time, new_size, new_noise)
                 del self.store[time]
                 self._consolidate_helper(prev_p_sum_time)
+
+class HybridPartialSumStore(_NoisePartialSumStore):
+    def __init__(self, noise_generator=None):
+        super(HybridPartialSumStore, self).__init__(noise_generator)
+        self.tree_store = {}
+        self.log_store = None
+        self.new_noise = None
+
+    def is_power_of_two(self, val):
+        return ((val & (val - 1)) == 0) and val > 0
+    
+    def add(self, time, noise):
+        self.new_noise = NoisePartialSum(start=time, size=1, noise=noise)
+        self.consolidate()
+
+    def consolidate(self):
+        """Collapse all partial sums into one "power of two"-sized block with a tree.
+
+        This is used for the 'hybrid' release method.
+        """
+        time = self.new_noise.start
+        noise = self.new_noise.noise
+        if time == self.START:
+            self.log_store = NoisePartialSum(start=time, size=1, noise=noise)        
+        elif self.is_power_of_two(time):
+            new_noise = self.log_store.noise + noise
+            self.log_store = NoisePartialSum(start=self.START, size=time, noise=new_noise)
+            self.tree_store = {}
+        else:
+            self.tree_store[time] = NoisePartialSum(start=time, size=1, noise=noise)
+            self._consolidate_helper(time)
+        self.new_noise = None
+
+    def _consolidate_helper(self, time):
+        prev_p_sum_time = self.tree_store[time].start - self.tree_store[time].size
+        if prev_p_sum_time in self.tree_store:
+            if self.tree_store[time].size == self.tree_store[prev_p_sum_time].size:
+                new_size = self.tree_store[time].size * 2
+                eps = self.noise_generator.eps
+                T = 2**int(np.log2(time))
+                right_time_bound = self.tree_store[prev_p_sum_time].start + new_size - 1
+                new_noise = self.noise_generator.laplacian(eps / np.log2(T), sens=right_time_bound)
+                self.tree_store[prev_p_sum_time] = NoisePartialSum(
+                    prev_p_sum_time, new_size, new_noise)
+                del self.tree_store[time]
+                self._consolidate_helper(prev_p_sum_time)
+
+    def release(self):
+        if not self.log_store:
+            return np.zeros(shape=(1, 1))
+        
+        total_noise = np.copy(self.log_store.noise)
+        for psum in self.tree_store.values():
+            total_noise += psum.noise
+        return total_noise
