@@ -1,14 +1,18 @@
-from Rewards.LinearReward import LinearReward
-from Rewards.SocialLinearReward import SocialLinearReward
+import copy
+import datetime
+import json
+import os.path
+from random import sample, seed, shuffle
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from conf import save_address, sim_files_folder
 # from Rewards.FairReward import FairReward
 from Recommendation import Recommendation
-import numpy as np 
-import datetime
-import os.path
-import copy
-from conf import sim_files_folder, save_address
-from random import sample, shuffle, seed
-import matplotlib.pyplot as plt
+from Rewards.LinearReward import LinearReward
+from Rewards.SocialLinearReward import SocialLinearReward
+
 
 class RewardManager():
 	def __init__(self, arg_dict, reward_type = 'Linear'):
@@ -34,10 +38,10 @@ class RewardManager():
 		if iter_ % 25 == 0:
 			print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
 
-	def regulateArticlePool(self):
+	def regulateArticlePool(self, time, user_id):
 		# Randomly generate articles
-		self.articlePool = sample(self.articles, self.poolArticleSize)   
-	
+		self.articlePool = sample(self.articles, self.poolArticleSize)
+
 	def getL2Diff(self, x, y):
 		return np.linalg.norm(x-y) # L2 norm
 
@@ -86,7 +90,7 @@ class RewardManager():
 		for iter_ in range(self.training_iterations):
 			article = self.articles[iter_]										
 			for u in self.users:
-				noise = self.noise() * 0
+				noise = self.noise()
 				reward = self.reward.getReward(u, article)
 				reward += noise
 				for alg_id, alg in algorithms.items():
@@ -97,13 +101,18 @@ class RewardManager():
 					alg_block['algorithm'].LateUpdate()	
 
 		#Testing
+		article_pool_history = {}
 		for iter_ in range(self.testing_iterations):
 			total = 0
 			counter = 0
 			for u in self.users:
-				self.regulateArticlePool() # select random articles
+				self.regulateArticlePool(iter_, u.id) # select random articles
+				if self.save_pool:
+					if iter_ not in article_pool_history:
+						article_pool_history[iter_] = {}
+					article_pool_history[iter_][u.id] = [a.id for a in self.articlePool]
 
-				noise = self.noise() * 0
+				noise = self.noise()
 				#get optimal reward for user x at time t
 				#pool_copy = copy.deepcopy(self.articlePool)
 				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
@@ -167,6 +176,11 @@ class RewardManager():
 					f.write(str(iter_))
 					diffLists.iteration_write(f)
 					f.write('\n')
+
+		if self.save_pool:
+			with open(self.pool_filename, 'w') as outfile:
+				json.dump(article_pool_history, outfile)
+
 
 		if (self.plot==True): # only plot
 			# plot the results	

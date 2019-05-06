@@ -36,6 +36,11 @@ article:
   save: no # (yes/no) Save attributes for each article into a file for future simulations
   filename: Simulation_MAB_files/articles_1000context_16latent_0Agroups5.json # (string) File from which to load article objects
 
+pool:
+  load: yes # (yes/no) Load article ids of each article pool from file specified by filename
+  save: no # (yes/no) Save article ids of each article pool into a file for future simulations
+  filename: Simulation_MAB_files/pool_10articles_1000iterations_500.json # (string) File from which to load article ids of each article pool
+
 # Reward to determine the accuracy of choices made by the algorithm
 reward:
   k: 1 # (int) number of articles to recommend for each user each iteration

@@ -93,6 +93,7 @@ if __name__ == '__main__':
 		cfg = yaml.load(ymlfile)
 	gen = cfg['general'] if cfg.has_key('general') else {}
 	user = cfg['user'] if cfg.has_key('user') else {}
+	pool = cfg['pool'] if cfg.has_key('pool') else {}
 	article = cfg['article'] if cfg.has_key('article') else {}
 	reco = cfg['reward'] if cfg.has_key('reward') else {}
 
@@ -131,6 +132,13 @@ if __name__ == '__main__':
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
+	
+	default_pool_filename = os.path.join(sim_files_folder, 'pool_' + str(rewardManagerDict['poolArticleSize']) + 'articles_' + str(n_articles) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
+	rewardManagerDict['load_pool'] = pool.has_key('load') and pool['load']
+	rewardManagerDict['save_pool'] = pool.has_key('save') and pool['save']
+	rewardManagerDict['pool_filename'] = default_pool_filename
+	if rewardManagerDict['load_pool']:
+		rewardManagerDict['pool_filename'] = pool['filename'] if pool.has_key('filename') else default_pool_filename
 	rewardManagerDict['batchSize'] = gen['batch_size'] if gen.has_key('batch_size') else 1
 
 	# Matrix parameters
