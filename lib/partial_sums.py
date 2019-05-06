@@ -187,11 +187,8 @@ class TreePartialSumStore(NoisePartialSumStore):
         if prev_p_sum_time in self.store:
             if self.store[time].size == self.store[prev_p_sum_time].size:
                 new_size = self.store[time].size * 2
-                eps = self.noise_generator.eps  # this doesn't make sense
-                delta = self.noise_generator.delta  # that these hyperparams
-                T = self.noise_generator.T  # are in noise generator
                 right_time_bound = self.store[prev_p_sum_time].start + new_size - 1
-                new_noise = self.noise_generator.laplacian(eps / np.log2(T), sens=right_time_bound)  # yet are decoupled
+                new_noise = self.noise_generator.laplacian(self.eps / np.log2(self.T), sens=right_time_bound)
                 self.store[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, new_size, new_noise)
                 del self.store[time]
@@ -239,10 +236,9 @@ class HybridPartialSumStore(NoisePartialSumStore):
         if prev_p_sum_time in self.tree_store:
             if self.tree_store[time].size == self.tree_store[prev_p_sum_time].size:
                 new_size = self.tree_store[time].size * 2
-                eps = self.noise_generator.eps
                 T = 2**int(np.log2(time))
                 right_time_bound = self.tree_store[prev_p_sum_time].start + new_size - 1
-                new_noise = self.noise_generator.laplacian(eps / np.log2(T), sens=right_time_bound)
+                new_noise = self.noise_generator.laplacian(self.eps / np.log2(T), sens=right_time_bound)
                 self.tree_store[prev_p_sum_time] = NoisePartialSum(
                     prev_p_sum_time, new_size, new_noise)
                 del self.tree_store[time]
