@@ -187,19 +187,7 @@ class PrivateLinUCBUserStruct:
         self.noise_generator = PrivateLinUCBNoiseGenerator(
             self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
 
-        if self.release_method == 'once':
-            self.noise_store = OncePartialSumStore(self.noise_generator)
-        elif self.release_method == 'every':
-            self.noise_store = EveryPartialSumStore(self.noise_generator)
-        elif self.release_method == 'sqrt':
-            block_size = int(np.sqrt(self.T))
-            self.noise_store = TwoLevelPartialSumStore(self.noise_generator, block_size)
-        elif self.release_method == 'tree':
-            self.noise_store = TreePartialSumStore(self.noise_generator)
-        elif self.release_method == 'hybrid':
-            self.noise_store = HybridPartialSumStore(self.noise_generator)
-        else:
-            raise NotImplementedError
+        self.noise_store = NoisePartialSumStore.get_instance(self.release_method, hyperparameters, self.noise_generator)
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -208,34 +196,8 @@ class PrivateLinUCBUserStruct:
         self.UserThetaNoise = np.zeros(self.d)
         self.time = 1
 
-    def update_noise_store(self):
-        def is_power_of_two(val):
-            return ((val & (val - 1)) == 0) and val > 0
-
-        if self.release_method == 'once':
-            noise = self.noise_generator.laplacian(self.eps / self.T, sens=self.time)
-            self.noise_store.add(self.noise_store.START, noise)
-        elif self.release_method == 'every':
-            noise = self.noise_generator.laplacian(self.eps, sens=self.time)
-            self.noise_store.add(self.time, noise)
-        elif self.release_method == 'sqrt':
-            noise = self.noise_generator.laplacian(self.eps / 2, sens=self.time)
-            self.noise_store.add(self.time, noise)
-        elif self.release_method == 'tree':
-            noise = self.noise_generator.laplacian(self.eps / np.log2(self.T), sens=self.time)
-            self.noise_store.add(self.time, noise)
-        elif self.release_method == 'hybrid':
-            if is_power_of_two(self.time):
-                noise = self.noise_generator.laplacian(self.eps / 2, sens=self.time)
-            else:
-                time_horizon = 2**int(np.log2(self.time))
-                noise = self.noise_generator.laplacian((self.eps / 2) / np.log2(time_horizon), sens=self.time)
-            self.noise_store.add(self.time, noise)
-        else:
-            raise NotImplementedError
-
     def update_user_theta(self):
-        self.update_noise_store()
+        self.noise_store.add(self.time)
         N = self.noise_store.release()
 
         if self.is_theta_level:
