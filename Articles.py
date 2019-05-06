@@ -8,6 +8,12 @@ class Article():
 	def __init__(self, aid, FV=None):
 		self.id = aid
 		self.featureVector = FV
+
+	def __str__(self):
+		return 'Article#' + str(self.id)
+
+	def __repr__(self):
+		return 'Article#' + str(self.id)
 		
 
 class ArticleManager():

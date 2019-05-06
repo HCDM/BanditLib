@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 1500 #(int) Number of iterations to testing and refine model upon
+  testing_iterations: 500 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -23,18 +23,18 @@ user:
   number: 10 # (int) Number of users for the algorithm to select arms for
   groups: 5 # (int) define how the users are organized together
   theta_func: featureUniform # (string)
-  load: no # (yes/no) Load the theta for each user from file specified by file_name
+  load: yes # (yes/no) Load the theta for each user from file specified by filename
   save: no # (yes/no Save the thetas for each user to be loaded for future simulations
   collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
-  file_name: test.json # (string) File from which to load user thetas
+  filename: Simulation_MAB_files/users_10context_16latent_0Ugroups5.json # (string) File from which to load user thetas
 
 # Different settings for article arms
 article:
   number: 1000 # (int) total number of articles from which to create the article pool
   groups: 5 # (int)
-  load: no # (yes/no) Load attributes for each article from file specified by file_name
+  load: yes # (yes/no) Load attributes for each article from file specified by filename
   save: no # (yes/no) Save attributes for each article into a file for future simulations
-  file_name: test.json # (string) File from which to load article objects
+  filename: Simulation_MAB_files/articles_1000context_16latent_0Agroups5.json # (string) File from which to load article objects
 
 # Reward to determine the accuracy of choices made by the algorithm
 reward:

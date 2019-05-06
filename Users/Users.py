@@ -10,6 +10,12 @@ class User():
 		self.CoTheta = CoTheta
 		self.estimatedTheta = None
 
+	def __str__(self):
+		return 'User#' + str(self.id)
+
+	def __repr__(self):
+		return 'User#' + str(self.id)
+
 	def chooseArticle(self, recommendation):
 		if self.estimatedTheta is None:
 			self.initializeEstimatedTheta(len(self.theta), 0.1)
@@ -59,7 +65,7 @@ class UserManager():
 			# Simulate random users
 			self.users = self.simulateThetafromUsers()
 			if user_dict.has_key('save') and user_dict['save']:
-				self.saveUsers(users, user_dict['default_file'], force = False)
+				self.saveUsers(self.users, user_dict['default_file'], force = False)
 
 		# How should W be set up for this type of Users
 		self.W, self.W0 = self.constructZeroMatrix()

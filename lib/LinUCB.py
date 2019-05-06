@@ -53,6 +53,7 @@ class Uniform_LinUCBAlgorithm(object):
 
 	def getEstimateSettings(self):
 		return self.estimates
+
 	def decide(self, pool_articles, userID):
 		maxPTA = float('-inf')
 		articlePicked = None
@@ -63,8 +64,10 @@ class Uniform_LinUCBAlgorithm(object):
 				articlePicked = x
 				maxPTA = x_pta
 		return articlePicked
+
 	def updateParameters(self, articlePicked, click, userID):
 		self.USER.updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
+	
 	def getCoTheta(self, userID):
 		return self.USER.UserTheta
 

@@ -57,14 +57,12 @@ def pca_articles(articles, order):
 
 
 def generate_algorithms(global_dict, alg_dict, W, system_params):
-	print(global_dict)
 	gen = alg_dict['general'] if alg_dict.has_key('general') and alg_dict['general'] else {}
 	algorithms = {}
 	diffLists = DiffManager()
 	for alg in alg_dict['specific']:
 		alg_name = alg['algorithm']
 		alg_id = alg['id']
-		print str(alg_name)
 		try:
 			tmpDict = globals()['create' + alg_name + 'Dict'](global_dict, alg if alg else {}, gen, W, system_params)
 		except KeyError:
@@ -80,7 +78,6 @@ def generate_algorithms(global_dict, alg_dict, W, system_params):
 			else:
 				raise e
 		diffLists.add_algorithm(alg_id, algorithms[alg_id]['algorithm'].getEstimateSettings())
-	print algorithms
 	return algorithms, diffLists
 
 if __name__ == '__main__':
@@ -173,16 +170,16 @@ if __name__ == '__main__':
 	AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
 			FeatureFunc=featureUniform,  argv={'l2_limit':1})
 	if article.has_key('load') and article['load']:
-		articles = AM.loadArticles(articles['filename']) if articles.has_key('filename') else AM.loadArticles(articlesFilename)
+		articles = AM.loadArticles(article['filename']) if article.has_key('filename') else AM.loadArticles(articlesFilename)
 	else:
 		articles = AM.simulateArticlePool()
 		if article.has_key('save') and article['save']:
-			AM.saveArticles(articles, articlesFilename, force=False) 
+			AM.saveArticles(articles, articlesFilename, force=False)
 	rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
 	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
-	
+
 	#PCA
-	pca_articles(articles, 'random')
+	pca_articles(articles, 'ascend')
 	rewardManagerDict['articles'] = articles
 	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
 	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])

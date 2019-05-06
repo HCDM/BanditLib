@@ -4,3 +4,4 @@
 ./SimulationResults/*
 /SimulationResults/
 .vscode/
+env/

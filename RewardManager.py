@@ -7,7 +7,7 @@ import datetime
 import os.path
 import copy
 from conf import sim_files_folder, save_address
-from random import sample, shuffle
+from random import sample, shuffle, seed
 import matplotlib.pyplot as plt
 
 class RewardManager():
@@ -80,13 +80,15 @@ class RewardManager():
 			f.write('\n')
 		
 		# Training
+		np.random.seed(58)
+		seed(58)
 		shuffle(self.articles)
 		for iter_ in range(self.training_iterations):
 			article = self.articles[iter_]										
 			for u in self.users:
-				noise = self.noise()	
+				noise = self.noise() * 0
 				reward = self.reward.getReward(u, article)
-				reward += noise										
+				reward += noise
 				for alg_id, alg in algorithms.items():
 					alg.updateParameters(article, reward, u.id)	
 
@@ -101,7 +103,7 @@ class RewardManager():
 			for u in self.users:
 				self.regulateArticlePool() # select random articles
 
-				noise = self.noise()
+				noise = self.noise() * 0
 				#get optimal reward for user x at time t
 				#pool_copy = copy.deepcopy(self.articlePool)
 				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
