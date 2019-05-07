@@ -38,9 +38,17 @@ class RewardManager():
 		if iter_ % 25 == 0:
 			print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
 
-	def regulateArticlePool(self, time, user_id):
-		# Randomly generate articles
-		self.articlePool = sample(self.articles, self.poolArticleSize)
+	def regulateArticlePool(self, time, user_id, loaded_pool_history=None):
+		if self.load_pool:
+			article_ids = loaded_pool_history[str(time)][str(user_id)]
+			pool = []
+			for article in self.articles:
+				if article.id in article_ids:
+					pool.append(article)
+			self.articlePool = pool
+		else:
+			# Randomly generate articles
+			self.articlePool = sample(self.articles, self.poolArticleSize)
 
 	def getL2Diff(self, x, y):
 		return np.linalg.norm(x-y) # L2 norm
@@ -84,8 +92,6 @@ class RewardManager():
 			f.write('\n')
 		
 		# Training
-		np.random.seed(58)
-		seed(58)
 		shuffle(self.articles)
 		for iter_ in range(self.training_iterations):
 			article = self.articles[iter_]										
@@ -102,17 +108,21 @@ class RewardManager():
 
 		#Testing
 		article_pool_history = {}
+		loaded_pool_history = {}
+		if self.load_pool:
+			with open(self.pool_filename, 'r') as infile:
+				loaded_pool_history = json.load(infile)
 		for iter_ in range(self.testing_iterations):
 			total = 0
 			counter = 0
 			for u in self.users:
-				self.regulateArticlePool(iter_, u.id) # select random articles
+				self.regulateArticlePool(iter_, u.id, loaded_pool_history=loaded_pool_history)
 				if self.save_pool:
 					if iter_ not in article_pool_history:
 						article_pool_history[iter_] = {}
 					article_pool_history[iter_][u.id] = [a.id for a in self.articlePool]
 
-				noise = self.noise()
+				noise = self.noise() * 0
 				#get optimal reward for user x at time t
 				#pool_copy = copy.deepcopy(self.articlePool)
 				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
