@@ -112,6 +112,11 @@ class RewardManager():
 		if self.load_pool:
 			with open(self.pool_filename, 'r') as infile:
 				loaded_pool_history = json.load(infile)
+		reward_noise_history = {}
+		loaded_reward_noise_history = {}
+		if self.load_reward_noise:
+			with open(self.reward_noise_filename, 'r') as infile:
+				loaded_reward_noise_history = json.load(infile)
 		for iter_ in range(self.testing_iterations):
 			total = 0
 			counter = 0
@@ -122,7 +127,13 @@ class RewardManager():
 						article_pool_history[iter_] = {}
 					article_pool_history[iter_][u.id] = [a.id for a in self.articlePool]
 
-				noise = self.noise() * 0
+				if self.load_reward_noise:
+					noise = loaded_reward_noise_history[str(iter_)][str(u.id)]
+				else:
+					noise = self.noise()
+				if iter_ not in reward_noise_history:
+					reward_noise_history[iter_] = {}
+				reward_noise_history[iter_][u.id] = noise
 				#get optimal reward for user x at time t
 				#pool_copy = copy.deepcopy(self.articlePool)
 				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
@@ -190,6 +201,10 @@ class RewardManager():
 		if self.save_pool:
 			with open(self.pool_filename, 'w') as outfile:
 				json.dump(article_pool_history, outfile)
+
+		if self.save_reward_noise:
+			with open(self.reward_noise_filename, 'w') as outfile:
+				json.dump(reward_noise_history, outfile)
 
 
 		if (self.plot==True): # only plot

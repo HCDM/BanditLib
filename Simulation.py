@@ -185,6 +185,14 @@ if __name__ == '__main__':
 			AM.saveArticles(articles, articlesFilename, force=False)
 	rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
 	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
+	
+	default_reward_noise_filename = os.path.join(sim_files_folder, 'reward_' + str(rewardManagerDict['k']) + 'users_' + str(n_users) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
+	reward_noise = reco['noise']
+	rewardManagerDict['load_reward_noise'] = reward_noise.has_key('load') and reward_noise['load']
+	rewardManagerDict['save_reward_noise'] = reward_noise.has_key('save') and reward_noise['save']
+	rewardManagerDict['reward_noise_filename'] = default_reward_noise_filename
+	if rewardManagerDict['load_reward_noise']:
+		rewardManagerDict['reward_noise_filename'] = reward_noise['filename'] if reward_noise.has_key('filename') else default_reward_noise_filename
 
 	#PCA
 	pca_articles(articles, 'ascend')
