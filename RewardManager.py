@@ -117,6 +117,7 @@ class RewardManager():
 		if self.load_reward_noise:
 			with open(self.reward_noise_filename, 'r') as infile:
 				loaded_reward_noise_history = json.load(infile)
+		article_selection_history = {}
 		for iter_ in range(self.testing_iterations):
 			total = 0
 			counter = 0
@@ -152,14 +153,22 @@ class RewardManager():
 						article, incentive = u.chooseArticle(recommendation)
 						# Tell the system the users choice
 						best_rec = Recommendation(1, [article])
-						reward, pickedArticle = self.reward.getRecommendationReward(u, best_rec, noise)
+						reward, pickedArticle = self.reward.getRecommendationReward(u, best_rec)
+						reward += noise
 						u.updateParameters(pickedArticle.contextFeatureVector, reward)
 					else:
 						recommendation = alg.createRecommendation(self.articlePool, u.id, self.k)
 
 						# Assuming that the user will always be selecting one item for each iteration
 						#pickedArticle = recommendation.articles[0]
-						reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation, noise)
+						reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation)
+						if iter_ not in article_selection_history:
+							article_selection_history[iter_] = {}
+						article_selection_history[iter_][u.id] = pickedArticle.id
+						reward += noise
+						if self.reward_noise_resample_active:
+							if iter_ == self.reward_noise_resample_round:
+								reward += self.reward_noise_resample_change
 						# print "ActualReward", reward
 					if (self.testing_method=="online"):
 						alg.updateParameters(pickedArticle, reward, u.id)
@@ -205,6 +214,14 @@ class RewardManager():
 		if self.save_reward_noise:
 			with open(self.reward_noise_filename, 'w') as outfile:
 				json.dump(reward_noise_history, outfile)
+
+		with open('SimulationResults/article_selection_history.csv', 'w') as outfile:
+			for iter_ in range(len(article_selection_history)):
+				user_selections = article_selection_history[iter_]
+				row = []
+				for uid in range(len(user_selections)):
+					row.append(str(user_selections[uid]))
+				outfile.write(','.join(row) + '\n')
 
 
 		if (self.plot==True): # only plot

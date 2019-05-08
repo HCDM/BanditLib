@@ -5,3 +5,4 @@
 /SimulationResults/
 .vscode/
 env/
+experiment*
