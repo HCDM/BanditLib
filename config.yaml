@@ -8,7 +8,7 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 500 #(int) Number of iterations to testing and refine model upon
+  testing_iterations: 2000 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -39,19 +39,19 @@ article:
 pool:
   load: yes # (yes/no) Load article ids of each article pool from file specified by filename
   save: no # (yes/no) Save article ids of each article pool into a file for future simulations
-  filename: Simulation_MAB_files/pool_10articles_1000iterations_500.json # (string) File from which to load article ids of each article pool
+  filename: Simulation_MAB_files/pool_10articles_1000iterations_2000.json # (string) File from which to load article ids of each article pool
 
 # Reward to determine the accuracy of choices made by the algorithm
 reward:
   k: 1 # (int) number of articles to recommend for each user each iteration
   type: Linear # (string) Linear/SocialLinear/Fair: determines which reward function is used, overridden by general collaborative setting
   noise:
-    resample:  # present if a reward noise resample is desired
-      round: 200 # which round number to resample a round's reward noise
-      change: -0.25 # amount to change reward noise of round specified by resample_round
+    # resample:  # present if a reward noise resample is desired
+    #   round: 200 # which round number to resample a round's reward noise
+    #   change: -0.25 # amount to change reward noise of round specified by resample_round
     load: yes # (yes/no) Load reward noise from file specified by filename
     save: no # (yes/no) Save reward noise into a file for future simulations
-    filename: Simulation_MAB_files/reward_noise_1users_10iterations_500.json # (string) File from which to load reward noise
+    filename: Simulation_MAB_files/reward_noise_1users_10iterations_2000.json # (string) File from which to load reward noise
 
 # Parameters for the different algorithms
 alg:
@@ -68,29 +68,32 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    - algorithm: LinUCB
-      alpha: 0.3
-      id: Lin
-      lambda_: 0.1
-      parameters:
-        Theta: True
-        CoTheta: False
-        W: False
-        V: False
-    # - algorithm: PrivateLinUCB
+    # - algorithm: LinUCB
     #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 100
-    #   id: pLin - laplacian - tree - theta
+    #   id: Lin
     #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: tree
     #   parameters:
     #     Theta: True
     #     CoTheta: False
     #     W: False
     #     V: False
-    #   is_theta_level: True
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 1.5
+      id: pLin - laplacian - tree - theta
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      noise_save: False
+      noise_load: True
+      noise_filename: Simulation_MAB_files/plin_noise_laplacianiterations_2000.json
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      is_theta_level: True
     # - algorithm: PrivateLinUCB
     #   alpha: 0.3
     #   delta: 0.5

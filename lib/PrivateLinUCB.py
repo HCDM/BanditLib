@@ -1,9 +1,15 @@
 from __future__ import division  # enforce float division with `/`
+
+import json
+
 import numpy as np
+
 from BaseAlg import BaseAlg
 from scipy.stats import wishart
 
 from .partial_sums import *
+
+
 """Paper: Differentially Private Contextual Bandits
 """
 
@@ -152,19 +158,8 @@ class PrivateLinUCBNoiseGenerator:
         return noise
 
 
-"""
-# noise types
-
-1/eps
-T/eps
-logT/eps
-1/2eps
-1/eps sqrt(j)
-
-"""
-
 class PrivateLinUCBUserStruct:
-    def __init__(self, featureDimension, lambda_, hyperparameters, protect_context, noise_type, release_method, is_theta_level, init="zero"):
+    def __init__(self, featureDimension, lambda_, hyperparameters, noise, protect_context, is_theta_level, init="zero"):
         self.d = featureDimension
         self.M = lambda_ * np.identity(self.d + 1)
         self.A = self.M[:self.d, :self.d]
@@ -179,15 +174,24 @@ class PrivateLinUCBUserStruct:
         self.protect_context = protect_context
         self.is_theta_level = is_theta_level
 
-        noise_type = noise_type.lower()
-        if noise_type != 'laplacian':
+        self.noise_type = noise['type'].lower()
+        if self.noise_type != 'laplacian':
             raise NotImplementedError  # more refactoring needs to be done
-        self.release_method = release_method.lower()
+        self.release_method = noise['method'].lower()
         noise_dim = self.d - 1 if self.is_theta_level else self.d
         self.noise_generator = PrivateLinUCBNoiseGenerator(
-            self.eps, self.delta, self.T, self.alpha, noise_dim, noise_type, is_theta_level)
+            self.eps, self.delta, self.T, self.alpha, noise_dim, self.noise_type, is_theta_level)
 
         self.noise_store = NoisePartialSumStore.get_instance(self.release_method, hyperparameters, self.noise_generator)
+        self.noise_save = noise['save']
+        self.noise_load = noise['load']
+        self.noise_filename = noise['filename']
+        if self.noise_save:
+            self.noise_filename = 'Simulation_MAB_files/plin_noise_{}iterations_{}.json'.format(self.noise_type, self.T)
+        self.noise_history = {}
+        if self.noise_load:
+            with open(self.noise_filename, 'r') as infile:
+                self.noise_history = json.load(infile)
 
         if init == "random":
             self.UserTheta = np.random.rand(self.d)
@@ -197,8 +201,16 @@ class PrivateLinUCBUserStruct:
         self.time = 1
 
     def update_user_theta(self):
-        self.noise_store.add(self.time)
-        N = self.noise_store.release()
+        if self.noise_load:
+            N = np.array(self.noise_history[str(self.time)])
+        else:
+            self.noise_store.add(self.time)
+            N = self.noise_store.release()
+        if self.noise_save:
+            self.noise_history[self.time] = N.tolist()
+            if self.time == self.T:  # last iteration
+                with open(self.noise_filename, 'w') as outfile:
+                    json.dump(self.noise_history, outfile)
 
         if self.is_theta_level:
             self.UserThetaNoise = N[0]
@@ -207,7 +219,6 @@ class PrivateLinUCBUserStruct:
             self.Ainv = np.linalg.inv(self.A)
             self.UserTheta = np.dot(self.Ainv, self.b)
         else:
-            N = self.noise_store.release()
             self.b = (self.M + N)[:self.d, -1]
             if self.protect_context:  # NIPS
                 self.A = (self.M + N)[:self.d, :self.d]
@@ -242,9 +253,6 @@ class PrivateLinUCBUserStruct:
     def getTheta(self):
         return self.UserTheta + self.UserThetaNoise
 
-    # def getA(self):
-    #     return self.A
-
 
 class PrivateLinUCBAlgorithm(BaseAlg):
     def __init__(self, arg_dict, init="zero"):  # n is number of users
@@ -256,15 +264,21 @@ class PrivateLinUCBAlgorithm(BaseAlg):
             'delta': arg_dict['delta'],
             'T': arg_dict['T'],
         }
+        noise = {
+            'type': arg_dict['noise_type'],
+            'method': arg_dict['noise_method'],
+            'save': arg_dict['noise_save'],
+            'load': arg_dict['noise_load'],
+            'filename': arg_dict['noise_filename'],
+        }
         # algorithm have n users, each user has a user structure
         for i in range(arg_dict['n_users']):
             self.users.append(PrivateLinUCBUserStruct(
                 arg_dict['dimension'],
                 arg_dict['lambda_'],
                 hyperparameters,
+                noise,
                 arg_dict.get('protect_context', None),
-                arg_dict['noise_type'],
-                arg_dict['noise_method'],
                 arg_dict.get('is_theta_level', None),
                 init))
 
@@ -305,12 +319,8 @@ class PrivateLinUCBAlgorithm(BaseAlg):
         self.users[userID].updateParameters(
             articlePicked.contextFeatureVector[:self.dimension], click)
 
-    ##### SHOULD THIS BE CALLED GET COTHETA #####
     def getCoTheta(self, userID):
         return self.users[userID].getTheta()
 
     def getTheta(self, userID):
         return self.users[userID].getTheta()
-
-    # def getW(self, userID):
-    # 	return np.identity(n = len(self.users))
