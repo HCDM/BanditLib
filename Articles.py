@@ -1,8 +1,12 @@
 import cPickle
-import numpy as np 
-from util_functions import featureUniform, gaussianFeature, fileOverWriteWarning
-from random import sample, randint
 import json
+from random import randint, sample
+
+import numpy as np
+
+from util_functions import (featureUniform, fileOverWriteWarning,
+                            gaussianFeature)
+
 
 class Article():	
 	def __init__(self, aid, FV=None):
@@ -16,7 +20,7 @@ class Article():
 		return 'Article#' + str(self.id)
 		
 
-class ArticleManager():
+class ArticleManager(object):
 	def __init__(self, dimension, n_articles, ArticleGroups, FeatureFunc, argv ):
 		self.signature = "Article manager for simulation study"
 		self.dimension = dimension
@@ -110,3 +114,24 @@ class ArticleManager():
 	
 		return articles
 
+
+class ArticleManagerLastFm(ArticleManager):
+	def saveArticles(self, Articles, filename, force = False):
+		with open(filename, 'w') as outfile:
+			outfile.write('ArticleID\tFeatureVector\n')
+			for article in Articles:
+				aid = article.id
+				feature_vector_list = article.featureVector.astype(str).tolist()
+				feature_vector_str = ';'.join(feature_vector_list)
+				outfile.write('{}\t{}\n'.format(aid, feature_vector_str))
+
+	def loadArticles(self, filename):
+		articles = []
+		with open(filename, 'r') as infile:
+			next(infile)  # skip header
+			for line in infile:
+				aid, feature_vector_raw = line.split('\t')
+				feature_vector_list = feature_vector_raw.split(';')
+				feature_vector = np.array(feature_vector_list).astype(np.float64)
+				articles.append(Article(aid, feature_vector))
+		return articles

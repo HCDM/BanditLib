@@ -16,7 +16,7 @@ from conf import sim_files_folder, save_address
 # 	createCoLinUCBDict, createHLinUCBDict, createUCBPMFDict, createFactorUCBDict, \
 # 	createCLUBDict, createPTSDict, createBaseAlgDict
 from util_functions import *
-from Articles import ArticleManager
+from Articles import ArticleManager, ArticleManagerLastFm
 from Users.Users import UserManager
 from Users.CoUsers import CoUserManager
 from RewardManager import RewardManager
@@ -175,10 +175,16 @@ if __name__ == '__main__':
 	rewardManagerDict['users'] = UM.getUsers()
 	
 	articlesFilename = os.path.join(sim_files_folder, "articles_"+str(n_articles)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Agroups" + str(ArticleGroups)+".json")
-	AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
-			FeatureFunc=featureUniform,  argv={'l2_limit':1})
+	article_format = article['format']
+	if article_format.lower() == 'lastfm':
+		AM = ArticleManagerLastFm(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
+				FeatureFunc=featureUniform,  argv={'l2_limit':1})
+	else:
+		AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
+				FeatureFunc=featureUniform,  argv={'l2_limit':1})
 	if article.has_key('load') and article['load']:
 		articles = AM.loadArticles(article['filename']) if article.has_key('filename') else AM.loadArticles(articlesFilename)
+		n_articles = len(articles)
 	else:
 		articles = AM.simulateArticlePool()
 		if article.has_key('save') and article['save']:
