@@ -69,8 +69,10 @@ def set_resample(config, round, change):
 def run_simulation(config_filepath):
     os.system('python Simulation.py --config {}'.format(config_filepath))
 
-def print_summary():
+def print_summary(arm_changes_filepath):
     print('Summary')
+    with open(arm_changes_filepath, 'r') as infile:
+        print(infile.read())
 
 
 def compute_arm_diffs(orig_arm_file, new_arm_file):
@@ -87,6 +89,10 @@ def compute_arm_diffs(orig_arm_file, new_arm_file):
                 num_diffs += 1
     return num_diffs
 
+def clear_changes(arm_changes_filepath):
+    with open(arm_changes_filepath, 'w') as infile:
+        pass
+
 def save_changes(arm_changes_filepath, resample_round, resample_change, num_arm_changes):
     with open(arm_changes_filepath, 'a+') as outfile:
         outfile.write('{},{},{}\n'.format(resample_round, resample_change, num_arm_changes))
@@ -95,12 +101,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = '')
     parser.add_argument('--config', dest='config', help='yaml config file')
     parser.add_argument('--clean', dest='clean', help='delete tmp folder before start', action='store_true')
+    parser.add_argument('--load', dest='load', help='force everything to load in config', action='store_true')
     args = parser.parse_args()
 
     config_filepath = args.config
     config = read_config(config_filepath)
     experiment = config['experiment']
     tmp_dir = experiment['tmp_directory'] if experiment.has_key('tmp_directory') else 'tmp'
+
 
     # Delete tmp
     if args.clean:
@@ -109,6 +117,11 @@ if __name__ == '__main__':
     # Create tmp
     create_tmp_directory(tmp_dir)
     tmp_exp_config_path = os.path.join(tmp_dir, 'tmp.exp.yaml')
+
+    # Force load
+    if args.load:
+        config = set_config_only_loads(config)
+        write_config(tmp_exp_config_path, config)
 
     # Run once to generate arms, pools, etc. as specified
     config = prepare_config(config)
@@ -128,6 +141,7 @@ if __name__ == '__main__':
     resample_round_interval = experiment['resample']['round_interval']
     resample_change = experiment['resample']['change']
     arm_changes_filepath = experiment['arm_changes_file']
+    clear_changes(arm_changes_filepath)
     save_changes(arm_changes_filepath, 'Round', 'Change', 'DiffArms')
 
     for n in range(0, config['general']['testing_iterations'] + 1, resample_round_interval):
@@ -138,4 +152,4 @@ if __name__ == '__main__':
         arm_changes = compute_arm_diffs(original_art_sel_hist_file, art_sel_hist_file)
         save_changes(arm_changes_filepath, n, resample_change, arm_changes)
 
-    print_summary()
+    print_summary(arm_changes_filepath)

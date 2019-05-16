@@ -95,7 +95,7 @@ alg:
     #   lambda_: 0.1
     #   noise_type: laplacian
     #   noise_method: tree
-    #   noise_save: False
+    #   noise_save: True
     #   noise_load: False
     #   noise_filename: tmp/plin_noise_laplacianiterations_2000.json
     #   parameters:
