@@ -42,9 +42,8 @@ class RewardManager():
 		if self.load_pool:
 			article_ids = loaded_pool_history[str(time)][str(user_id)]
 			pool = []
-			for article in self.articles:
-				if article.id in article_ids:
-					pool.append(article)
+			for aid in article_ids:
+				pool.append(self.artdict[aid])
 			self.articlePool = pool
 		else:
 			# Randomly generate articles
@@ -91,6 +90,11 @@ class RewardManager():
 			diffLists.initial_write(f)
 			f.write('\n')
 		
+		# Prepare article dict
+		self.artdict = {}
+		for art in self.articles:
+			self.artdict[art.id] = art
+
 		# Training
 		shuffle(self.articles)
 		for iter_ in range(self.training_iterations):
@@ -215,7 +219,7 @@ class RewardManager():
 			with open(self.reward_noise_filename, 'w') as outfile:
 				json.dump(reward_noise_history, outfile)
 
-		with open('SimulationResults/article_selection_history.csv', 'w') as outfile:
+		with open('tmp/article_selection_history.csv', 'w') as outfile:
 			for iter_ in range(len(article_selection_history)):
 				user_selections = article_selection_history[iter_]
 				row = []

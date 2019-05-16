@@ -185,8 +185,9 @@ class PrivateLinUCBUserStruct:
         self.noise_store = NoisePartialSumStore.get_instance(self.release_method, hyperparameters, self.noise_generator)
         self.noise_save = noise['save']
         self.noise_load = noise['load']
-        self.noise_filename = noise['filename']
-        if self.noise_save:
+        if noise.has_key('filename'):
+            self.noise_filename = noise['filename']
+        else:
             self.noise_filename = 'Simulation_MAB_files/plin_noise_{}iterations_{}.json'.format(self.noise_type, self.T)
         self.noise_history = {}
         if self.noise_load:
@@ -271,6 +272,7 @@ class PrivateLinUCBAlgorithm(BaseAlg):
             'load': arg_dict['noise_load'],
             'filename': arg_dict['noise_filename'],
         }
+
         # algorithm have n users, each user has a user structure
         for i in range(arg_dict['n_users']):
             self.users.append(PrivateLinUCBUserStruct(
