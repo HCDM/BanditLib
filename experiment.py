@@ -1,4 +1,5 @@
 import argparse
+import matplotlib.pyplot as plt
 import os
 import shutil
 import time
@@ -97,6 +98,24 @@ def save_changes(arm_changes_filepath, resample_round, resample_change, num_arm_
     with open(arm_changes_filepath, 'a+') as outfile:
         outfile.write('{},{},{}\n'.format(resample_round, resample_change, num_arm_changes))
 
+def display_arm_changes(orig_arm_file, new_arm_file):
+    with open(orig_arm_file, 'r') as infile:
+        orig_aids = [line.split(',') for line in infile.readlines()]
+    
+    with open(new_arm_file, 'r') as infile:
+        new_aids = [line.split(',') for line in infile.readlines()]
+
+    changes = []
+    num_diffs = 0
+    for i in range(len(orig_aids)):
+        for j in range(len(orig_aids[0])):
+            if orig_aids[i][j] != new_aids[i][j]:
+                num_diffs += 1
+        changes.append(num_diffs)
+
+    plt.plot(range(len(orig_aids)), changes)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = '')
     parser.add_argument('--config', dest='config', help='yaml config file')
@@ -151,5 +170,8 @@ if __name__ == '__main__':
 
         arm_changes = compute_arm_diffs(original_art_sel_hist_file, art_sel_hist_file)
         save_changes(arm_changes_filepath, n, resample_change, arm_changes)
+        display_arm_changes(original_art_sel_hist_file, art_sel_hist_file)
 
+    plt.title('Cumulative arm changes with ({}) change'.format(resample_change))
+    plt.show()
     print_summary(arm_changes_filepath)
