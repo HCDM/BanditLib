@@ -32,8 +32,8 @@ user:
   number: 10 # (int) Number of users for the algorithm to select arms for
   groups: 5 # (int) define how the users are organized together
   theta_func: featureUniform # (string)
-  load: yes # (yes/no) Load the theta for each user from file specified by filename
-  save: no # (yes/no Save the thetas for each user to be loaded for future simulations
+  load: no # (yes/no) Load the theta for each user from file specified by filename
+  save: yes # (yes/no Save the thetas for each user to be loaded for future simulations
   collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
   filename: tmp/users_10context_16latent_0Ugroups5.json # (string) File from which to load user thetas
 
@@ -47,8 +47,8 @@ article:
   format: lastfm # (default/lastfm/delicious/yahoo) which data source to use
 
 pool:
-  load: yes # (yes/no) Load article ids of each article pool from file specified by filename
-  save: no # (yes/no) Save article ids of each article pool into a file for future simulations
+  load: no # (yes/no) Load article ids of each article pool from file specified by filename
+  save: yes # (yes/no) Save article ids of each article pool into a file for future simulations
   filename: tmp/pool_10articles_1000iterations_2000.json # (string) File from which to load article ids of each article pool
 
 # Reward to determine the accuracy of choices made by the algorithm
@@ -59,8 +59,8 @@ reward:
     # resample:  # present if a reward noise resample is desired
     #   round: 200 # which round number to resample a round's reward noise
     #   change: -0.25 # amount to change reward noise of round specified by resample_round
-    load: yes # (yes/no) Load reward noise from file specified by filename
-    save: no # (yes/no) Save reward noise into a file for future simulations
+    load: no # (yes/no) Load reward noise from file specified by filename
+    save: yes # (yes/no) Save reward noise into a file for future simulations
     filename: tmp/reward_noise_1users_10iterations_2000.json # (string) File from which to load reward noise
 
 # Parameters for the different algorithms
@@ -78,29 +78,29 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    # - algorithm: LinUCB
-    #   alpha: 0.3
-    #   id: Lin
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    - algorithm: PrivateLinUCB
+    - algorithm: LinUCB
       alpha: 0.3
-      delta: 0.5
-      eps: 1.5
-      id: pLin - laplacian - tree - theta
+      id: Lin
       lambda_: 0.1
-      noise_type: laplacian
-      noise_method: tree
-      noise_save: True
-      noise_load: False
-      noise_filename: tmp/plin_noise_laplacianiterations_2000.json
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
-      is_theta_level: True
+    # - algorithm: PrivateLinUCB
+    #   alpha: 0.3
+    #   delta: 0.5
+    #   eps: 1.5
+    #   id: pLin - laplacian - tree - theta
+    #   lambda_: 0.1
+    #   noise_type: laplacian
+    #   noise_method: tree
+    #   noise_save: True
+    #   noise_load: False
+    #   noise_filename: tmp/plin_noise_laplacianiterations_2000.json
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    #   is_theta_level: True
