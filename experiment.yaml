@@ -6,9 +6,18 @@
 #     default to a value
 #   Default values for the parameters are the current values for each parameter
 
+# Settings for experiment
+experiment:
+  resample:
+    round_interval: 50 # (int) try resampling at every interval, ex: if the interval is 100, will run experiment at round 0, 100, 200, ...
+    change: 0.5
+  article_selection_file: 'tmp/article_selection_history.csv' # (str) where Simulation.py saves article selection history
+  tmp_directory: 'tmp' # (str) where to store tmp files
+  arm_changes_file: 'tmp/arm_changes.csv' 
+
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 200 #(int) Number of iterations to testing and refine model upon
+  testing_iterations: 250 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 25 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
@@ -24,7 +33,7 @@ user:
   groups: 5 # (int) define how the users are organized together
   theta_func: featureUniform # (string)
   load: no # (yes/no) Load the theta for each user from file specified by filename
-  save: no # (yes/no Save the thetas for each user to be loaded for future simulations
+  save: yes # (yes/no Save the thetas for each user to be loaded for future simulations
   collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
   filename: tmp/users_10context_16latent_0Ugroups5.json # (string) File from which to load user thetas
 
@@ -39,7 +48,7 @@ article:
 
 pool:
   load: no # (yes/no) Load article ids of each article pool from file specified by filename
-  save: no # (yes/no) Save article ids of each article pool into a file for future simulations
+  save: yes # (yes/no) Save article ids of each article pool into a file for future simulations
   filename: tmp/pool_10articles_1000iterations_2000.json # (string) File from which to load article ids of each article pool
 
 # Reward to determine the accuracy of choices made by the algorithm
@@ -51,7 +60,7 @@ reward:
     #   round: 200 # which round number to resample a round's reward noise
     #   change: -0.25 # amount to change reward noise of round specified by resample_round
     load: no # (yes/no) Load reward noise from file specified by filename
-    save: no # (yes/no) Save reward noise into a file for future simulations
+    save: yes # (yes/no) Save reward noise into a file for future simulations
     filename: tmp/reward_noise_1users_10iterations_2000.json # (string) File from which to load reward noise
 
 # Parameters for the different algorithms
