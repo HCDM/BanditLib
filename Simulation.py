@@ -133,12 +133,13 @@ if __name__ == '__main__':
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
 	
-	default_pool_filename = os.path.join(sim_files_folder, 'pool_' + str(rewardManagerDict['poolArticleSize']) + 'articles_' + str(n_articles) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
+	if pool.has_key('filename'):
+		pool_filename = pool['filename']
+	else:
+		pool_filename = os.path.join(sim_files_folder, 'pool_' + str(rewardManagerDict['poolArticleSize']) + 'articles_' + str(n_articles) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
 	rewardManagerDict['load_pool'] = pool.has_key('load') and pool['load']
 	rewardManagerDict['save_pool'] = pool.has_key('save') and pool['save']
-	rewardManagerDict['pool_filename'] = default_pool_filename
-	if rewardManagerDict['load_pool']:
-		rewardManagerDict['pool_filename'] = pool['filename'] if pool.has_key('filename') else default_pool_filename
+	rewardManagerDict['pool_filename'] = pool_filename
 	rewardManagerDict['batchSize'] = gen['batch_size'] if gen.has_key('batch_size') else 1
 
 	# Matrix parameters
@@ -150,7 +151,8 @@ if __name__ == '__main__':
 	# Parameters for GOBLin
 	rewardManagerDict['Gepsilon'] = 1
 	
-	user['default_file'] = os.path.join(sim_files_folder, "users_"+str(n_users)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Ugroups" + str(UserGroups)+".json")
+	if not user.has_key('filename'):
+		user['filename'] = os.path.join(sim_files_folder, "users_"+str(n_users)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Ugroups" + str(UserGroups)+".json")
 	# Override User type 
 	if gen.has_key('collaborative'):
 		if gen['collaborative']:
@@ -174,7 +176,10 @@ if __name__ == '__main__':
 	rewardManagerDict['W'] = UM.getW()
 	rewardManagerDict['users'] = UM.getUsers()
 	
-	articlesFilename = os.path.join(sim_files_folder, "articles_"+str(n_articles)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Agroups" + str(ArticleGroups)+".json")
+	if article.has_key('filename'):
+		articles_filename = article['filename']
+	else:
+		articles_filename = os.path.join(sim_files_folder, "articles_"+str(n_articles)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Agroups" + str(ArticleGroups)+".json")
 	article_format = article['format']
 	if article_format.lower() == 'lastfm':
 		AM = ArticleManagerLastFm(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
@@ -183,22 +188,23 @@ if __name__ == '__main__':
 		AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
 				FeatureFunc=featureUniform,  argv={'l2_limit':1})
 	if article.has_key('load') and article['load']:
-		articles = AM.loadArticles(article['filename']) if article.has_key('filename') else AM.loadArticles(articlesFilename)
+		articles = AM.loadArticles(articles_filename)
 		n_articles = len(articles)
 	else:
 		articles = AM.simulateArticlePool()
 		if article.has_key('save') and article['save']:
-			AM.saveArticles(articles, articlesFilename, force=False)
+			AM.saveArticles(articles, articles_filename, force=False)
 	rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
 	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
 	
-	default_reward_noise_filename = os.path.join(sim_files_folder, 'reward_noise_' + str(rewardManagerDict['k']) + 'users_' + str(n_users) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
 	reward_noise = reco['noise']
+	if reward_noise.has_key('filename'):
+		reward_noise_filename = reward_noise['filename']
+	else:
+		reward_noise_filename = os.path.join(sim_files_folder, 'reward_noise_' + str(rewardManagerDict['k']) + 'users_' + str(n_users) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
 	rewardManagerDict['load_reward_noise'] = reward_noise.has_key('load') and reward_noise['load']
 	rewardManagerDict['save_reward_noise'] = reward_noise.has_key('save') and reward_noise['save']
-	rewardManagerDict['reward_noise_filename'] = default_reward_noise_filename
-	if rewardManagerDict['load_reward_noise']:
-		rewardManagerDict['reward_noise_filename'] = reward_noise['filename'] if reward_noise.has_key('filename') else default_reward_noise_filename
+	rewardManagerDict['reward_noise_filename'] = reward_noise_filename
 
 	if reward_noise.has_key('resample'):
 		rewardManagerDict['reward_noise_resample_active'] = True

@@ -1,0 +1,204 @@
+# Bandit Lib Config File (for EXPERIMENT.PY)
+#   Config file to set different parameters for the system
+#   To use append --config option to the python Simulation.py command
+#     i.e: python Simulation.py --config <config-file-name>.yaml
+#   None of the parameters are required, if not included system will 
+#     default to a value
+#   Default values for the parameters are the current values for each parameter
+
+# System level settings to be used in all algorithms
+general:
+  testing_iterations: 500 #(int) Number of iterations to testing and refine model upon
+  training_iterations: 0 # (int) Number of iterations to train a model
+  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
+  hidden_dimension: 0 # (int) The number of features hidden from the algorithms
+  pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
+  batch_size: 1 # (int) 
+  testing_method: 'online' # (string) online: update the model after each iterations
+  plot: True # (True/False) Should plots be created
+  collaborative: True # (True/False) connection between collaborative user and social_linear rewards
+
+# Different settings for user objects
+user:
+  number: 10 # (int) Number of users for the algorithm to select arms for
+  groups: 5 # (int) define how the users are organized together
+  theta_func: featureUniform # (string)
+  load: no # (yes/no) Load the theta for each user from file specified by filename
+  save: no # (yes/no Save the thetas for each user to be loaded for future simulations
+  collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
+  filename: Simulation_MAB_files/users_10context_16latent_0Ugroups5.json # (string) File from which to load user thetas
+
+# Different settings for article arms
+article:
+  number: 1000 # (int) total number of articles from which to create the article pool, overwritten if loading articles
+  groups: 5 # (int)
+  load: yes # (yes/no) Load attributes for each article from file specified by filename
+  save: no # (yes/no) Save attributes for each article into a file for future simulations
+  filename: Dataset/hetrec2011-lastfm-2k/Arm_FeatureVectors_2.dat # (string) File from which to load article objects
+  format: lastfm # (default/lastfm/delicious/yahoo) which data source to use
+
+pool:
+  load: no # (yes/no) Load article ids of each article pool from file specified by filename
+  save: no # (yes/no) Save article ids of each article pool into a file for future simulations
+  filename: Simulation_MAB_files/pool_10articles_1000iterations_2000.json # (string) File from which to load article ids of each article pool
+
+# Reward to determine the accuracy of choices made by the algorithm
+reward:
+  k: 1 # (int) number of articles to recommend for each user each iteration
+  type: Linear # (string) Linear/SocialLinear/Fair: determines which reward function is used, overridden by general collaborative setting
+  noise:
+    # resample:  # present if a reward noise resample is desired
+    #   round: 200 # which round number to resample a round's reward noise
+    #   change: -0.25 # amount to change reward noise of round specified by resample_round
+    load: no # (yes/no) Load reward noise from file specified by filename
+    save: no # (yes/no) Save reward noise into a file for future simulations
+    filename: Simulation_MAB_files/reward_noise_1users_10iterations_2000.json # (string) File from which to load reward noise
+
+# Parameters for the different algorithms
+alg:
+  # General Parameters, setting in this section will overwrite default values in all algorithms simulation
+  general:
+    alpha: 0.3
+    lambda_: 0.1
+    # Define what sort of additional parameter modifications will be tracked
+    parameters:
+      Theta: True
+      CoTheta: False
+      W: False
+      V: False
+  # Specific Parameters, setting in this section under an algorithm will overwrite default and 
+  #   general parameters for that algorithm
+  specific:
+    - algorithm: LinUCB
+      alpha: 0.3
+      id: Lin
+      lambda_: 0.1
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 1.5
+      id: pLin - laplacian - tree - theta
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      noise_save: False
+      noise_load: False
+      noise_filename: Simulation_MAB_files/plin_noise_laplacianiterations_2000.json
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      is_theta_level: True
+    # - algorithm: PrivateLinUCB
+    #   alpha: 0.3
+    #   delta: 0.5
+    #   eps: 100
+    #   id: pLin - laplacian - tree
+    #   lambda_: 0.1
+    #   noise_type: laplacian
+    #   noise_method: tree
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    #   protect_context: True
+    # - algorithm: PrivateLinUCB
+    #   alpha: 0.3
+    #   delta: 0.5
+    #   eps: 100
+    #   id: pLin - laplacian - sqrt - theta
+    #   lambda_: 0.1
+    #   noise_type: laplacian
+    #   noise_method: sqrt
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    #   is_theta_level: True
+    # - algorithm: PrivateLinUCB
+    #   alpha: 0.3
+    #   delta: 0.5
+    #   eps: 100
+    #   id: pLin - laplacian - sqrt
+    #   lambda_: 0.1
+    #   noise_type: laplacian
+    #   noise_method: sqrt
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    #   protect_context: True
+    # GOBLin:
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   use_alpha_t: False
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: False
+    # HLinUCB:
+    #   alpha: 0.3
+    #   alpha2: 0.1
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: True
+    # FairUCB:
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # UCBPMF:
+    #   sigma : 0.5
+    #   sigmaU : 1 
+    #   sigmaV : 1 
+    #   alpha : 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # FactorUCB:
+    #   alpha: 0.05
+    #   alpha2: 0.025
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: True
+    # CLUB:
+    #   alpha: 0.1
+    #   alpha2: 0.5
+    #   lambda_: 0.1 
+    #   cluster_init : 'Erdos-Renyi'
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # PTS:
+    #   particle_num : 10 
+    #   sigma : 0.5
+    #   sigmaU : 1 
+    #   sigmaV : 1 
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False

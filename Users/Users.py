@@ -60,12 +60,12 @@ class UserManager():
 		self.signature = "A-"+"+PA"+"+TF-"+self.thetaFunc.__name__
 		if user_dict.has_key('load') and user_dict['load']:
 			# Load from user file
-			self.users = self.loadUsers(user_dict['filename']) if user_dict.has_key('filename') else self.loadUsers(user_dict['default_file'])
+			self.users = self.loadUsers(user_dict['filename'])
 		else:
 			# Simulate random users
 			self.users = self.simulateThetafromUsers()
 			if user_dict.has_key('save') and user_dict['save']:
-				self.saveUsers(self.users, user_dict['default_file'], force = False)
+				self.saveUsers(self.users, user_dict['filename'], force = False)
 
 		# How should W be set up for this type of Users
 		self.W, self.W0 = self.constructZeroMatrix()
