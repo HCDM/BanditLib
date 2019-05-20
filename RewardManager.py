@@ -40,7 +40,7 @@ class RewardManager():
 
 	def regulateArticlePool(self, time, user_id, loaded_pool_history=None):
 		if self.load_pool:
-			article_ids = loaded_pool_history[str(time)][str(user_id)]
+			article_ids = loaded_pool_history[time][user_id]
 			pool = []
 			for aid in article_ids:
 				pool.append(self.artdict[aid])
@@ -51,6 +51,52 @@ class RewardManager():
 
 	def getL2Diff(self, x, y):
 		return np.linalg.norm(x-y) # L2 norm
+
+	def load_pool_history(self):
+		def load_lastfm_pools():
+			# Create user->timestamp->pool mapping
+			user_to_pools = {}
+			with open(self.pool_filename, 'r') as infile:
+				next(infile)
+				for line in infile:
+					user_id, timestamp, arm_pool = line.split('\t')
+					if user_id not in user_to_pools:
+						user_to_pools[user_id] = {}
+					user_to_pools[user_id][timestamp] = eval(arm_pool)
+
+			# Convert to time->user->pool
+			pool_dict = {}
+			for user_id in user_to_pools:
+				time = 0
+				for key in sorted(user_to_pools[user_id].keys()):
+					if time not in pool_dict:
+						pool_dict[time] = {}
+					pool_dict[time][user_id] = user_to_pools[user_id][key]
+					time += 1
+
+			return pool_dict
+
+		def load_default_pools():
+			loaded_pool_history = {}
+			with open(self.pool_filename, 'r') as infile:
+				loaded_pool_history = json.load(infile)
+
+			# Convert from str keys to int keys
+			pool_history_int_keys = {}
+			for time in loaded_pool_history:
+				pool_history_int_keys[int(time)] = {}
+				for user_id in loaded_pool_history[time]:
+					pool_history_int_keys[int(time)][int(user_id)] = loaded_pool_history[time][user_id]
+			
+			return pool_history_int_keys
+
+		loaded_pool_history = {}
+		if self.pool_format == 'lastfm':
+			loaded_pool_history = load_lastfm_pools()
+		else:
+			loaded_pool_history = load_default_pools()
+		return loaded_pool_history
+			
 
 	def runAlgorithms(self, algorithms, diffLists):
 		self.startTime = datetime.datetime.now()
@@ -112,10 +158,7 @@ class RewardManager():
 
 		#Testing
 		article_pool_history = {}
-		loaded_pool_history = {}
-		if self.load_pool:
-			with open(self.pool_filename, 'r') as infile:
-				loaded_pool_history = json.load(infile)
+		loaded_pool_history = self.load_pool_history()
 		reward_noise_history = {}
 		loaded_reward_noise_history = {}
 		if self.load_reward_noise:

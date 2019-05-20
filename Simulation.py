@@ -140,6 +140,7 @@ if __name__ == '__main__':
 	rewardManagerDict['load_pool'] = pool.has_key('load') and pool['load']
 	rewardManagerDict['save_pool'] = pool.has_key('save') and pool['save']
 	rewardManagerDict['pool_filename'] = pool_filename
+	rewardManagerDict['pool_format'] = pool['format'] if pool.has_key('format') else 'default'
 	rewardManagerDict['batchSize'] = gen['batch_size'] if gen.has_key('batch_size') else 1
 
 	# Matrix parameters

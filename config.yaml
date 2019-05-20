@@ -35,12 +35,13 @@ article:
   load: yes # (yes/no) Load attributes for each article from file specified by filename
   save: no # (yes/no) Save attributes for each article into a file for future simulations
   filename: Dataset/hetrec2011-lastfm-2k/Arm_FeatureVectors_2.dat # (string) File from which to load article objects
-  format: lastfm # (default/lastfm/delicious/yahoo) which data source to use
+  format: lastfm # (default/lastfm/delicious/yahoo) which data format to use
 
 pool:
   load: no # (yes/no) Load article ids of each article pool from file specified by filename
   save: no # (yes/no) Save article ids of each article pool into a file for future simulations
-  filename: Simulation_MAB_files/pool_10articles_1000iterations_2000.json # (string) File from which to load article ids of each article pool
+  filename: Dataset/hetrec2011-lastfm-2k/processed_events_shuffled.dat # (string) File from which to load article ids of each article pool
+  format: lastfm # (default/lastfm/delicious/yahoo) which data format to use
 
 # Reward to determine the accuracy of choices made by the algorithm
 reward:
