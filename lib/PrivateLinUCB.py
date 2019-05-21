@@ -326,3 +326,6 @@ class PrivateLinUCBAlgorithm(BaseAlg):
 
     def getTheta(self, userID):
         return self.users[userID].getTheta()
+
+    def setT(self, T):
+        self.T = T

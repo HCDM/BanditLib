@@ -38,7 +38,7 @@ article:
   format: lastfm # (default/lastfm/delicious/yahoo) which data format to use
 
 pool:
-  load: no # (yes/no) Load article ids of each article pool from file specified by filename
+  load: yes # (yes/no) Load article ids of each article pool from file specified by filename
   save: no # (yes/no) Save article ids of each article pool into a file for future simulations
   filename: Dataset/hetrec2011-lastfm-2k/processed_events_shuffled.dat # (string) File from which to load article ids of each article pool
   format: lastfm # (default/lastfm/delicious/yahoo) which data format to use

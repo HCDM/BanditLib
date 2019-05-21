@@ -53,28 +53,49 @@ class RewardManager():
 		return np.linalg.norm(x-y) # L2 norm
 
 	def load_pool_history(self):
-		def load_lastfm_pools():
-			# Create user->timestamp->pool mapping
-			user_to_pools = {}
-			with open(self.pool_filename, 'r') as infile:
-				next(infile)
-				for line in infile:
-					user_id, timestamp, arm_pool = line.split('\t')
-					if user_id not in user_to_pools:
-						user_to_pools[user_id] = {}
-					user_to_pools[user_id][timestamp] = eval(arm_pool)
+		def load_lastfm_pools(ignore_timestamp=True):
+			if ignore_timestamp:
+				# Create user->[pools] (equiv. to user->time->pools)
+				user_pools = {}
+				with open(self.pool_filename, 'r') as infile:
+					next(infile)
+					for line in infile:
+						user_id, timestamp, arm_pool = line.split('\t')
+						if user_id not in user_pools:
+							user_pools[user_id] = []
+						user_pools[user_id].append(arm_pool)
 
-			# Convert to time->user->pool
-			pool_dict = {}
-			for user_id in user_to_pools:
-				time = 0
-				for key in sorted(user_to_pools[user_id].keys()):
-					if time not in pool_dict:
-						pool_dict[time] = {}
-					pool_dict[time][user_id] = user_to_pools[user_id][key]
-					time += 1
+				# Convert to time->user->pools
+				pool_dict = {}
+				for user_id in user_pools:
+					for time in range(len(user_pools[user_id])):
+						if time not in pool_dict:
+							pool_dict[time] = {}
+						pool_dict[time][int(user_id)] = user_pools[user_id][time]
 
-			return pool_dict
+				return pool_dict
+			else:
+				# Create user->timestamp->pool mapping
+				user_to_pools = {}
+				with open(self.pool_filename, 'r') as infile:
+					next(infile)
+					for line in infile:
+						user_id, timestamp, arm_pool = line.split('\t')
+						if user_id not in user_to_pools:
+							user_to_pools[user_id] = {}
+						user_to_pools[user_id][timestamp] = eval(arm_pool)
+
+				# Convert to time->user->pool
+				pool_dict = {}
+				for user_id in user_to_pools:
+					time = 0
+					for key in sorted(user_to_pools[user_id].keys()):
+						if time not in pool_dict:
+							pool_dict[time] = {}
+						pool_dict[time][int(user_id)] = user_to_pools[user_id][key]
+						time += 1
+
+				return pool_dict
 
 		def load_default_pools():
 			loaded_pool_history = {}
@@ -96,6 +117,54 @@ class RewardManager():
 		else:
 			loaded_pool_history = load_default_pools()
 		return loaded_pool_history
+
+	def load_pool_user_T(self):
+		def load_pool_user_T_lastfm():
+			# Create user->[timestamps] mapping
+			user_timestamps = {}
+			with open(self.pool_filename, 'r') as infile:
+				next(infile)
+				for line in infile:
+					user_id, timestamp, arm_pool = line.split('\t')
+					if user_id not in user_timestamps:
+						user_timestamps[user_id] = set()
+					user_timestamps[user_id].add(timestamp)
+
+			# Convert to user->num unique timestamps mapping
+			user_num_pools = {}
+			for user_id in user_timestamps:
+				user_num_pools[user_id] = len(user_timestamps[user_id])
+
+			return user_num_pools
+
+		def load_pool_user_T_default():
+			loaded_pool_history = {}
+			with open(self.pool_filename, 'r') as infile:
+				loaded_pool_history = json.load(infile)
+
+			# Convert from str keys to int keys
+			pool_history_int_keys = {}
+			for time in loaded_pool_history:
+				pool_history_int_keys[int(time)] = {}
+				for user_id in loaded_pool_history[time]:
+					pool_history_int_keys[int(time)][int(user_id)] = loaded_pool_history[time][user_id]
+			
+			# Convert from time->user_id->arms to user_id->num unique times
+			user_times = {}
+			for time in pool_history_int_keys:
+				for user_id in pool_history_int_keys[time]:
+					if user_id not in user_times:
+						user_times[user_id] = 0
+					user_times[user_id] += 1
+
+			return user_times
+
+		load_pool_user_T = {}
+		if self.pool_format == 'lastfm':
+			load_pool_user_T = load_pool_user_T_lastfm()
+		else:
+			load_pool_user_T = load_pool_user_T_default()
+		return load_pool_user_T
 			
 
 	def runAlgorithms(self, algorithms, diffLists):
@@ -135,7 +204,13 @@ class RewardManager():
 			f.write('Time(Iteration)')
 			diffLists.initial_write(f)
 			f.write('\n')
-		
+
+		loaded_pool_history = {}
+		if self.load_pool:
+			loaded_pool_history = self.load_pool_history()
+			loaded_pool_user_T = self.load_pool_user_T()
+			print(sorted(loaded_pool_history[0].keys()))
+
 		# Prepare article dict
 		self.artdict = {}
 		for art in self.articles:
@@ -158,7 +233,6 @@ class RewardManager():
 
 		#Testing
 		article_pool_history = {}
-		loaded_pool_history = self.load_pool_history()
 		reward_noise_history = {}
 		loaded_reward_noise_history = {}
 		if self.load_reward_noise:
