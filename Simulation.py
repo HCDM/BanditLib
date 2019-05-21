@@ -80,6 +80,183 @@ def generate_algorithms(global_dict, alg_dict, W, system_params):
 		diffLists.add_algorithm(alg_id, algorithms[alg_id]['algorithm'].getEstimateSettings())
 	return algorithms, diffLists
 
+def create_reward_manager_dict(config, clargs):
+	def extract_context_dimension(general_cfg, clargs, default=20):
+		context_dimension = default
+		if clargs.contextdim:
+			context_dimension = clargs.contextdim
+		elif 'context_dimension' in general_cfg:
+			context_dimension = general_cfg['context_dimension']
+		return context_dimension
+
+	def extract_latent_dimension(general_cfg, clargs, default=0):
+		latent_dimension = default
+		if clargs.hiddendim:
+			latent_dimension = clargs.hiddendim
+		elif 'hidden_dimension' in general_cfg:
+			latent_dimension = general_cfg['hidden_dimension']
+		return latent_dimension
+
+	def extract_argument(parent_cfg, name, default):
+		if name in parent_cfg:
+			return parent_cfg[name]
+		return default
+
+	def create_filename(d, ext='.json', first_key=None):
+		"""Generate default filename from set of key-values.
+
+		The key-value pairs are ordered alphabetically with the exception of
+		the first key, if specified.
+
+		Args:
+			d (dict): Set of key-value pairs to include in filename.
+			ext (str): File extension, default to .json.
+			first_key (Any): If specified, make this the first key in the filename.
+
+		Returns:
+			The full filepath string.
+		"""
+		parent_dir = sim_files_folder
+		filename_array = []
+		sorted_d_items = sorted(d.items(), key=lambda t: t[0])
+		for k, v in sorted_d_items:
+			if first_key and k == first_key:
+				filename_array.insert(0, '{}_{}'.format(k, v))
+			else:
+				filename_array.append('{}_{}'.format(k, v))
+		filename = ''.join(filename_array) + ext
+		filepath = os.path.join(parent_dir, filename)
+		return filepath
+		
+
+	reward_manager_dict = {}
+
+	general_cfg = config['general'] if 'general' in config else {}
+	article_cfg = config['article'] if 'article' in config else {}
+	pool_cfg = config['pool'] if 'pool' in config else {}
+	user_cfg = config['user'] if 'user' in config else {}
+	reward_cfg = config['reward'] if 'reward' in config else {}
+
+	# Other attributes
+	n_articles = extract_argument(article_cfg, 'number', default=1000)
+	n_article_groups = extract_argument(article_cfg, 'groups', default=5)
+	n_users = extract_argument(user_cfg, 'number', default=10)
+	n_users_groups = extract_argument(user_cfg, 'groups', default=5)
+	reward_manager_dict['n_articles'] = n_articles
+	reward_manager_dict['n_article_groups'] = n_article_groups
+	reward_manager_dict['n_users'] = n_users
+	reward_manager_dict['n_users_groups'] = n_users_groups
+
+
+	# Config-independent
+	reward_manager_dict['NoiseScale'] = 0.01
+	reward_manager_dict['noise'] = lambda : np.random.normal(scale = reward_manager_dict['NoiseScale'])
+	reward_manager_dict['epsilon'] = 0
+	reward_manager_dict['Gepsilon'] = 1  # parameter for GOBLin
+	reward_manager_dict['matrixNoise'] = lambda : np.random.normal(scale = 0.01)  # matrix parameters
+	reward_manager_dict['sparseLevel'] = n_users  # if smaller or equal to 0 or larger or enqual to usernum, matrix is fully connected
+	reward_manager_dict['type'] = 'UniformTheta'
+
+	# General
+	context_dimension = extract_context_dimension(general_cfg, clargs)
+	latent_dimension = extract_latent_dimension(general_cfg, clargs)
+	reward_manager_dict['context_dimension'] = context_dimension
+	reward_manager_dict['latent_dimension'] = latent_dimension
+	reward_manager_dict['training_iterations'] = extract_argument(general_cfg, 'training_iterations', default=0)
+	reward_manager_dict['testing_iterations'] = extract_argument(general_cfg, 'testing_iterations', default=100)
+	reward_manager_dict['plot'] = extract_argument(general_cfg, 'plot', default=True)
+	reward_manager_dict['poolArticleSize'] = extract_argument(general_cfg, 'pool_article_size', default=10)
+	reward_manager_dict['batchSize'] = extract_argument(general_cfg, 'batch_size', default=1)
+	reward_manager_dict['testing_method'] = extract_argument(general_cfg, 'testing_method', default='online')
+
+	# Article
+	default_article_filename = create_filename({
+		'articles': n_articles,
+		'context': context_dimension,
+		'latent': latent_dimension,
+		'Agroups': n_article_groups
+	}, first_key='articles')
+	article_filename = extract_argument(article_cfg, 'filename', default=default_article_filename)
+	article_format = extract_argument(article_cfg, 'format', default='default')
+	if article_format.lower() == 'lastfm':
+		AM = ArticleManagerLastFm(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = n_article_groups,
+				FeatureFunc=featureUniform,  argv={'l2_limit':1})
+	else:
+		AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = n_article_groups,
+				FeatureFunc=featureUniform,  argv={'l2_limit':1})
+	if extract_argument(article_cfg, 'load', default=False):
+		articles = AM.loadArticles(article_filename)
+		n_articles = len(articles)  # Override n_articles
+	else:
+		articles = AM.simulateArticlePool()
+		if extract_argument(article_cfg, 'save', default=False):
+			AM.saveArticles(articles, article_filename, force=False)
+	pca_articles(articles, 'ascend')
+	reward_manager_dict['articles'] = articles
+	reward_manager_dict['simulation_signature'] = AM.signature
+
+	# Pool
+	default_pool_filename = create_filename({
+		'pool': reward_manager_dict['poolArticleSize'],
+		'articles': n_articles,
+		'iterations': reward_manager_dict['testing_iterations']
+	}, first_key='pool')
+	reward_manager_dict['pool_filename'] = extract_argument(pool_cfg, 'filename', default=default_pool_filename)
+	reward_manager_dict['load_pool'] = extract_argument(pool_cfg, 'load', default=False)
+	reward_manager_dict['save_pool'] = extract_argument(pool_cfg, 'save', default=False)
+	reward_manager_dict['pool_format'] = extract_argument(pool_cfg, 'format', default='default')
+
+	# User
+	default_user_filename = create_filename({
+		'users': n_users,
+		'context': context_dimension,
+		'latent': latent_dimension,
+		'Ugroups': n_users_groups
+	}, first_key='users')
+	user_cfg['filename'] = extract_argument(user_cfg, 'filename', default=default_user_filename)
+	
+	if 'collaborative' in general_cfg:
+		if extract_argument(general_cfg, 'collaborative', default=False):
+			use_coUsers = True
+			reward_manager_dict['reward_type'] = 'SocialLinear'
+		else:
+			use_coUsers = False
+			reward_manager_dict['reward_type'] = 'Linear'
+	else:
+		use_coUsers = extract_argument(user_cfg, 'collaborative', default=False)
+		reward_manager_dict['reward_type'] = extract_argument(reward_cfg, 'type', default='linear')
+
+	if use_coUsers:
+		UM = CoUserManager(context_dimension+latent_dimension, user_cfg, argv={'l2_limit':1, 'sparseLevel': n_users, 'matrixNoise': reward_manager_dict['matrixNoise']})
+	else:
+		UM = UserManager(context_dimension+latent_dimension, user_cfg, argv={'l2_limit':1})
+	UM.CoTheta()
+
+	reward_manager_dict['W'] = UM.getW()
+	reward_manager_dict['users'] = UM.getUsers()
+
+	# Reward
+	reward_manager_dict['k'] = extract_argument(reward_cfg, 'k', default=1)
+	# Reward noise
+	reward_noise_cfg = reward_cfg['noise'] if 'noise' in reward_cfg else {}
+	reward_manager_dict['load_reward_noise'] = extract_argument(reward_noise_cfg, 'load', default=False)
+	reward_manager_dict['save_reward_noise'] = extract_argument(reward_noise_cfg, 'save', default=False)
+	default_reward_noise_filename = create_filename({
+		'reward_noise': reward_manager_dict['k'],
+		'users': n_users,
+		'iterations': reward_manager_dict['testing_iterations']
+	}, first_key='reward_noise')
+	reward_manager_dict['reward_noise_filename'] = extract_argument(reward_noise_cfg, 'filename', default=default_reward_noise_filename)
+	# Reward noise resample
+	if 'resample' in reward_noise_cfg:
+		reward_manager_dict['reward_noise_resample_active'] = True
+		reward_manager_dict['reward_noise_resample_round'] = extract_argument(reward_noise_cfg['resample'], 'round', default=0)
+		reward_manager_dict['reward_noise_resample_change'] = extract_argument(reward_noise_cfg['resample'], 'change', default=0.5)
+	else:
+		reward_manager_dict['reward_noise_resample_active'] = False
+
+	return reward_manager_dict
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description = '')
 	parser.add_argument('--alg', dest='alg', help='Select a specific algorithm, could be CoLin, hLinUCB, factorUCB, LinUCB, etc.')
@@ -91,153 +268,24 @@ if __name__ == '__main__':
 	cfg = {}
 	with open(args.config, 'r') as ymlfile:
 		cfg = yaml.load(ymlfile)
-	gen = cfg['general'] if cfg.has_key('general') else {}
-	user = cfg['user'] if cfg.has_key('user') else {}
-	pool = cfg['pool'] if cfg.has_key('pool') else {}
-	article = cfg['article'] if cfg.has_key('article') else {}
-	reco = cfg['reward'] if cfg.has_key('reward') else {}
-
-	#algName = str(args.alg) if args.alg else gen['alg']
-
-	rewardManagerDict = {}
-
-	if args.contextdim:
-		context_dimension = args.contextdim
-	else:
-		context_dimension = gen['context_dimension'] if gen.has_key('context_dimension') else 20
-	rewardManagerDict['context_dimension'] = context_dimension
-	if args.hiddendim:
-		latent_dimension = args.hiddendim
-	else:
-		latent_dimension = gen['hidden_dimension'] if gen.has_key('hidden_dimension') else 0
-	rewardManagerDict['latent_dimension'] = latent_dimension
-
-	rewardManagerDict['training_iterations'] = gen['training_iterations'] if gen.has_key('training_iterations') else 0
-	rewardManagerDict['testing_iterations'] = gen['testing_iterations'] if gen.has_key('testing_iterations') else 100
-	rewardManagerDict['plot'] = gen['plot'] if gen.has_key('plot') else True
-	
-	rewardManagerDict['NoiseScale'] = .01
-
-	
-
-	# alpha  = 0.3
-	# lambda_ = 0.1   # Initialize A
-	rewardManagerDict['epsilon'] = 0 # initialize W
-	# eta_ = 0.5
-
-	n_articles = article['number'] if article.has_key('number') else 1000
-	ArticleGroups = article['groups'] if article.has_key('groups') else 5
-
-	n_users = user['number'] if user.has_key('number') else 10
-	UserGroups = user['groups'] if user.has_key('groups') else 5
-	
-	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
-	
-	if pool.has_key('filename'):
-		pool_filename = pool['filename']
-	else:
-		pool_filename = os.path.join(sim_files_folder, 'pool_' + str(rewardManagerDict['poolArticleSize']) + 'articles_' + str(n_articles) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
-	rewardManagerDict['load_pool'] = pool.has_key('load') and pool['load']
-	rewardManagerDict['save_pool'] = pool.has_key('save') and pool['save']
-	rewardManagerDict['pool_filename'] = pool_filename
-	rewardManagerDict['pool_format'] = pool['format'] if pool.has_key('format') else 'default'
-	rewardManagerDict['batchSize'] = gen['batch_size'] if gen.has_key('batch_size') else 1
-
-	# Matrix parameters
-	matrixNoise = 0.01
-	rewardManagerDict['matrixNoise'] = lambda : np.random.normal(scale = matrixNoise)
-	rewardManagerDict['sparseLevel'] = n_users  # if smaller or equal to 0 or larger or enqual to usernum, matrix is fully connected
-
-
-	# Parameters for GOBLin
-	rewardManagerDict['Gepsilon'] = 1
-	
-	if not user.has_key('filename'):
-		user['filename'] = os.path.join(sim_files_folder, "users_"+str(n_users)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Ugroups" + str(UserGroups)+".json")
-	# Override User type 
-	if gen.has_key('collaborative'):
-		if gen['collaborative']:
-			use_coUsers = True
-			reward_type = 'SocialLinear'
-		else:
-			use_coUsers = False
-			reward_type = 'Linear'
-	else:
-		use_coUsers = user.has_key('collaborative') and user['collaborative']
-		reward_type = reco['type'] if reco.has_key('type') else 'linear'
-
-
-	#if user.has_key('collaborative') and user['collaborative']:
-	if use_coUsers:
-		UM = CoUserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1, 'sparseLevel': n_users, 'matrixNoise': rewardManagerDict['matrixNoise']})
-	else:
-		UM = UserManager(context_dimension+latent_dimension, user, argv={'l2_limit':1})
-	UM.CoTheta()
-
-	rewardManagerDict['W'] = UM.getW()
-	rewardManagerDict['users'] = UM.getUsers()
-	
-	if article.has_key('filename'):
-		articles_filename = article['filename']
-	else:
-		articles_filename = os.path.join(sim_files_folder, "articles_"+str(n_articles)+"context_"+str(context_dimension)+"latent_"+str(latent_dimension)+ "Agroups" + str(ArticleGroups)+".json")
-	article_format = article['format']
-	if article_format.lower() == 'lastfm':
-		AM = ArticleManagerLastFm(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
-				FeatureFunc=featureUniform,  argv={'l2_limit':1})
-	else:
-		AM = ArticleManager(context_dimension+latent_dimension, n_articles=n_articles, ArticleGroups = ArticleGroups,
-				FeatureFunc=featureUniform,  argv={'l2_limit':1})
-	if article.has_key('load') and article['load']:
-		articles = AM.loadArticles(articles_filename)
-		n_articles = len(articles)
-	else:
-		articles = AM.simulateArticlePool()
-		if article.has_key('save') and article['save']:
-			AM.saveArticles(articles, articles_filename, force=False)
-	rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
-	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
-	
-	reward_noise = reco['noise']
-	if reward_noise.has_key('filename'):
-		reward_noise_filename = reward_noise['filename']
-	else:
-		reward_noise_filename = os.path.join(sim_files_folder, 'reward_noise_' + str(rewardManagerDict['k']) + 'users_' + str(n_users) + 'iterations_' + str(rewardManagerDict['testing_iterations']) + '.json')
-	rewardManagerDict['load_reward_noise'] = reward_noise.has_key('load') and reward_noise['load']
-	rewardManagerDict['save_reward_noise'] = reward_noise.has_key('save') and reward_noise['save']
-	rewardManagerDict['reward_noise_filename'] = reward_noise_filename
-
-	if reward_noise.has_key('resample'):
-		rewardManagerDict['reward_noise_resample_active'] = True
-		rewardManagerDict['reward_noise_resample_round'] = reward_noise['resample']['round']
-		rewardManagerDict['reward_noise_resample_change'] = reward_noise['resample']['change']
-	else:
-		rewardManagerDict['reward_noise_resample_active'] = False
-
-	#PCA
-	pca_articles(articles, 'ascend')
-	rewardManagerDict['articles'] = articles
-	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
-	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])
-	rewardManagerDict['type'] = "UniformTheta"
-	rewardManagerDict['simulation_signature'] = AM.signature
-
-
-	
-	for i in range(len(articles)):
-		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
 	# TODO: Add in reward options dictionary
-	simExperiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
+	reward_manager_dict = create_reward_manager_dict(cfg, args)
+	
+	for i in range(len(reward_manager_dict['articles'])):
+		reward_manager_dict['articles'][i].contextFeatureVector = reward_manager_dict['articles'][i].featureVector[:reward_manager_dict['context_dimension']]
+
+	simExperiment = RewardManager(arg_dict = reward_manager_dict, reward_type = reward_manager_dict['reward_type'])
 
 	print "Starting for ", simExperiment.simulation_signature
 	system_params = {
-		'context_dim': context_dimension,
-		'latent_dim': latent_dimension,
-		'n_users': n_users,
-		'n_articles': n_articles
+		'context_dim': reward_manager_dict['context_dimension'],
+		'latent_dim': reward_manager_dict['latent_dimension'],
+		'n_users': reward_manager_dict['n_users'],
+		'n_articles': reward_manager_dict['n_articles']
 	}
 
-	algorithms, diffLists = generate_algorithms(gen, cfg['alg'], UM.getW(), system_params)
+	general_cfg = cfg['general'] if 'general' in cfg else {}
+	algorithms, diffLists = generate_algorithms(general_cfg, cfg['alg'], reward_manager_dict['W'], system_params)
 
 	simExperiment.runAlgorithms(algorithms, diffLists)
