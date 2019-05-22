@@ -224,9 +224,18 @@ class RewardManager():
 			f.write('\n')
 
 		loaded_pool_history = {}
+		loaded_pool_user_T = {}
 		if self.load_pool:
 			loaded_pool_history = self.load_pool_history()
 			loaded_pool_user_T = self.load_pool_user_T()
+
+			# set T for each private linucb alg estimated user
+			for alg_id, alg_block in algorithms.items():
+				alg_name = alg_block['name']
+				if alg_name == 'PrivateLinUCB':
+					users = alg_block['algorithm'].users
+					for user_id in range(len(users)):
+						users[user_id].setT(loaded_pool_user_T[user_id])
 
 		# Prepare article dict
 		self.artdict = {}
@@ -260,6 +269,9 @@ class RewardManager():
 			total = 0
 			counter = 0
 			for u in self.users:
+				if iter_ >= loaded_pool_user_T[u.id]:
+					continue
+
 				self.regulateArticlePool(iter_, u.id, loaded_pool_history=loaded_pool_history)
 				if self.save_pool:
 					if iter_ not in article_pool_history:
@@ -353,13 +365,8 @@ class RewardManager():
 			with open(self.reward_noise_filename, 'w') as outfile:
 				json.dump(reward_noise_history, outfile)
 
-		with open('tmp/article_selection_history.csv', 'w') as outfile:
-			for iter_ in range(len(article_selection_history)):
-				user_selections = article_selection_history[iter_]
-				row = []
-				for uid in range(len(user_selections)):
-					row.append(str(user_selections[uid]))
-				outfile.write(','.join(row) + '\n')
+		with open('tmp/article_selection_history.json', 'w') as outfile:
+			json.dump(article_selection_history, outfile)
 
 
 		if (self.plot==True): # only plot

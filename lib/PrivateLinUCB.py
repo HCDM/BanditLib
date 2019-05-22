@@ -254,6 +254,9 @@ class PrivateLinUCBUserStruct:
     def getTheta(self):
         return self.UserTheta + self.UserThetaNoise
 
+    def setT(self, T):
+        self.T = T
+
 
 class PrivateLinUCBAlgorithm(BaseAlg):
     def __init__(self, arg_dict, init="zero"):  # n is number of users
@@ -326,6 +329,3 @@ class PrivateLinUCBAlgorithm(BaseAlg):
 
     def getTheta(self, userID):
         return self.users[userID].getTheta()
-
-    def setT(self, T):
-        self.T = T
