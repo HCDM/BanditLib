@@ -143,7 +143,7 @@ class simulateOnlineData(object):
 			ui.CoTheta = np.zeros(self.context_dimension+self.latent_dimension)
 			for uj in self.users:
 				ui.CoTheta += self.W[uj.id][ui.id] * np.asarray(uj.theta)
-			print 'Users', ui.id, 'CoTheta', ui.CoTheta	
+			# print 'Users', ui.id, 'CoTheta', ui.CoTheta	
 	
 	def batchRecord(self, iter_):
 		print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime

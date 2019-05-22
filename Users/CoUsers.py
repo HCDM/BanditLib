@@ -97,4 +97,4 @@ class CoUserManager(UserManager):
 			ui.CoTheta = np.zeros(self.dimension)
 			for uj in self.users:
 				ui.CoTheta += self.W[uj.id][ui.id] * np.asarray(uj.theta)
-			print 'Users', ui.id, 'CoTheta', ui.CoTheta, 'Theta', ui.theta
+			# print 'Users', ui.id, 'CoTheta', ui.CoTheta, 'Theta', ui.theta

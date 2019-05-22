@@ -142,6 +142,14 @@ def create_reward_manager_dict(config, clargs):
 	n_article_groups = extract_argument(article_cfg, 'groups', default=5)
 	n_users = extract_argument(user_cfg, 'number', default=10)
 	n_users_groups = extract_argument(user_cfg, 'groups', default=5)
+
+	if extract_argument(article_cfg, 'load', default=False):
+		if extract_argument(article_cfg, 'format', default='default') == 'lastfm':
+			# hardcoded for simplicity
+			n_users = 1892
+			n_articles = 12523
+			user_cfg['number'] = 1892
+
 	reward_manager_dict['n_articles'] = n_articles
 	reward_manager_dict['n_article_groups'] = n_article_groups
 	reward_manager_dict['n_users'] = n_users

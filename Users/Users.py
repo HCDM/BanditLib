@@ -129,4 +129,4 @@ class UserManager():
 	def CoTheta(self):
 		for ui in self.users:
 			ui.CoTheta = ui.theta
-			print 'Users', ui.id, 'CoTheta', ui.CoTheta
+			# print 'Users', ui.id, 'CoTheta', ui.CoTheta

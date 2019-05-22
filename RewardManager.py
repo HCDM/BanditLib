@@ -40,7 +40,8 @@ class RewardManager():
 
 	def regulateArticlePool(self, time, user_id, loaded_pool_history=None):
 		if self.load_pool:
-			article_ids = loaded_pool_history[time][user_id]
+			time_dict = loaded_pool_history[time]
+			article_ids = time_dict[user_id]
 			pool = []
 			for aid in article_ids:
 				pool.append(self.artdict[aid])
@@ -63,7 +64,9 @@ class RewardManager():
 						user_id, timestamp, arm_pool = line.split('\t')
 						if user_id not in user_pools:
 							user_pools[user_id] = []
-						user_pools[user_id].append(arm_pool)
+						arm_pool_arr = arm_pool.strip()[1:-1].split(', ')
+						arm_pool_ints = [int(x) for x in arm_pool_arr]
+						user_pools[user_id].append(arm_pool_ints)
 
 				# Convert to time->user->pools
 				pool_dict = {}
@@ -71,7 +74,7 @@ class RewardManager():
 					for time in range(len(user_pools[user_id])):
 						if time not in pool_dict:
 							pool_dict[time] = {}
-						pool_dict[time][int(user_id)] = user_pools[user_id][time]
+						pool_dict[time][int(user_id) - 1] = user_pools[user_id][time]  # - 1 to 0-index user ids
 
 				return pool_dict
 			else:
@@ -83,7 +86,9 @@ class RewardManager():
 						user_id, timestamp, arm_pool = line.split('\t')
 						if user_id not in user_to_pools:
 							user_to_pools[user_id] = {}
-						user_to_pools[user_id][timestamp] = eval(arm_pool)
+						arm_pool_arr = arm_pool.strip()[1:-1].split(', ')
+						arm_pool_ints = [int(x) for x in arm_pool_arr]
+						user_to_pools[user_id][timestamp] = arm_pool_ints
 
 				# Convert to time->user->pool
 				pool_dict = {}
@@ -92,7 +97,7 @@ class RewardManager():
 					for key in sorted(user_to_pools[user_id].keys()):
 						if time not in pool_dict:
 							pool_dict[time] = {}
-						pool_dict[time][int(user_id)] = user_to_pools[user_id][key]
+						pool_dict[time][int(user_id) - 1] = user_to_pools[user_id][key]  # - 1 to 0-index user ids
 						time += 1
 
 				return pool_dict
@@ -209,12 +214,11 @@ class RewardManager():
 		if self.load_pool:
 			loaded_pool_history = self.load_pool_history()
 			loaded_pool_user_T = self.load_pool_user_T()
-			print(sorted(loaded_pool_history[0].keys()))
 
 		# Prepare article dict
 		self.artdict = {}
 		for art in self.articles:
-			self.artdict[art.id] = art
+			self.artdict[int(art.id)] = art
 
 		# Training
 		shuffle(self.articles)
