@@ -269,8 +269,9 @@ class RewardManager():
 			total = 0
 			counter = 0
 			for u in self.users:
-				if iter_ >= loaded_pool_user_T[u.id]:
-					continue
+				if self.load_pool:
+					if iter_ >= loaded_pool_user_T[u.id]:
+						continue
 
 				self.regulateArticlePool(iter_, u.id, loaded_pool_history=loaded_pool_history)
 				if self.save_pool:
