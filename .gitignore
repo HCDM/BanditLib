@@ -5,4 +5,4 @@
 /SimulationResults/
 .vscode/
 env/
-tmp/*
+tmp*/

@@ -79,29 +79,20 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    - algorithm: LinUCB
+    - algorithm: PrivateLinUCB
       alpha: 0.3
-      id: Lin
+      delta: 0.5
+      eps: 1.5
+      id: pLin - laplacian - tree - theta
       lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      noise_save: True
+      noise_load: False
+      noise_filename: tmp/plin_noise_laplacianiterations_1500.json
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 1.5
-    #   id: pLin - laplacian - tree - theta
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: tree
-    #   noise_save: True
-    #   noise_load: False
-    #   noise_filename: tmp/plin_noise_laplacianiterations_2000.json
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   is_theta_level: True
+      is_theta_level: True

@@ -19,7 +19,7 @@ experiment:
 general:
   testing_iterations: 1500 #(int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
+  context_dimension: 16 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
   pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
   batch_size: 1 # (int) 
@@ -41,16 +41,15 @@ user:
 article:
   number: 1000 # (int) total number of articles from which to create the article pool, overwritten if loading articles
   groups: 5 # (int)
-  load: yes # (yes/no) Load attributes for each article from file specified by filename
-  save: no # (yes/no) Save attributes for each article into a file for future simulations
-  filename: Dataset/hetrec2011-lastfm-2k/Arm_FeatureVectors_2.dat # (string) File from which to load article objects
-  format: lastfm # (default/lastfm/delicious/yahoo) which data source to use
+  load: no # (yes/no) Load attributes for each article from file specified by filename
+  save: yes # (yes/no) Save attributes for each article into a file for future simulations
+  filename: tmp/articles_1000iterations_1500.json # (string) File from which to load article objects
+  format: default # (default/lastfm/delicious/yahoo) which data source to use
 
 pool:
-  load: yes # (yes/no) Load article ids of each article pool from file specified by filename
-  save: no # (yes/no) Save article ids of each article pool into a file for future simulations
-  filename: Dataset/hetrec2011-lastfm-2k/processed_events_shuffled.dat # (string) File from which to load article ids of each article pool
-  format: lastfm # (default/lastfm/delicious/yahoo) which data format to use
+  load: no # (yes/no) Load article ids of each article pool from file specified by filename
+  save: yes # (yes/no) Save article ids of each article pool into a file for future simulations
+  filename: tmp/pool_10articles_1000iterations_1500.json # (string) File from which to load article ids of each article pool
 
 # Reward to determine the accuracy of choices made by the algorithm
 reward:
@@ -79,29 +78,20 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    - algorithm: LinUCB
+    - algorithm: PrivateLinUCB
       alpha: 0.3
-      id: Lin
+      delta: 0.5
+      eps: 1.5
+      id: pLin - laplacian - tree
       lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      noise_save: True
+      noise_load: False
+      noise_filename: tmp/plin_noise_laplacianiterations_1500.json
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 1.5
-    #   id: pLin - laplacian - tree - theta
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: tree
-    #   noise_save: True
-    #   noise_load: False
-    #   noise_filename: tmp/plin_noise_laplacianiterations_2000.json
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   is_theta_level: True
+      is_theta_level: False

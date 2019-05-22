@@ -1,4 +1,5 @@
 import argparse
+import json
 import matplotlib.pyplot as plt
 import os
 import shutil
@@ -22,7 +23,7 @@ def write_config(outfilepath, config):
     with open(outfilepath, 'w') as outfile:
         outfile.write(yaml.dump(config))
 
-def rename_article_history_csv(srcpath, dstpath):
+def rename_article_history_file(srcpath, dstpath):
     os.rename(srcpath, dstpath)
 
 def prepare_config(config):
@@ -78,15 +79,16 @@ def print_summary(arm_changes_filepath):
 
 def compute_arm_diffs(orig_arm_file, new_arm_file):
     with open(orig_arm_file, 'r') as infile:
-        orig_aids = [line.split(',') for line in infile.readlines()]
+        orig_aids = json.load(infile)
     
     with open(new_arm_file, 'r') as infile:
-        new_aids = [line.split(',') for line in infile.readlines()]
-    
+        new_aids = json.load(infile)
+
     num_diffs = 0
-    for i in range(len(orig_aids)):
-        for j in range(len(orig_aids[0])):
-            if orig_aids[i][j] != new_aids[i][j]:
+    for time in range(len(orig_aids)):
+        time_key = str(time)
+        for user_id in orig_aids[time_key]:
+            if orig_aids[time_key][user_id] != new_aids[time_key][user_id]:
                 num_diffs += 1
     return num_diffs
 
@@ -100,16 +102,17 @@ def save_changes(arm_changes_filepath, resample_round, resample_change, num_arm_
 
 def display_arm_changes(orig_arm_file, new_arm_file):
     with open(orig_arm_file, 'r') as infile:
-        orig_aids = [line.split(',') for line in infile.readlines()]
+        orig_aids = json.load(infile)
     
     with open(new_arm_file, 'r') as infile:
-        new_aids = [line.split(',') for line in infile.readlines()]
+        new_aids = json.load(infile)
 
     changes = []
     num_diffs = 0
-    for i in range(len(orig_aids)):
-        for j in range(len(orig_aids[0])):
-            if orig_aids[i][j] != new_aids[i][j]:
+    for time in range(len(orig_aids)):
+        time_key = str(time)
+        for user_id in orig_aids[time_key]:
+            if orig_aids[time_key][user_id] != new_aids[time_key][user_id]:
                 num_diffs += 1
         changes.append(num_diffs)
 
@@ -152,10 +155,10 @@ if __name__ == '__main__':
     config = set_config_only_loads(config)
     write_config(tmp_exp_config_path, config)
     art_sel_hist_file = experiment['article_selection_file']
-    original_art_sel_hist_file = os.path.join(tmp_dir, 'article_selection_history_original.csv')
+    original_art_sel_hist_file = os.path.join(tmp_dir, 'article_selection_history_original.json')
     if not os.path.isfile(original_art_sel_hist_file):
         run_simulation(tmp_exp_config_path)
-        rename_article_history_csv(art_sel_hist_file, original_art_sel_hist_file)
+        rename_article_history_file(art_sel_hist_file, original_art_sel_hist_file)
 
     resample_round_interval = experiment['resample']['round_interval']
     resample_change = experiment['resample']['change']

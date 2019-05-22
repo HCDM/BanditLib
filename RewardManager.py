@@ -360,11 +360,11 @@ class RewardManager():
 
 		if self.save_pool:
 			with open(self.pool_filename, 'w') as outfile:
-				json.dump(article_pool_history, outfile)
+				json.dump(article_pool_history, outfile, indent=2)
 
 		if self.save_reward_noise:
 			with open(self.reward_noise_filename, 'w') as outfile:
-				json.dump(reward_noise_history, outfile)
+				json.dump(reward_noise_history, outfile, indent=2)
 
 		with open('tmp/article_selection_history.json', 'w') as outfile:
 			json.dump(article_selection_history, outfile)
