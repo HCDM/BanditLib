@@ -124,23 +124,36 @@ class RewardManager():
 		return loaded_pool_history
 
 	def load_pool_user_T(self):
-		def load_pool_user_T_lastfm():
-			# Create user->[timestamps] mapping
-			user_timestamps = {}
-			with open(self.pool_filename, 'r') as infile:
-				next(infile)
-				for line in infile:
-					user_id, timestamp, arm_pool = line.split('\t')
-					if user_id not in user_timestamps:
-						user_timestamps[user_id] = set()
-					user_timestamps[user_id].add(timestamp)
+		def load_pool_user_T_lastfm(ignore_timestamp=True):
+			if ignore_timestamp:
+				user_num_pools = {}
+				with open(self.pool_filename, 'r') as infile:
+					next(infile)
+					for line in infile:
+						user_id, timestamp, arm_pool = line.split('\t')
+						user_id = int(user_id) - 1  # - 1 to 0-index user ids
+						if user_id not in user_num_pools:
+							user_num_pools[user_id] = 0
+						user_num_pools[user_id] += 1
+				return user_num_pools
+			else:
+				# Create user->[timestamps] mapping
+				user_timestamps = {}
+				with open(self.pool_filename, 'r') as infile:
+					next(infile)
+					for line in infile:
+						user_id, timestamp, arm_pool = line.split('\t')
+						user_id = int(user_id) - 1  # - 1 to 0-index user ids
+						if user_id not in user_timestamps:
+							user_timestamps[user_id] = set()
+						user_timestamps[user_id].add(timestamp)
 
-			# Convert to user->num unique timestamps mapping
-			user_num_pools = {}
-			for user_id in user_timestamps:
-				user_num_pools[user_id] = len(user_timestamps[user_id])
+				# Convert to user->num unique timestamps mapping
+				user_num_pools = {}
+				for user_id in user_timestamps:
+					user_num_pools[user_id] = len(user_timestamps[user_id])
 
-			return user_num_pools
+				return user_num_pools
 
 		def load_pool_user_T_default():
 			loaded_pool_history = {}
