@@ -53,7 +53,7 @@ reward:
     #   change: -0.25 # amount to change reward noise of round specified by resample_round
     load: no # (yes/no) Load reward noise from file specified by filename
     save: no # (yes/no) Save reward noise into a file for future simulations
-    filename: Simulation_MAB_files/reward_noise_1users_10iterations_2000.json # (string) File from which to load reward noise
+    filename: test.json # (string) File from which to load reward noise
 
 # Parameters for the different algorithms
 alg:
@@ -83,123 +83,33 @@ alg:
       alpha: 0.3
       delta: 0.5
       eps: 1.5
-      id: pLin - laplacian - tree - theta
+      id: pLin using tree
       lambda_: 0.1
       noise_type: laplacian
       noise_method: tree
       noise_save: False
       noise_load: False
-      noise_filename: Simulation_MAB_files/plin_noise_laplacianiterations_2000.json
+      noise_filename: test.json
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+      is_theta_level: False
+    - algorithm: PrivateLinUCB
+      alpha: 0.3
+      delta: 0.5
+      eps: 1.5
+      id: pLin using tree at theta level
+      lambda_: 0.1
+      noise_type: laplacian
+      noise_method: tree
+      noise_save: False
+      noise_load: False
+      noise_filename: test.json
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
       is_theta_level: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 100
-    #   id: pLin - laplacian - tree
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: tree
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 100
-    #   id: pLin - laplacian - sqrt - theta
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: sqrt
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   is_theta_level: True
-    # - algorithm: PrivateLinUCB
-    #   alpha: 0.3
-    #   delta: 0.5
-    #   eps: 100
-    #   id: pLin - laplacian - sqrt
-    #   lambda_: 0.1
-    #   noise_type: laplacian
-    #   noise_method: sqrt
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    #   protect_context: True
-    # GOBLin:
-    #   alpha: 0.3
-    #   lambda_: 0.1
-    #   use_alpha_t: False
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: False
-    # HLinUCB:
-    #   alpha: 0.3
-    #   alpha2: 0.1
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: True
-    # FairUCB:
-    #   alpha: 0.3
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    # UCBPMF:
-    #   sigma : 0.5
-    #   sigmaU : 1 
-    #   sigmaV : 1 
-    #   alpha : 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    # FactorUCB:
-    #   alpha: 0.05
-    #   alpha2: 0.025
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: True
-    # CLUB:
-    #   alpha: 0.1
-    #   alpha2: 0.5
-    #   lambda_: 0.1 
-    #   cluster_init : 'Erdos-Renyi'
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    # PTS:
-    #   particle_num : 10 
-    #   sigma : 0.5
-    #   sigmaU : 1 
-    #   sigmaV : 1 
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
