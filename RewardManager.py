@@ -288,7 +288,11 @@ class RewardManager():
 				reward_noise_history[iter_][u.id] = noise
 				#get optimal reward for user x at time t
 				#pool_copy = copy.deepcopy(self.articlePool)
-				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
+				if self.load_pool and self.pool_format == 'lastfm':
+					OptimalReward, OptimalArticle = 1, self.articlePool[0]
+				else:
+					OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
+
 				# print "Optimal Reward", OptimalReward
 				#OptimalReward = self.reward.getOptimalRecommendationReward(u, self.articlePool, self.k)
 				OptimalReward += noise
@@ -312,7 +316,10 @@ class RewardManager():
 
 						# Assuming that the user will always be selecting one item for each iteration
 						#pickedArticle = recommendation.articles[0]
-						reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation)
+						if self.load_pool and self.pool_format == 'lastfm':
+							reward, pickedArticle = self.reward.getRecommendationRewardLastFm(self.articlePool[0], recommendation)
+						else:
+							reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation)
 						if iter_ not in article_selection_history:
 							article_selection_history[iter_] = {}
 						article_selection_history[iter_][u.id] = pickedArticle.id

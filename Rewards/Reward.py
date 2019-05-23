@@ -34,3 +34,9 @@ class Reward():
 				max_article = i
 		return max_reward, max_article
 
+	def getRecommendationRewardLastFm(self, real_picked_article, recommendation):
+		for article in recommendation.articles:
+			if article.id == real_picked_article.id:
+				return 1, article
+		return 0, recommendation.articles[0]
+
