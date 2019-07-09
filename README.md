@@ -1,7 +1,7 @@
 # BanditLib
 This repo contains the implementation of serveral contextual bandits algorithm, including CoLin, hLinUCB, factorUCB, GOB.Lin, LinUCB, HybridLinUCB, PTS, and UCBPMF. CoLin, hLinUCB and factorUCB are our proposed algorithms published in [1], [2], [3].
 
-##Usage
+## Usage
 Run the simulator: `python Simulation.py --alg XXX` where parameter alg represents the name of algorithm. 
 
 Run with different parameters: `python Simulation.py --alg XXX --contextdim XX --userNum XX --Sparsity XX --NoiseScale XX --matrixNoise  XX --hiddendim XX` 
@@ -11,7 +11,7 @@ where
 `--Sparsity` stands for the sparsity level of the user graph. Sparsity XX means to only maintain the top XX most connected users. Sparsity should be smaller than userNum, when equal to userNum, the graph is a full connected graph'
 `--hiddendim`stands for dimension of hidden features. This parameter is specifically for the algorithms that can estimate hidden features, such as hLinUCB, PTS. For all the other contextual bandit algorithms, the default setting for this parameter should be 0.
 
-##Algorithms' details
+## Algorithms' details
 **LinUCB**: A state-of-art contextual bandit algorithm. It select arms based on an upper confidence bound of the estimated reward with given context vectors. LinUCB assume that users/bandits' parameters are independent with each other. And LinUCB only works with the observed features and does not consider hidden features.
 
 **CoLin**: A collaborative contextual bandit algorithm which explicitly models the underlying dependency among users/bandits. In CoLin, a weighted adjacency graph is constructed, where each node represents a contextual bandit deployed for a single user and the weight on each edge indicates the influence between a pair of users. Based on this dependency structure, the observed payoffs on each user are assumed to be determined by a mixture of neighboring users in the graph. Bandit parameters over all the users are estimated in a collaborative manner: both context and received payoffs from one user are prorogated across the whole graph in the process of online updating. CoLin establishes a bridge to share information among heterogenous users and thus reduce the sample com- plexity of preference learning. We rigorously prove that our CoLin achieves a remarkable reduction of upper regret bound with high probability, comparing to the linear regret with respect to the number of users if one simply runs independent bandits on them (LinUCB). 
@@ -23,8 +23,9 @@ where
 ##Result
 The results will be written under folder `./SimulationResults`, including accumulated regret and parameter estimation error. You can then plot the result, and here are one example we used in [1], where we run the simulator to compare CoLin, GOB.Lin, LinUCB, and HybridLinUCB:
 
-![image](SimulationResults/regret.png "regret")
-![image](SimulationResults/ParameterEstimation.png "ParameterEstimation")
+Regret                                          | Parameter estimation error
+------------------------------------------------| -------------
+![image](SimulationResults/regret.png "regret") | ![image](SimulationResults/ParameterEstimation.png "ParameterEstimation")
 
 ## Redesign
 
