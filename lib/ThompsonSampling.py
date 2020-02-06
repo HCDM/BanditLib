@@ -28,12 +28,11 @@ class ThompsonSamplingAlgorithm(BaseAlg):
         BaseAlg.__init__(self, arg_dict)
         self.users = [] 
         v_squared = self.get_v_squared(arg_dict['R'], arg_dict['epsilon'], arg_dict['delta'])
-        print(v_squared)
 
         for _ in range(arg_dict['n_users']):
             self.users.append(ThompsonSamplingUserStruct(arg_dict['dimension'], arg_dict['lambda_'], v_squared))
 
-    def decide(self, pool_articles, userID, k=1):
+    def decide_old(self, pool_articles, userID, k=1):
         maxPTA = float('-inf')
         articlePicked = None
         
@@ -43,6 +42,21 @@ class ThompsonSamplingAlgorithm(BaseAlg):
                articlePicked = x 
                maxPTA = x_pta 
         return [articlePicked]
+
+    def decide(self, pool_articles, userID, k=1):
+        art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector[:self.dimension])])
+        for i in range(len(pool_articles)):
+            art_features[i, :] = pool_articles[i].contextFeatureVector[:self.dimension]
+
+        user_features = self.users[userID].theta_estimate
+
+        pta_matrix = np.dot(art_features, user_features)
+        pool_positions = np.argsort(pta_matrix)[(k*-1):]
+
+        articles = []
+        for i in range(k):
+            articles.append(pool_articles[pool_positions[i]])
+        return articles
 
     def updateParameters(self, article_picked, click, userID):
         self.users[userID].updateParameters(article_picked.contextFeatureVector[:self.dimension], click)
