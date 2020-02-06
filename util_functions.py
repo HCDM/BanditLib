@@ -120,6 +120,17 @@ def createPTSDict(specific, general, W, system_params):
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
+def createThompsonSamplingDict(specific, general, W, system_params):
+	base_dict = {
+		'lambda_': 0.1,
+                'R': 1.0,
+                'delta': .1,
+                'epsilon': .01,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 def update_dict(a, b):
 	c = copy.deepcopy(b)
 	for i in a:
