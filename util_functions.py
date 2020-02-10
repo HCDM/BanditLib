@@ -123,14 +123,23 @@ def createPTSDict(specific, general, W, system_params):
 def createThompsonSamplingDict(specific, general, W, system_params):
 	base_dict = {
 		'lambda_': 0.1,
-                'R': 1.0,
-                'delta': .1,
-                'epsilon': .01,
+                'a': 1,
 		'parameters': {
 			'Theta': True,
 		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createLinUCBDict(specific, general, W, system_params):
+	base_dict = {
+		'alpha': 0.3,
+		'lambda_': 0.1,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
 def update_dict(a, b):
 	c = copy.deepcopy(b)
 	for i in a:

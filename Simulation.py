@@ -12,9 +12,6 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 # local address to save simulated users, simulated articles, and results
 from conf import sim_files_folder, save_address
-# from util_functions import featureUniform, gaussianFeature, createLinUCBDict, \
-# 	createCoLinUCBDict, createHLinUCBDict, createUCBPMFDict, createFactorUCBDict, \
-# 	createCLUBDict, createPTSDict, createBaseAlgDict
 from util_functions import *
 from Articles import ArticleManager
 from Users.Users import UserManager
@@ -32,6 +29,7 @@ from lib.PTS import PTSAlgorithm
 from lib.UCBPMF import UCBPMFAlgorithm
 from lib.FairUCB import FairUCBAlgorithm
 from lib.ThompsonSampling import ThompsonSamplingAlgorithm
+from lib.LinPHE import LinPHEAlgorithm
 
 def pca_articles(articles, order):
 	X = []
