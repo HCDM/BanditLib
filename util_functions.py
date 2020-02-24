@@ -123,17 +123,20 @@ def createPTSDict(specific, general, W, system_params):
 def createThompsonSamplingDict(specific, general, W, system_params):
 	base_dict = {
 		'lambda_': 0.1,
-                'a': 1,
+		'R': .0001,
+                'delata': .1,
+                'epsilon': .05,
 		'parameters': {
 			'Theta': True,
 		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
-def createLinUCBDict(specific, general, W, system_params):
+
+def createLinPHEDict(specific, general, W, system_params):
 	base_dict = {
-		'alpha': 0.3,
-		'lambda_': 0.1,
+		'a': 0.1,
+                'lambda_': .1,
 		'parameters': {
 			'Theta': True,
 		}
