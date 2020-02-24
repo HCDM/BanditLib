@@ -11,14 +11,13 @@ class LinPHEUserStruct:
                 self.f = np.zeros(self.d)
                 self.B = np.zeros((self.d, self.d))
                 self.UserTheta = np.zeros(self.d)
-                self.G_additive = lambda_*(a+1)*np.identity(self.d)
+                self.G_Addend = lambda_*(a+1)*np.identity(self.d)
 
         def updateParameters(self, articlePicked_featureVector, click):
-                self.B += (self.a+1) * np.outer(articlePicked_featureVector, articlePicked_featureVector)
-                G = self.B + self.G_additive
-
-                perturbed_reward = .1*np.random.binomial(self.a, .5)
-                self.f += articlePicked_featureVector * (click+ perturbed_reward)
+                self.B += np.outer(articlePicked_featureVector, articlePicked_featureVector)
+                G = (self.a + 1) * self.B + self.G_Addend
+                perturbed_reward = .1 * np.random.binomial(self.a, .5)
+                self.f += articlePicked_featureVector * (click + perturbed_reward)
                 self.UserTheta = np.dot(np.linalg.inv(G), self.f)
 
         def getProb(self, article_featureVector):
@@ -46,14 +45,10 @@ class LinPHEAlgorithm(BaseAlg):
  
 	def decide(self, pool_articles, userID, k = 1):
 		# MEAN
-		art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector[:self.dimension])])
-		for i in range(len(pool_articles)):
-			art_features[i, :] = pool_articles[i].contextFeatureVector[:self.dimension]
+                art_features = np.array([article.contextFeatureVector[:self.dimension] for article in pool_articles])
 		user_features = self.users[userID].UserTheta
 
-		# VARIANCE
 		pta_matrix = np.dot(art_features, user_features) 
-
 
 		pool_positions = np.argsort(pta_matrix)[(k*-1):]
 		articles = []
