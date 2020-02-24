@@ -64,16 +64,24 @@ alg:
         CoTheta: False
         W: False
         V: False
-    # ThompsonSampling:
-    #   lambda_: 0.1
-    #   R: 0
-    #   delta: .01
-    #   epsilon: .01
-    #   parameters:
-    #     Theta: True
-    #     CoTheta: False
-    #     W: False
-    #     V: False
+    LinPHE:
+      a: 1 
+      lambda_: 0.1
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+    ThompsonSampling:
+       lambda_: 0.1
+       R: .0001 
+       delta: .1
+       epsilon: .05
+       parameters:
+         Theta: True
+         CoTheta: False
+         W: False
+         V: False
     # CoLinUCB:
     #   alpha: 0.3
     #   lambda_: 0.1
