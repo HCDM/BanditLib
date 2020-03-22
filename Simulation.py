@@ -120,12 +120,12 @@ if __name__ == '__main__':
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
         
-
-        if user.has_key('number'):
+        if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
+                        n_users = 2100
+        elif user.has_key('number'):
                 n_users = user['number'] 
         else:
                 n_users =  10
-        print("NUSERS", n_users)
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
@@ -190,8 +190,8 @@ if __name__ == '__main__':
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
 	# TODO: Add in reward options dictionary
-	if args.dataset != 'None':
-                experiment = DatasetRewardManager(arg_dict = rewardManagerDict, dataset=args.dataset, clusterfile=args.clusterfile)
+	if gen['dataset'] != 'None':
+                experiment = DatasetRewardManager(arg_dict = rewardManagerDict,dataset = gen['dataset'], clusterfile=args.clusterfile)
         else:
                 experiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
 
