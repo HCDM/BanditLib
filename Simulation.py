@@ -1,22 +1,20 @@
 import copy
 import numpy as np
-#from random import sample, shuffle
 from scipy.sparse import csgraph
 import datetime #
 import os.path #
-#import matplotlib.pyplot as plt
 import argparse
 import yaml
 from sklearn.decomposition import TruncatedSVD
 from sklearn import cluster
 from sklearn.decomposition import PCA
-# local address to save simulated users, simulated articles, and results
 from conf import sim_files_folder, save_address
 from util_functions import *
 from Articles import ArticleManager
 from Users.Users import UserManager
 from Users.CoUsers import CoUserManager
 from RewardManager import RewardManager
+from DatasetRewardManager import DatasetRewardManager
 from DiffList.DiffManager import DiffManager
 
 from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
@@ -77,17 +75,24 @@ if __name__ == '__main__':
 	parser.add_argument('--contextdim', type=int, help='Set dimension of context features.')
 	parser.add_argument('--hiddendim', type=int, help='Set dimension of hidden features.')
 	parser.add_argument('--config', dest='config', help='yaml config file')
+        parser.add_argument('--dataset', required=False, choices=['LastFM', 'Delicious'], help='Select dataset to run. No Selection resuts in simulated rewards')
+        parser.add_argument('--clusterfile', dest="clusterfile", help="input an clustering label file", 
+                        metavar="FILE", type=lambda x: is_valid_file(parser, x))
 
 	args = parser.parse_args()
 	cfg = {}
+
+
+
+
 	with open(args.config, 'r') as ymlfile:
 		cfg = yaml.load(ymlfile)
 	gen = cfg['general'] if cfg.has_key('general') else {}
 	user = cfg['user'] if cfg.has_key('user') else {}
 	article = cfg['article'] if cfg.has_key('article') else {}
 	reco = cfg['reward'] if cfg.has_key('reward') else {}
+        
 
-	#algName = str(args.alg) if args.alg else gen['alg']
 
 	rewardManagerDict = {}
 
@@ -110,15 +115,17 @@ if __name__ == '__main__':
 
 	
 
-	# alpha  = 0.3
-	# lambda_ = 0.1   # Initialize A
 	rewardManagerDict['epsilon'] = 0 # initialize W
-	# eta_ = 0.5
 
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
-
-	n_users = user['number'] if user.has_key('number') else 10
+        
+        if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
+                        n_users = 2100
+        elif user.has_key('number'):
+                n_users = user['number'] 
+        else:
+                n_users =  10
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
@@ -183,9 +190,13 @@ if __name__ == '__main__':
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
 	# TODO: Add in reward options dictionary
-	simExperiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
+	if gen['dataset'] != 'None':
+                experiment = DatasetRewardManager(arg_dict = rewardManagerDict,dataset = gen['dataset'], clusterfile=args.clusterfile)
+        else:
+                experiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
 
-	print "Starting for ", simExperiment.simulation_signature
+
+	print "Starting for ", experiment.simulation_signature
 	system_params = {
 		'context_dim': context_dimension,
 		'latent_dim': latent_dimension,
@@ -195,4 +206,4 @@ if __name__ == '__main__':
 
 	algorithms, diffLists = generate_algorithms(cfg['alg'], UM.getW(), system_params)
 
-	simExperiment.runAlgorithms(algorithms, diffLists)
+	experiment.runAlgorithms(algorithms, diffLists)

@@ -14,7 +14,6 @@ class RewardManager():
 	def __init__(self, arg_dict, reward_type = 'Linear'):
 		for key in arg_dict:
 			setattr(self, key, arg_dict[key])
-		#self.W, self.W0 = self.constructAdjMatrix(self.sparseLevel)
 
 		# Pass arguments to the reward functions using a dictionary
 		reward_arg_dict = {}
@@ -23,13 +22,6 @@ class RewardManager():
 		except KeyError:
 			self.reward = LinearReward(reward_arg_dict)
 
-		# if(reward_type == 'social_linear'):
-		# 	self.reward = SocialLinearReward(self.k, self.W)
-		# elif(reward_type == 'fair'):
-		# 	self.reward = FairReward(self.k)
-		# else:
-		# 	self.reward = LinearReward(self.k)
-	
 	def batchRecord(self, iter_):
 		print "Iteration %d"%iter_, "Pool", len(self.articlePool)," Elapsed time", datetime.datetime.now() - self.startTime
 
@@ -59,7 +51,7 @@ class RewardManager():
 		RVDiff = {}
 
 		Var = {}
-		
+	        	
 		# Initialization
 		userSize = len(self.users)
 		for alg_name, alg in algorithms.items():
@@ -78,7 +70,20 @@ class RewardManager():
 			diffLists.initial_write(f)
 			f.write('\n')
 		
-		# Training
+                self.trainAlgorithms(algorithms) 
+                self.testAlgorithms(algorithms, diffLists, AlgRegret, BatchCumlateRegret,\
+                                Var, userSize, tim_, filenameWriteRegret, filenameWritePara)
+
+		if (self.plot==True): # only plot
+                        self.plot_result(algorithms, BatchCumlateRegret, tim_, diffLists)
+
+		finalRegret = {}
+		for alg_name in algorithms.iterkeys():
+			finalRegret[alg_name] = BatchCumlateRegret[alg_name][:-1]
+		return finalRegret
+        
+        # Trains algorithms with a simulated reward
+        def trainAlgorithms(self, algorithms):
 		shuffle(self.articles)
 		for iter_ in range(self.training_iterations):
 			article = self.articles[iter_]										
@@ -92,6 +97,8 @@ class RewardManager():
 			if 'syncCoLinUCB' in algorithms:
 				algorithms['syncCoLinUCB'].LateUpdate()	
 
+        def testAlgorithms(self, algorithms, diffLists, AlgRegret, BatchCumlateRegret,\
+                         Var, userSize, tim_, filenameWriteRegret, filenameWritePara):
 		#Testing
 		for iter_ in range(self.testing_iterations):
 			total = 0
@@ -100,11 +107,7 @@ class RewardManager():
 				self.regulateArticlePool() # select random articles
 
 				noise = self.noise()
-				#get optimal reward for user x at time t
-				#pool_copy = copy.deepcopy(self.articlePool)
 				OptimalReward, OptimalArticle = self.reward.getOptimalReward(u, self.articlePool)
-				# print "Optimal Reward", OptimalReward
-				#OptimalReward = self.reward.getOptimalRecommendationReward(u, self.articlePool, self.k)
 				OptimalReward += noise
 
 				for alg_name, alg in algorithms.items():
@@ -125,14 +128,11 @@ class RewardManager():
 						# Assuming that the user will always be selecting one item for each iteration
 						#pickedArticle = recommendation.articles[0]
 						reward, pickedArticle = self.reward.getRecommendationReward(u, recommendation, noise)
-						# print "ActualReward", reward
 					if (self.testing_method=="online"):
 						alg.updateParameters(pickedArticle, reward, u.id)
-						#alg.updateRecommendationParameters(recommendation, rewardList, u.id)
 						if alg_name =='CLUB':
 							n_components= alg.updateGraphClusters(u.id,'False')
 
-					# print "Regret", float(OptimalReward - reward)
 					regret = OptimalReward - reward
 					AlgRegret[alg_name].append(regret)
 
@@ -162,31 +162,28 @@ class RewardManager():
 					diffLists.iteration_write(f)
 					f.write('\n')
 
-		if (self.plot==True): # only plot
-			# plot the results	
-			f, axa = plt.subplots(1, sharex=True)
-			for alg_name in algorithms.iterkeys():	
-				axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
-				print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
-			axa.legend(loc='upper left',prop={'size':9})
-			axa.set_xlabel("Iteration")
-			axa.set_ylabel("Regret")
-			axa.set_title("Accumulated Regret")
-			plt.show()
 
-			# plot the estimation error of co-theta
-			f, axa = plt.subplots(1, sharex=True)
-			time = range(self.testing_iterations)
-			diffLists.plot_diff_lists(axa, time)
-		
-			axa.legend(loc='upper right',prop={'size':6})
-			axa.set_xlabel("Iteration")
-			axa.set_ylabel("L2 Diff")
-			axa.set_yscale('log')
-			axa.set_title("Parameter estimation error")
-			plt.show()
 
-		finalRegret = {}
-		for alg_name in algorithms.iterkeys():
-			finalRegret[alg_name] = BatchCumlateRegret[alg_name][:-1]
-		return finalRegret
+        def plot_result(self, algorithms, BatchCumlateRegret, tim_, diffLists):
+                # plot the results	
+                f, axa = plt.subplots(1, sharex=True)
+                for alg_name in algorithms.iterkeys():	
+                        axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
+                        print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
+                axa.legend(loc='upper left',prop={'size':9})
+                axa.set_xlabel("Iteration")
+                axa.set_ylabel("Regret")
+                axa.set_title("Accumulated Regret")
+                plt.show()
+
+                # plot the estimation error of co-theta
+                f, axa = plt.subplots(1, sharex=True)
+                time = range(self.testing_iterations)
+                diffLists.plot_diff_lists(axa, time)
+        
+                axa.legend(loc='upper right',prop={'size':6})
+                axa.set_xlabel("Iteration")
+                axa.set_ylabel("L2 Diff")
+                axa.set_yscale('log')
+                axa.set_title("Parameter estimation error")
+                plt.show()
