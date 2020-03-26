@@ -28,7 +28,7 @@ class DatasetRewardManager():
                 self.nClusters = 100
                 self.userNum = self.nClusters
                 self.Gepsilon = .3
-                print(self.address)
+
 #                if clusterfile:           
 #                        label = read_cluster_label(args.clusterfile)
 #                        userNum = nClusters = int(args.clusterfile.name.split('.')[-1]) # Get cluster number.
@@ -40,7 +40,9 @@ class DatasetRewardManager():
 #                        W = normalizedNewW
         
         def runAlgorithms(self, algorithms, diffLists):
-            self.set_up_file_write(self, algorithms)
+            timeRun = datetime.datetime.now().strftime('_%m_%d_%H_%M')
+            filenameWriteRegret = os.path.join(self.save_address, 'AccRegret' + timeRun + '.csv')
+            self.set_up_regret_file(filenameWriteRegret, algorithms)
 
             tsave = 60*60*47 # Time interval for saving model.
             tstart = datetime.datetime.now()
@@ -67,16 +69,11 @@ class DatasetRewardManager():
             fileName =  self.address + "/processed_events_shuffled.dat"            
             print(fileName)
             FeatureVectors = readFeatureVectorFile(self.FeatureVectorsFileName)
-            with open(fileName, 'r') as f:
-                f.readline()
-                count = 0
-                for i, line in enumerate(f, 1):
-                        count += 1
             
             with open(fileName, 'r') as f:
                 f.readline()
                 for i, line in enumerate(f, 1):
-                    totalObservations +=1            
+                    #if i > 10000: break 
                     articlePool = []
                     userID, tim, pool_articles = parseLine(line)
                     article_chosen = int(pool_articles[0]) 
@@ -91,13 +88,7 @@ class DatasetRewardManager():
                         RandomChoice.regret += 1
 
 
-                    #shuffle(articlePool[:self.poolArticleSize])
-                    shuffle(articlePool)
-                    if totalObservations % 100 == 0:
-                        tim_.append(i) 
-                        RandomChoiceRegret.append(RandomChoice.regret)
-                        if totalObservations % 1000 == 0:
-                            self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
+                    shuffle(articlePool[:self.poolArticleSize])
                         
                     for alg_name, alg in algorithms.items():
                         if alg_name in ['CoLin', 'CoLinRankOne','factorLinUCB', 'LearnWl2', 'LearnWl1', 'LearnWl1_UpdateA','LearnWl2_UpdateA', 'LearnW_WRegu']:
@@ -121,9 +112,18 @@ class DatasetRewardManager():
                                                 +alg_name+'_Diagnol_'+args.diagnol+'_' + timeRun
                             model_dump(alg, model_name, i)
 
-                        if totalObservations%100==0:#self.batchSize==0:
+                        if i % 100==0:#self.batchSize==0:
                             BatchCumlateRegret[alg_name].append(sum(AlgRegret[alg_name]))
-                            AlgRewardRatio_vsRandom[alg_name].append((i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
+                            if RandomChoice.reward != 0:
+                                AlgRewardRatio_vsRandom[alg_name].append((i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
+                            else:
+                                AlgRewardRatio_vsRandom[alg_name].append(0)
+                    if i % 100 == 0:
+                        tim_.append(i) 
+                        RandomChoiceRegret.append(RandomChoice.regret)
+                        if i % 1000 == 0:
+                            self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
+                            self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumlateRegret, i, RandomChoice.regret)
                 self.plot_result(algorithms, BatchCumlateRegret, tim_, None, RandomChoiceRegret, AlgRewardRatio_vsRandom)
 
 
@@ -158,23 +158,20 @@ class DatasetRewardManager():
  
         def batchRecord(self, algorithms, iter_, tstart, articles_random, AlgPicked):
 		print "Datapoint #%d"%iter_, " Elapsed time", datetime.datetime.now() - tstart 
-              #  recordedStats = [articles_random.reward]
-              #  for alg_name, alg in algorithms.items():
-              #      recordedStats.append(AlgPicked[alg_name][-1])
-              #      recordedStats.append(alg.reward)
-                # write to file
-              #  save_to_file(fileNameWrite, recordedStats, tim)
         
-        def set_up_file_write(self, fileNameWrite, algorithms):
-                fileSig = 'l2_'
-                curTime = datetime.datetime.now().strftime('%m_%d_%Y %H:%M:%S')
-                fileNameWrite = os.path.join(save_address, fileSig + curTime + '.csv')
-                print(save_address, fileNameWrite)
-                with open(fileNameWrite, 'a+') as f:
-                        f.write('New Run at  ' + curTime)
-                        f.write('\n, Time, RandomReward; ')
-                        for alg_name, alg in algorithms.items():
-                                f.write(alg_name+'Reward; ')
+        # Creates file to record reward of each algorithm after each batch completes 
+        def set_up_regret_file(self, filenameWriteRegret, algorithms):
+                with open(filenameWriteRegret, 'w') as f:
+                        f.write('Time(Iteration),Random')
+                        f.write(',' + ','.join( [str(alg_name) for alg_name in algorithms.iterkeys()]))
+                        f.write('\n')
+                print(filenameWriteRegret)
+        
+        def write_regret_to_file(self, filenameWriteRegret, algorithms, BatchCumlateRegret, iter_, randomRegret):
+                 with open(filenameWriteRegret, 'a+') as f:
+                        f.write(str(iter_))
+                        f.write(',' + str(randomRegret))
+                        f.write(',' + ','.join([str(BatchCumlateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
                         f.write('\n')
 
         def set_file_data(self):
@@ -184,7 +181,7 @@ class DatasetRewardManager():
                         self.save_address = LastFM_save_address
                         self.FeatureVectorsFileName = LastFM_FeatureVectorsFileName
                         self.itemNum = 19000
-                else:
+                elif self.dataset == 'Delicous':
                         self.relationFileName = Delicious_relationFileName
                         self.address = Delicious_address
                         self.save_address = Delicious_save_address
