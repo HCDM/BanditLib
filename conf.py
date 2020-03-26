@@ -7,13 +7,13 @@ import os
 
 sim_files_folder = "./Simulation_MAB_files"
 
-result_folder = "./SimulationResults"
+result_folder = "./Results/SimulationResults"
 
-save_address = "./SimulationResults"
+save_address = "./Results/SimulationResults"
 
-LastFM_save_address = "./LastFMResults"
-Delicious_save_address = "./DeliciousResults"
-Yahoo_save_address = "./YahooResults"
+LastFM_save_address = "./Results/LastFMResults"
+Delicious_save_address = "./Results/DeliciousResults"
+Yahoo_save_address = "./ResultsYahooResults"
 
 
 save_addressResult = "./Results/Sparse"

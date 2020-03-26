@@ -122,6 +122,7 @@ if __name__ == '__main__':
         
         if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
                         n_users = 2100
+                        n_articles = 1900
         elif user.has_key('number'):
                 n_users = user['number'] 
         else:
@@ -190,12 +191,13 @@ if __name__ == '__main__':
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
 	# TODO: Add in reward options dictionary
-	if gen['dataset'] != 'None':
+	if gen.has_key('dataset') and gen['dataset'] != 'None':
                 experiment = DatasetRewardManager(arg_dict = rewardManagerDict,dataset = gen['dataset'], clusterfile=args.clusterfile)
         else:
                 experiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
 
 
+        #print(vars(experiment))
 	print "Starting for ", experiment.simulation_signature
 	system_params = {
 		'context_dim': context_dimension,
