@@ -87,44 +87,44 @@ def initializeW(n,relationFileName):
     #initializeW_clustering(n,relationFileName, 5)
     return W.T
 
-#
-#def initializeW_clustering(n,relationFileName, nClusters):
-#    W = np.identity(n+1)
-#    with open(relationFileName) as f:
-#        f.readline()
-#        for line in f:
-#            line = line.split('\t')            
-#            if int(line[0])<=n and int(line[1]) <=n:
-#                W[int(line[0])][int(line[1])] +=1   
-#    #KMeans
-#    
-#    #SpectralClustering
-#    spc = SpectralClustering(n_clusters=nClusters, affinity = "precomputed")
-#    #spc = SpectralClustering(n_clusters=nClusters)
-#    spc.fit(W)   # What is the meaning
-#    label = spc.labels_
-#    
-#
-#    with open(relationFileName+'.cluster','w') as f:
-#        for i in range(n):
-#            f.write(str(label[i])+'\n')
-#        
-#    NeighborW = np.zeros(shape=(nClusters, nClusters))
-#    for i in range(n):
-#        for j in range(n):
-#            if label[i]==label[j]:
-#                NeighborW[label[i]][label[j]] = 0
-#            else:
-#                NeighborW[label[i]][label[j]] += W[i][j]
-#    NormalizedNeighborW = normalizeByRow(NeighborW)
-#
-#    newW = np.identity(nClusters) + NormalizedNeighborW   
-#    print 'newW', newW  
-#
-#    NormalizednewW = normalizeByRow(newW)   
-#    print 'NormalizednewW', NormalizednewW.T
-#
-#    return NormalizednewW.T, newW, label
+
+def initializeW_clustering(n,relationFileName, nClusters):
+    W = np.identity(n+1)
+    with open(relationFileName) as f:
+        f.readline()
+        for line in f:
+            line = line.split('\t')            
+            if int(line[0])<=n and int(line[1]) <=n:
+                W[int(line[0])][int(line[1])] +=1   
+    #KMeans
+    
+    #SpectralClustering
+    spc = SpectralClustering(n_clusters=nClusters, affinity = "precomputed")
+    #spc = SpectralClustering(n_clusters=nClusters)
+    spc.fit(W)   # What is the meaning
+    label = spc.labels_
+    
+
+    with open(relationFileName+'.cluster','w') as f:
+        for i in range(n):
+            f.write(str(label[i])+'\n')
+        
+    NeighborW = np.zeros(shape=(nClusters, nClusters))
+    for i in range(n):
+        for j in range(n):
+            if label[i]==label[j]:
+                NeighborW[label[i]][label[j]] = 0
+            else:
+                NeighborW[label[i]][label[j]] += W[i][j]
+    NormalizedNeighborW = normalizeByRow(NeighborW)
+
+    newW = np.identity(nClusters) + NormalizedNeighborW   
+    print 'newW', newW  
+
+    NormalizednewW = normalizeByRow(newW)   
+    print 'NormalizednewW', NormalizednewW.T
+
+    return NormalizednewW.T, newW, label
 
 def initializeGW_clustering(Gepsilon, relationFileName, newW):
     G = newW

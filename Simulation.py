@@ -16,6 +16,8 @@ from Users.CoUsers import CoUserManager
 from RewardManager import RewardManager
 from DatasetRewardManager import DatasetRewardManager
 from DiffList.DiffManager import DiffManager
+from conf import *
+from LastFM_util_functions import *
 
 from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm
@@ -68,6 +70,39 @@ def generate_algorithms(alg_dict, W, system_params):
 		diffLists.add_algorithm(i, algorithms[i].getEstimateSettings())
 	print algorithms
 	return algorithms, diffLists
+
+
+def addDatasetParams(rewardManagerDict):
+	rewardManagerDict['dataset'] = gen['dataset']
+	if gen['dataset'] == 'LastFM':
+		rewardManagerDict['relationFileName'] = LastFM_relationFileName
+		rewardManagerDict['address'] = LastFM_address
+		rewardManagerDict['save_address'] = LastFM_save_address
+		rewardManagerDict['FeatureVectorsFileName'] = LastFM_FeatureVectorsFileName
+		rewardManagerDict['itemNum'] = 19000
+	elif gen['dataset'] == 'Delicious':
+		rewardManagerDict['relationFileName'] = Delicious_relationFileName
+		rewardManagerDict['address'] = Delicious_address
+		rewardManagerDict['save_address'] = Delicious_save_address
+		rewardManagerDict['FeatureVectorsFileName'] = Delicious_FeatureVectorsFileName  
+		rewardManagerDict['itemNum'] = 190000  
+
+def createW(gen):
+	OriginaluserNum = 2100
+	nClusters = 100
+	Gepsilon = .3
+	if gen.has_key('clusterfile'):           
+		label = read_cluster_label(gen['clusterfile'])
+		rewardManagerDict['label'] = label
+		userNum = nClusters = int(args.clusterfile.name.split('.')[-1]) # Get cluster number.
+		W = initializeW_label(nClusters, rewardManagerDict['relationFileName'], label, args.diagnol, args.showheatmap)   # Generate user relation matrix
+		GW = initializeGW_label(Gepsilon, nClusters, relationFileName, label, args.diagnol)            
+	else:
+		normalizedNewW, newW, label = initializeW_clustering(OriginaluserNum, rewardManagerDict['relationFileName'], nClusters)
+		rewardManagerDict['label'] = label
+		GW = initializeGW_clustering(Gepsilon, rewardManagerDict['relationFileName'], newW)
+		W = normalizedNewW
+	return W, GW, nClusters
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description = '')
@@ -122,7 +157,7 @@ if __name__ == '__main__':
         
         if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
                         n_users = 2100
-                        n_articles = 1900
+                        n_articles = 19000
         elif user.has_key('number'):
                 n_users = user['number'] 
         else:
@@ -190,22 +225,24 @@ if __name__ == '__main__':
 	for i in range(len(articles)):
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
-	# TODO: Add in reward options dictionary
-	if gen.has_key('dataset') and gen['dataset'] != 'None':
-                experiment = DatasetRewardManager(arg_dict = rewardManagerDict,dataset = gen['dataset'], clusterfile=args.clusterfile)
+        nClusters = n_users	
+	if gen.has_key('dataset') and gen['dataset'] in ['LastFM', 'Delicious']:
+		addDatasetParams(rewardManagerDict)
+		W, GW, nClusters = createW(gen)
+		experiment = DatasetRewardManager(arg_dict = rewardManagerDict)
         else:
                 experiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
+		W = UM.getW()
 
 
-        #print(vars(experiment))
 	print "Starting for ", experiment.simulation_signature
 	system_params = {
 		'context_dim': context_dimension,
 		'latent_dim': latent_dimension,
 		'n_users': n_users,
+		'n_clusters': nClusters,
 		'n_articles': n_articles
 	}
-
-	algorithms, diffLists = generate_algorithms(cfg['alg'], UM.getW(), system_params)
+	algorithms, diffLists = generate_algorithms(cfg['alg'], W, system_params)
 
 	experiment.runAlgorithms(algorithms, diffLists)
