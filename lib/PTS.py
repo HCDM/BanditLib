@@ -81,8 +81,6 @@ class PTSParticleStruct:
 class PTSAlgorithm(BaseAlg):
 	def __init__(self, arg_dict):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
-                for key, value in arg_dict.items():
-                        print(key, value)
 		self.particles = [] # Particles
 		for i in range(self.particle_num):
 			self.particles.append(PTSParticleStruct(self.dimension, self.n_users, self.itemNum, self.sigma, self.sigmaU, self.sigmaV, 1.0/self.particle_num))

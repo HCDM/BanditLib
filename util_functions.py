@@ -83,6 +83,12 @@ def createUCBPMFDict(specific, general, W, system_params):
 		'sigmaU' : 1,
 		'sigmaV' : 1,
 		'alpha' : 0.1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -96,6 +102,12 @@ def createFactorUCBDict(specific, general, W, system_params):
 		'lambda_' : 0.1,
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -106,6 +118,12 @@ def createCLUBDict(specific, general, W, system_params):
 		'n' : system_params['n_users'],
 		'alpha_2' : 0.5,
 		'cluster_init' : 'Erdos-Renyi',
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -117,6 +135,12 @@ def createPTSDict(specific, general, W, system_params):
 		'sigma' : np.sqrt(.5),
 		'sigmaU' : 1,
 		'sigmaV' : 1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 

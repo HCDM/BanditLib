@@ -78,8 +78,6 @@ class UCBPMFUserStruct:
 class UCBPMFAlgorithm(BaseAlg):
 	def __init__(self, arg_dict):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
-                for k, v in arg_dict.items():
-                        print(k,v)
 		self.users = []
 		for i in range(self.n_users):
 			self.users.append(UCBPMFUserStruct(i, self.dimension, self.sigma, self.sigmaU,))
