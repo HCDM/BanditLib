@@ -51,6 +51,7 @@ def createCoLinUCBDict(specific, general, W, system_params):
 		'alpha': 0.3,
 		'lambda_': 0.1,
 		'use_alpha_t': False,
+		'n_users': system_params['n_clusters'],
 		'parameters': {
 			'CoTheta': True,
 		}

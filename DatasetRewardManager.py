@@ -19,26 +19,11 @@ class Article():
                 self.contextFeatureVector = FV
 
 class DatasetRewardManager():
-        def __init__(self, arg_dict, dataset, clusterfile):
+        def __init__(self, arg_dict):
                 for key in arg_dict:
                         setattr(self, key, arg_dict[key])
-                self.dataset = dataset
-                self.set_file_data()
-                self.OriginaluserNum = 2100
                 self.nClusters = 100
-                self.userNum = self.nClusters
-                self.Gepsilon = .3
 
-#                if clusterfile:           
-#                        label = read_cluster_label(args.clusterfile)
-#                        userNum = nClusters = int(args.clusterfile.name.split('.')[-1]) # Get cluster number.
-#                        W = initializeW_label(userNum, relationFileName, label, args.diagnol, args.showheatmap)   # Generate user relation matrix
-#                        GW = initializeGW_label(Gepsilon,userNum, relationFileName, label, args.diagnol)            
-#                else:
-#                        normalizedNewW, newW, label = initializeW_clustering(self.OriginaluserNum, self.relationFileName, self.nClusters)
-#                        GW = initializeGW_clustering(self.Gepsilon, self.relationFileName, newW)
-#                        W = normalizedNewW
-        
         def runAlgorithms(self, algorithms, diffLists):
             timeRun = datetime.datetime.now().strftime('_%m_%d_%H_%M')
             filenameWriteRegret = os.path.join(self.save_address, 'AccRegret' + timeRun + '.csv')
@@ -67,7 +52,6 @@ class DatasetRewardManager():
             totalObservations = 0
             OptimalReward = 1
             fileName =  self.address + "/processed_events_shuffled.dat"            
-            print(fileName)
             FeatureVectors = readFeatureVectorFile(self.FeatureVectorsFileName)
             
             with open(fileName, 'r') as f:
@@ -91,8 +75,8 @@ class DatasetRewardManager():
                     shuffle(articlePool[:self.poolArticleSize])
                         
                     for alg_name, alg in algorithms.items():
-                        if alg_name in ['CoLin', 'CoLinRankOne','factorLinUCB', 'LearnWl2', 'LearnWl1', 'LearnWl1_UpdateA','LearnWl2_UpdateA', 'LearnW_WRegu']:
-                            currentUserID = label[userID]
+                        if alg_name in ['CoLinUCB', 'CoLinRankOne','factorLinUCB', 'GOBLin', 'LearnWl2', 'LearnWl1', 'LearnWl1_UpdateA','LearnWl2_UpdateA', 'LearnW_WRegu']:
+                            currentUserID = self.label[userID]
                         else:
                             currentUserID = userID
                         pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k).articles[0]
@@ -165,7 +149,6 @@ class DatasetRewardManager():
                         f.write('Time(Iteration),Random')
                         f.write(',' + ','.join( [str(alg_name) for alg_name in algorithms.iterkeys()]))
                         f.write('\n')
-                print(filenameWriteRegret)
         
         def write_regret_to_file(self, filenameWriteRegret, algorithms, BatchCumlateRegret, iter_, randomRegret):
                  with open(filenameWriteRegret, 'a+') as f:
@@ -174,16 +157,3 @@ class DatasetRewardManager():
                         f.write(',' + ','.join([str(BatchCumlateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
                         f.write('\n')
 
-        def set_file_data(self):
-                if self.dataset == 'LastFM':
-                        self.relationFileName = LastFM_relationFileName
-                        self.address = LastFM_address
-                        self.save_address = LastFM_save_address
-                        self.FeatureVectorsFileName = LastFM_FeatureVectorsFileName
-                        self.itemNum = 19000
-                elif self.dataset == 'Delicous':
-                        self.relationFileName = Delicious_relationFileName
-                        self.address = Delicious_address
-                        self.save_address = Delicious_save_address
-                        self.FeatureVectorsFileName = Delicious_FeatureVectorsFileName  
-                        self.itemNum = 190000  
