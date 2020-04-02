@@ -168,6 +168,19 @@ def createLinPHEDict(specific, general, W, system_params):
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
+def createMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
 def update_dict(a, b):
 	c = copy.deepcopy(b)
 	for i in a:
