@@ -30,6 +30,7 @@ from lib.UCBPMF import UCBPMFAlgorithm
 from lib.FairUCB import FairUCBAlgorithm
 from lib.ThompsonSampling import ThompsonSamplingAlgorithm
 from lib.LinPHE import LinPHEAlgorithm
+from lib.MLP import MLPAlgorithm
 
 def pca_articles(articles, order):
 	X = []
@@ -86,6 +87,9 @@ def addDatasetParams(rewardManagerDict):
 		rewardManagerDict['save_address'] = Delicious_save_address
 		rewardManagerDict['FeatureVectorsFileName'] = Delicious_FeatureVectorsFileName  
 		rewardManagerDict['itemNum'] = 190000  
+	elif gen['dataset'] == 'Yahoo':
+		print("YAHOO NOT IMPLEMENTED")
+
 
 def createW(gen):
 	OriginaluserNum = 2100
@@ -155,9 +159,13 @@ if __name__ == '__main__':
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
         
-        if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
+        if gen.has_key('dataset'):
+		if gen['dataset'] == 'LastFM':
                         n_users = 2100
                         n_articles = 19000
+		if gen['dataset'] == 'Delicious':
+                        n_users = 2100
+                        n_articles = 190000
         elif user.has_key('number'):
                 n_users = user['number'] 
         else:
