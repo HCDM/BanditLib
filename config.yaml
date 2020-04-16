@@ -8,15 +8,16 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 1000 # (int) Number of iterations to testing and refine model upon
+  testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 16 # (int) The number of features which the algorithm knows about each article
-  hidden_dimension: 0 # (int) The number of features hidden from the algorithms
+  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
+  hidden_dimension: 6 # (int) The number of features hidden from the algorithms
   pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
   batch_size: 1 # (int) 
   testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created
   collaborative: True # (True/False) connection between collaborative user and social_linear rewards
+  dataset: None   #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
 
 # Different settings for user objects
 user:
@@ -64,95 +65,113 @@ alg:
         CoTheta: False
         W: False
         V: False
-    LinPHE:
-      a: 1 
-      lambda_: 0.1
-      parameters:
-        Theta: True
-        CoTheta: False
-        W: False
-        V: False
-    ThompsonSampling:
-       lambda_: 0.1
-       R: .0001 
-       delta: .1
-       epsilon: .05
-       parameters:
-         Theta: True
-         CoTheta: False
-         W: False
-         V: False
-    # CoLinUCB:
-    #   alpha: 0.3
+    #LinPHE:
+    #  a: 1 
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: True
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #ThompsonSampling:
     #   lambda_: 0.1
-    #   use_alpha_t: False # Use a theoretical alpha_t value
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: False
-    # GOBLin:
-    #   alpha: 0.3
-    #   lambda_: 0.1
-    #   use_alpha_t: False
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: False
-    # HLinUCB:
-    #   alpha: 0.3
-    #   alpha2: 0.1
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: True
-    # FairUCB:
-    #   alpha: 0.3
-    #   lambda_: 0.1
+    #   R: .0001 
+    #   delta: .1
+    #   epsilon: .05
     #   parameters:
     #     Theta: True
     #     CoTheta: False
     #     W: False
     #     V: False
-    # UCBPMF:
-    #   sigma : 0.5
-    #   sigmaU : 1 
-    #   sigmaV : 1 
-    #   alpha : 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    # FactorUCB:
-    #   alpha: 0.05
-    #   alpha2: 0.025
-    #   lambda_: 0.1
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: True
-    #     W: False
-    #     V: True
-    # CLUB:
-    #   alpha: 0.1
-    #   alpha2: 0.5
-    #   lambda_: 0.1 
-    #   cluster_init : 'Erdos-Renyi'
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
-    # PTS:
-    #   particle_num : 10 
-    #   sigma : 0.5
-    #   sigmaU : 1 
-    #   sigmaV : 1 
-    #   parameters:
-    #     Theta: False
-    #     CoTheta: False
-    #     W: False
-    #     V: False
+    #CoLinUCB:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  use_alpha_t: False # Use a theoretical alpha_t value
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: False
+    #GOBLin:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  use_alpha_t: False
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: False
+    #HLinUCB:
+    #  alpha: 0.3
+    #  alpha2: 0.1
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: True
+    #FairUCB:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: True
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #UCBPMF:
+    #  sigma : 0.5
+    #  sigmaU : 1 
+    #  sigmaV : 1 
+    #  alpha : 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #FactorUCB:
+    #  alpha: 0.05
+    #  alpha2: 0.025
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: True
+    #CLUB:
+    #  alpha: 0.1
+    #  alpha2: 0.5
+    #  lambda_: 0.1 
+    #  cluster_init : 'Erdos-Renyi'
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #PTS:
+    #  particle_num : 10 
+    #  sigma : 0.5
+    #  sigmaU : 1 
+    #  sigmaV : 1 
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #MLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #PMLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #  a: 1 
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+

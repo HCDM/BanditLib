@@ -25,7 +25,7 @@ The results will be written under folder `./SimulationResults`, including accumu
 
 Regret                                          | Parameter estimation error
 ------------------------------------------------| -------------
-![image](SimulationResults/regret.png "regret") | ![image](SimulationResults/ParameterEstimation.png "ParameterEstimation")
+![image](Results/SimulationResults/regret.png "regret") | ![image](Results/SimulationResults/ParameterEstimation.png "ParameterEstimation")
 
 ## Redesign
 

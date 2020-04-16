@@ -160,7 +160,7 @@ def createThompsonSamplingDict(specific, general, W, system_params):
 
 def createLinPHEDict(specific, general, W, system_params):
 	base_dict = {
-		'a': 0.1,
+		'a': 1,
                 'lambda_': .1,
 		'parameters': {
 			'Theta': True,
@@ -181,6 +181,19 @@ def createMLPDict(specific, general, W, system_params):
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
+def createMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'a': 1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 def update_dict(a, b):
 	c = copy.deepcopy(b)
 	for i in a:

@@ -1,3 +1,5 @@
+#Creates Two Layer Perceptron to predict rewards
+
 import numpy as np
 from util_functions import vectorize
 from Recommendation import Recommendation
@@ -9,23 +11,25 @@ class MLP(torch.nn.Module):
 		super(MLP, self).__init__()
 		self.linear1 = torch.nn.Linear(input_dim, hidden_dim)
 		self.linear2 = torch.nn.Linear(hidden_dim, 1)
-		self.loss_function = torch.nn.MSELoss()
+		self.relu = torch.nn.ReLU(inplace=True)
+		self.sigmoid = torch.nn.Sigmoid()
+		self.loss_function = torch.nn.BCELoss()
 		self.optimizer = torch.optim.SGD(self.parameters(), lr = 0.1)
-		self.reward_pred = 0
 
-	def forward(self, x):
-		h_relu = self.linear1(x).clamp(min=0)
-                pred = self.linear2(h_relu)
-		return pred
+	def forward(self, article_FeatureVector):
+		output = self.linear1(article_FeatureVector)
+                output = self.relu(output)
+		output = self.linear2(output)
+                output = self.sigmoid(output)
+		return output
 
-	def update_model(self, article_FeatureVector, click):
-		self.train()
-		self.optimizer.zero_grad()   # zero the gradient buffers
-	        pred = self.forward(article_FeatureVector)	
-		click = torch.tensor(np.array([click])).float()
-		loss = self.loss_function(pred, click)
-		loss.backward()
-		self.optimizer.step() 
+	def update_model(self, article_FeatureVectors, clicks):
+		self.train() 
+		self.optimizer.zero_grad()
+	        pred = self.forward(article_FeatureVectors)	
+		loss = self.loss_function(pred, clicks)
+		loss.backward() # computes gradient
+		self.optimizer.step() # updates weights
 		self.eval()
 
 
@@ -33,36 +37,45 @@ class MLPUserStruct:
 	def __init__(self, input_dim, hidden_dim):
 		self.mlp = MLP(input_dim, hidden_dim)
 		self.mlp.eval()
+		self.article_FeatureVectors = torch.empty(0,input_dim)
+		self.clicks = torch.empty(0,1)
 
+#	def updateParameters(self, article_FeatureVector, click):
+#		self.article_FeatureVectors = np.append(self.article_FeatureVectors, [article_FeatureVector], axis=0)
+#		self.clicks = np.append(self.clicks, click)
+#		print(self.article_FeatureVectors)
+#		print(self.clicks)
+#		feature_vectors = torch.from_numpy(self.article_FeatureVectors).float()
+#		clicks = torch.from_numpy(self.clicks).float()
+#		self.mlp.update_model(feature_vectors, click)
+#	
 	def updateParameters(self, article_FeatureVector, click):
-		feature_vector = torch.from_numpy(article_FeatureVector).float()
-		self.mlp.update_model(feature_vector, click)
+		article_FeatureVector = torch.tensor([article_FeatureVector]).float()
+		click = torch.tensor([[click]]).float()
+		self.article_FeatureVectors = torch.cat((self.article_FeatureVectors, article_FeatureVector), 0)
+		self.clicks = torch.cat((self.clicks, click), 0)
+		self.mlp.update_model(self.article_FeatureVectors, self.clicks)
 	
 	def getProb(self, article_FeatureVector):
-		y = self.mlp(torch.from_numpy(article_FeatureVector).float())
-		return y 
+		prob = self.mlp(torch.from_numpy(article_FeatureVector).float())
+		return prob 
 		
-#	def getProb_plot(self, alpha, article_FeatureVector):
-#		mean = np.dot(self.UserTheta,  article_FeatureVector)
-#		var = np.sqrt(np.dot(np.dot(article_FeatureVector, self.AInv),  article_FeatureVector))
-#		pta = mean + alpha * var
-#
-#		return pta, mean, alpha * var
-#	def getTheta(self):
-#		return 0
-#	
-#	def getA(self):
-#		return 0 
-#
 
 #---------------MLP(fixed user order) algorithm---------------
 class MLPAlgorithm(BaseAlg):
-	def __init__(self, arg_dict, init="zero"):  # n is number of users
+	def __init__(self, arg_dict):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
 		self.users = []
 		#algorithm have n users, each user has a user structure
 		for i in range(arg_dict['n_users']):
 			self.users.append(MLPUserStruct(arg_dict['dimension'], arg_dict['hidden_layer_dimension']))
+
+#		if torch.cuda.is_available():
+#			device = torch.device("cuda:0")  # you can continue going on here, like cuda:1 cuda:2....etc. 
+#			print("Running on the GPU")
+#		else:
+#			device = torch.device("cpu")
+#			print("Running on the CPU")
 
 	def decide(self, pool_articles, userID, k = 1):
 		maxPTA = float('-inf')
@@ -88,15 +101,16 @@ class MLPAlgorithm(BaseAlg):
 
 	def updateParameters(self, articlePicked, click, userID):
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
-	
 
-#	##### SHOULD THIS BE CALLED GET COTHETA #####
-#	def getCoTheta(self, userID):
-#		return self.users[userID].UserTheta
-#
-#	def getTheta(self, userID):
-#		return self.users[userID].UserTheta
-#
-	# def getW(self, userID):
-	# 	return np.identity(n = len(self.users))
+	
+# MLP with perturbed rewards
+class PMLPAlgorithm(MLPAlgorithm):
+	def __init__(self, arg_dict):
+		MLPAlgorithm.__init__(self,  arg_dict)
+	
+	def updateParameters(self, articlePicked, click, userID):
+		click +=  np.random.binomial(self.a, .5)
+		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
+		
+
 
