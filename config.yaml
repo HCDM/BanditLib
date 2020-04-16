@@ -8,10 +8,10 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
+  testing_iterations: 1000 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
-  hidden_dimension: 6 # (int) The number of features hidden from the algorithms
+  context_dimension: 16 # (int) The number of features which the algorithm knows about each article
+  hidden_dimension: 0 # (int) The number of features hidden from the algorithms
   pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
   batch_size: 1 # (int) 
   testing_method: 'online' # (string) online: update the model after each iterations
@@ -174,4 +174,12 @@ alg:
     #    CoTheta: False
     #    W: False
     #    V: False
-
+    #EGreedyMLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #  epsilon: .05 
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False

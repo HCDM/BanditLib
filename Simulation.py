@@ -30,7 +30,7 @@ from lib.UCBPMF import UCBPMFAlgorithm
 from lib.FairUCB import FairUCBAlgorithm
 from lib.ThompsonSampling import ThompsonSamplingAlgorithm
 from lib.LinPHE import LinPHEAlgorithm
-from lib.MLP import MLPAlgorithm, PMLPAlgorithm
+from lib.MLP import MLPAlgorithm, PMLPAlgorithm, EGreedyMLPAlgorithm
 
 def pca_articles(articles, order):
 	X = []
@@ -159,6 +159,10 @@ if __name__ == '__main__':
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
         
+        if user.has_key('number'):
+                n_users = user['number'] 
+        else:
+                n_users =  10
         if gen.has_key('dataset'):
 		if gen['dataset'] == 'LastFM':
                         n_users = 2100
@@ -166,10 +170,6 @@ if __name__ == '__main__':
 		if gen['dataset'] == 'Delicious':
                         n_users = 2100
                         n_articles = 190000
-        elif user.has_key('number'):
-                n_users = user['number'] 
-        else:
-                n_users =  10
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10

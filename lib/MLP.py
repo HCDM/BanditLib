@@ -1,10 +1,13 @@
 #Creates Two Layer Perceptron to predict rewards
 
 import numpy as np
+import torch
+import random
+
 from util_functions import vectorize
 from Recommendation import Recommendation
 from BaseAlg import BaseAlg
-import torch
+
 
 class MLP(torch.nn.Module):
 	def __init__(self, input_dim, hidden_dim):
@@ -41,14 +44,10 @@ class MLPUserStruct:
 		self.clicks = torch.empty(0,1)
 
 #	def updateParameters(self, article_FeatureVector, click):
-#		self.article_FeatureVectors = np.append(self.article_FeatureVectors, [article_FeatureVector], axis=0)
-#		self.clicks = np.append(self.clicks, click)
-#		print(self.article_FeatureVectors)
-#		print(self.clicks)
-#		feature_vectors = torch.from_numpy(self.article_FeatureVectors).float()
-#		clicks = torch.from_numpy(self.clicks).float()
-#		self.mlp.update_model(feature_vectors, click)
-#	
+# 		feature_vector = torch.from_numpy(article_FeatureVector).float()
+#		click = torch.tensor(np.array([click])).float()
+#		self.mlp.update_model(feature_vector, click)
+#
 	def updateParameters(self, article_FeatureVector, click):
 		article_FeatureVector = torch.tensor([article_FeatureVector]).float()
 		click = torch.tensor([[click]]).float()
@@ -60,6 +59,7 @@ class MLPUserStruct:
 		prob = self.mlp(torch.from_numpy(article_FeatureVector).float())
 		return prob 
 		
+
 
 #---------------MLP(fixed user order) algorithm---------------
 class MLPAlgorithm(BaseAlg):
@@ -106,11 +106,30 @@ class MLPAlgorithm(BaseAlg):
 # MLP with perturbed rewards
 class PMLPAlgorithm(MLPAlgorithm):
 	def __init__(self, arg_dict):
-		MLPAlgorithm.__init__(self,  arg_dict)
+		MLPAlgorithm.__init__(self, arg_dict)
 	
 	def updateParameters(self, articlePicked, click, userID):
 		click +=  np.random.binomial(self.a, .5)
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
 		
 
+# Epislon Greedy MLP Algorithm
+class EGreedyMLPAlgorithm(MLPAlgorithm):
+	def __init__(self, arg_dict):
+		MLPAlgorithm.__init__(self, arg_dict)
+	
+	def decide(self, pool_articles, userID, k = 1):
+		if random.random() < self.epsilon:
+			return [random.choice(pool_articles)]
+
+		maxPTA = float('-inf')
+		articlePicked = None
+
+		for x in pool_articles:
+			x_pta = self.users[userID].getProb(x.contextFeatureVector[:self.dimension])
+			if maxPTA < x_pta:
+				articlePicked = x
+				maxPTA = x_pta
+
+		return [articlePicked]
 
