@@ -195,6 +195,20 @@ def createPMLPDict(specific, general, W, system_params):
 		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+def creatTorchLRDict(specific, general, W, system_params):
+	print("Torch LR")
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'epsilon': .05,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
 def createEGreedyMLPDict(specific, general, W, system_params):
 	print("Greedy DICT")
