@@ -17,7 +17,7 @@ general:
   testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created
   collaborative: True # (True/False) connection between collaborative user and social_linear rewards
-  dataset: None  #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
+  dataset: LastFM  #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
 
 # Different settings for user objects
 user:
@@ -156,14 +156,14 @@ alg:
     #    CoTheta: False
     #    W: False
     #    V: False
-    #MLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
+    MLP:
+      dimension: 25
+      hidden_layer_dimension: 10
+      parameters:
+        Theta: False
+        CoTheta: False
+        W: False
+        V: False
     #TorchLR:
     #  dimension: 25
     #  parameters:
@@ -171,15 +171,15 @@ alg:
     #    CoTheta: False
     #    W: False
     #    V: False
-    #PMLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  a: .025 
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
+    PMLP:
+      dimension: 25
+      hidden_layer_dimension: 10
+      a: .025 
+      parameters:
+        Theta: False
+        CoTheta: False
+        W: False
+        V: False
     #EGreedyMLP:
     #  dimension: 25
     #  hidden_layer_dimension: 10
