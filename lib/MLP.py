@@ -1,4 +1,4 @@
-#Creates Two Layer Perceptron to predict rewards
+#creates Two Layer Perceptron to predict rewards
 
 import numpy as np
 import torch
@@ -16,9 +16,12 @@ class MLP(torch.nn.Module):
 		self.linear2 = torch.nn.Linear(hidden_dim, 1)
 		self.relu = torch.nn.ReLU(inplace=False)
 		self.sigmoid = torch.nn.Sigmoid()
-		self.linear1.weight.data.fill_(1)
 		self.linear2.weight.data.fill_(1)
-		#print(self.linear1.weight.data)
+		self.linear1.weight.data.fill_(1)
+		self.linear1.weight.data = torch.tensor(np.random.normal(scale=10,size=[hidden_dim, input_dim])).float()
+		self.linear2.weight.data = torch.tensor(np.random.normal(scale=10,size=[1, hidden_dim])).float()
+		self.linear1.bias.data = torch.tensor(np.random.normal(scale=10,size=hidden_dim)).float()
+		self.linear2.bias.data = torch.tensor(np.random.normal(scale=10, size=1)).float()
 		self.loss_function = torch.nn.MSELoss()
 		self.threshold = .05
 		# UPDATE: add L2 regularization through setting weight_decay
@@ -28,28 +31,32 @@ class MLP(torch.nn.Module):
 		output = self.linear1(article_FeatureVector)
                 output = self.relu(output)
 		output = self.linear2(output)
-                #output = self.sigmoid(output)
+                #outputoutput = self.sigmoid(output)
 		return output
 
         # for each datapoint take a step
 	def update_model(self, article_FeatureVectors, clicks):
 		self.train()
 		# UPDATE: multiple updates till converge
-		prev_loss = float('inf')
+		prev_loss = float('inf') 
 		while True:
 			self.optimizer.zero_grad()
 			pred = self.forward(article_FeatureVectors)
 			loss = self.loss_function(pred, clicks)
 			loss.backward() # computes gradient
+			self.perturb_gradient(self.linear1)
+			self.perturb_gradient(self.linear2)
 			self.optimizer.step() # updates weights
-
 			# end while
 			if (loss - prev_loss).abs() < self.threshold: # please set an appropriate threshold
 				break
 			prev_loss = loss
 		self.eval()
 		return prev_loss
-
+	
+	def perturb_gradient(self, layer):
+		size = layer.weight.grad.size()
+		layer.weight.grad  = layer.weight.grad + torch.tensor(np.random.normal(scale=.1,size=size)).float()
 
 class MLPUserStruct:
 	def __init__(self, input_dim, hidden_dim, device):
@@ -66,8 +73,6 @@ class MLPUserStruct:
 		click = torch.tensor([[click]]).float().to(device=self.device)
 		self.article_FeatureVectors = torch.cat((self.article_FeatureVectors, article_FeatureVector), 0)
 		self.clicks = torch.cat((self.clicks, click), 0)
-                # update many times
-                # print out training loss after each update
 		return self.mlp.update_model(self.article_FeatureVectors, self.clicks)
 
 	def getProb(self, article_FeatureVector):
@@ -120,7 +125,7 @@ class PMLPAlgorithm(MLPAlgorithm):
 		MLPAlgorithm.__init__(self, arg_dict)
 
 	def updateParameters(self, articlePicked, click, userID):
-		click +=  .05*np.random.normal(scale=.5)
+		click +=  np.random.normal(scale=.5)
 		self.users[userID].updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
 
 
