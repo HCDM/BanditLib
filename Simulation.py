@@ -1,10 +1,11 @@
 import copy
 import numpy as np
 from scipy.sparse import csgraph
-import datetime #
-import os.path #
+import datetime 
+import os.path 
 import argparse
 import yaml
+
 from sklearn.decomposition import TruncatedSVD
 from sklearn import cluster
 from sklearn.decomposition import PCA
@@ -15,9 +16,11 @@ from Users.Users import UserManager
 from Users.CoUsers import CoUserManager
 from RewardManager import RewardManager
 from DatasetRewardManager import DatasetRewardManager
+from YahooRewardManager import YahooRewardManager
 from DiffList.DiffManager import DiffManager
 from conf import *
 from LastFM_util_functions import *
+from YahooExp_util_functions import *
 
 from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
 from lib.hLinUCB import HLinUCBAlgorithm
@@ -38,9 +41,9 @@ def pca_articles(articles, order):
 	pca = PCA()
 	X_new = pca.fit_transform(X)
 	# X_new = np.asarray(X)
-	print('pca variance in each dim:', pca.explained_variance_ratio_) 
+	#print('pca variance in each dim:', pca.explained_variance_ratio_) 
 
-	print X_new
+	#print X_new
 	#default is descending order, where the latend features use least informative dimensions.
 	if order == 'random':
 		np.random.shuffle(X_new.T)
@@ -58,6 +61,7 @@ def generate_algorithms(alg_dict, W, system_params):
 	algorithms = {}
 	diffLists = DiffManager()
 	for i in alg_dict['specific']:
+		print("")
 		print str(i)
 		try:
 			tmpDict = globals()['create' + i + 'Dict'](alg_dict['specific'][i] if alg_dict['specific'][i] else {}, gen, W, system_params)
@@ -68,7 +72,7 @@ def generate_algorithms(alg_dict, W, system_params):
 		except KeyError:
 			raise NotImplementedError(i + " not currently implemented")
 		diffLists.add_algorithm(i, algorithms[i].getEstimateSettings())
-	print algorithms
+	#print algorithms
 	return algorithms, diffLists
 
 
@@ -86,11 +90,18 @@ def addDatasetParams(rewardManagerDict):
 		rewardManagerDict['save_address'] = Delicious_save_address
 		rewardManagerDict['FeatureVectorsFileName'] = Delicious_FeatureVectorsFileName  
 		rewardManagerDict['itemNum'] = 190000  
+	elif gen['dataset'] == 'Yahoo':
+		rewardManagerDict['address'] = Yahoo_address
+		rewardManagerDict['save_address'] = Yahoo_save_address
+		rewardManagerDict['itemNum'] = 200000
+
 
 def createW(gen):
 	OriginaluserNum = 2100
 	nClusters = 100
 	Gepsilon = .3
+	#won't work when there is a clusterfile procided. args.diagnol doesn't exist 
+
 	if gen.has_key('clusterfile'):           
 		label = read_cluster_label(gen['clusterfile'])
 		rewardManagerDict['label'] = label
@@ -154,14 +165,20 @@ if __name__ == '__main__':
 
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
-        
-        if gen.has_key('dataset') and gen['dataset'] == 'LastFM':
-                        n_users = 2100
-                        n_articles = 19000
-        elif user.has_key('number'):
+        if user.has_key('number'):
                 n_users = user['number'] 
         else:
                 n_users =  10
+        if gen.has_key('dataset'):
+		if gen['dataset'] == 'LastFM':
+			print("LastFM")
+                        n_users = 2100
+                        n_articles = 19000
+		elif gen['dataset'] == 'Delicious':
+			print("Delicious")
+                        n_users = 2100
+                        n_articles = 190000
+	
 	UserGroups = user['groups'] if user.has_key('groups') else 5
 	
 	rewardManagerDict['poolArticleSize'] = gen['pool_article_size'] if gen.has_key('pool_article_size') else 10
@@ -213,15 +230,13 @@ if __name__ == '__main__':
 	#reward_type = reco['type'] if reco.has_key('type') else 'linear'
 	
 	#PCA
-	pca_articles(articles, 'random')
+	#pca_articles(articles, 'random')
 	rewardManagerDict['articles'] = articles
 	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
 	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])
 	rewardManagerDict['type'] = "UniformTheta"
 	rewardManagerDict['simulation_signature'] = AM.signature
 
-
-	
 	for i in range(len(articles)):
 		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
@@ -230,6 +245,22 @@ if __name__ == '__main__':
 		addDatasetParams(rewardManagerDict)
 		W, GW, nClusters = createW(gen)
 		experiment = DatasetRewardManager(arg_dict = rewardManagerDict)
+	elif gen.has_key('dataset') and gen['dataset'] == 'Yahoo':
+		print('Yahoo')
+		addDatasetParams(rewardManagerDict)
+		clusterNum = 160 
+		fileNameWriteCluster = os.path.join(Kmeansdata_address, '10kmeans_model'+str(clusterNum)+ '.dat')
+		userFeatureVectors = getClusters(fileNameWriteCluster)
+		SparsityLevel = 160
+		epsilon = .3
+		W = initializeW(userFeatureVectors, SparsityLevel)
+		#if args.diagnol == 'Orgin':
+		#	W = initializeW(userFeatureVectors, SparsityLevel)
+		#elif args.diagnol == 'Opt':
+		#	W = initializeW_opt(userFeatureVectors, SparsityLevel)   # Generate user relation matrix
+		GW = initializeGW(W , epsilon)
+		experiment = YahooRewardManager(arg_dict = rewardManagerDict)
+		n_users = 160
         else:
                 experiment = RewardManager(arg_dict = rewardManagerDict, reward_type = reward_type)
 		W = UM.getW()
@@ -246,3 +277,9 @@ if __name__ == '__main__':
 	algorithms, diffLists = generate_algorithms(cfg['alg'], W, system_params)
 
 	experiment.runAlgorithms(algorithms, diffLists)
+
+
+
+
+
+

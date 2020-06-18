@@ -81,7 +81,7 @@ class DatasetRewardManager():
                             currentUserID = userID
                         pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k).articles[0]
                         
-                        if (pickedArticle.id == article_chosen):
+			if (pickedArticle.id == article_chosen):
                             reward = 1
                         else:
                             reward = 0
@@ -108,10 +108,10 @@ class DatasetRewardManager():
                         if i % 1000 == 0:
                             self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
                             self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumlateRegret, i, RandomChoice.regret)
-                self.plot_result(algorithms, BatchCumlateRegret, tim_, None, RandomChoiceRegret, AlgRewardRatio_vsRandom)
+                self.plot_result(algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom)
 
 
-        def plot_result(self, algorithms, BatchCumlateRegret, tim_, diffLists, RandomChoiceRegret, AlgRewardRatio_vsRandom):
+        def plot_result(self, algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom):
                 # plot the results      
                 f, axa = plt.subplots(1, sharex=True)
                 for alg_name in algorithms.iterkeys():
@@ -119,6 +119,12 @@ class DatasetRewardManager():
                         print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
 
                 print("RandomChoiceRegret: " +str(RandomChoiceRegret[-1]))
+		print("")
+
+                # plot the results      
+                f, axa = plt.subplots(1, sharex=True)
+                for alg_name in algorithms.iterkeys():
+                        axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
                 axa.plot(tim_, RandomChoiceRegret, label='Random Choice')
 
                 axa.legend(loc='upper left',prop={'size':9})
