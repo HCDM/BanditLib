@@ -172,14 +172,15 @@ def createMLPDict(specific, general, W, system_params):
 	base_dict = {
 		'dimension': 25,
 		'hidden_layer_dimension': 10,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
+		'parameters': {}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createMLPSingleDict(specific, general, W, system_params):
+	return createMLPDict(specific, general, W, system_params)
+
+def createUCBMLPDict(specific, general, W, system_params):
+	return createMLPDict(specific, general, W, system_params)
 
 def createPerturbedRewardMLPDict(specific, general, W, system_params):
 	base_dict = {
@@ -187,14 +188,15 @@ def createPerturbedRewardMLPDict(specific, general, W, system_params):
 		'hidden_layer_dimension': 10,
 		'a': 1,
 		'perturb_scale': .1,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
+		'parameters': {}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createPerturbedRewardMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedRewardMLPDict(specific, general, W, system_params)
+	
+def createPerturbedRewardBinomialMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedRewardMLPDict(specific, general, W, system_params)
 
 def createPerturbedGradientMLPDict(specific, general, W, system_params):
 	base_dict = {
@@ -202,26 +204,19 @@ def createPerturbedGradientMLPDict(specific, general, W, system_params):
 		'hidden_layer_dimension': 10,
 		'a': 1,
 		'perturb_scale': .1,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
+		'parameters': {}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createPerturbedGradientMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedGradientMLPDict(specific, general, W, system_params)
 
 def createEGreedyMLPDict(specific, general, W, system_params):
 	base_dict = {
 		'dimension': 25,
 		'hidden_layer_dimension': 10,
 		'epsilon': .05,
-		'parameters': {
-			'Theta': False,
-			'CoTheta': False,
-			'W': False,
-			'V': False
-		}
+		'parameters': {}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 

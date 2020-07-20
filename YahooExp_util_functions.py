@@ -197,12 +197,14 @@ class articleAccess():
         self.accesses = 0.0 # times the article was chosen to be presented as the best articles
         self.clicks = 0.0   # of times the article was actually clicked by the user
         self.CTR = 0.0      # ctr as calculated by the updateCTR function
+	self.cumulative_CTR_list = []
 
     def updateCTR(self):
         try:
             self.CTR = self.clicks / self.accesses
         except ZeroDivisionError: # if it has not been accessed
             self.CTR = -1
+	self.cumulative_CTR_list.append(self.CTR)
         return self.CTR
 
     def addrecord(self, click):

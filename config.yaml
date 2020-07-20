@@ -10,14 +10,14 @@
 general:
   testing_iterations: 1000 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 10 # (int) The number of features which the algorithm knows about each article
+  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
-  pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
+  pool_article_size: 20 # (int) Number of articles to select from total pool from which the algorithm can choose
   batch_size: 1 # (int) 
   testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created
   collaborative: True # (True/False) connection between collaborative user and social_linear rewards
-  dataset: None  #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
+  dataset: Yahoo #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
 
 # Different settings for user objects
 user:
@@ -47,6 +47,9 @@ alg:
   general:
     alpha: 0.3
     lambda_: 0.1
+    threshold: 1000
+    learning_rate: .01
+    number_sample: 1
     # Define what sort of additional parameter modifications will be tracked
     parameters:
       Theta: True
@@ -59,11 +62,36 @@ alg:
     LinUCB:
       alpha: 0.3
       lambda_: 1
-      parameters:
-        Theta: True
-        CoTheta: False
-        W: False
-        V: False
+    #MLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 25
+    #PerturbedRewardMLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10 
+    #  perturb_scale: 2.5 
+    #PerturbedGradientMLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10 
+    #  perturb_scale: 1.5 
+    #EGreedyMLP:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #  epsilon: .025 
+    #UCBMLP:
+    #  alpha: 0.3
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #MLPSingle:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10
+    #PerturbedRewardMLPSingle:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10 
+    #  perturb_scale: 2.5 
+    #PerturbedGradientMLPSingle:
+    #  dimension: 25
+    #  hidden_layer_dimension: 10 
+    #  perturb_scale: 1.5 
     #LinPHE:
     #  a: 1 
     #  lambda_: 0.1
@@ -151,47 +179,6 @@ alg:
     #  sigma : 0.5
     #  sigmaU : 1 
     #  sigmaV : 1 
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
-    #MLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  threshold: .005
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
-    #PerturbedRewardMLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  threshold: .005
-    #  a: .025 
-    #  perturb_scale: 1 
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
-    #PerturbedGradientMLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  threshold: .005
-    #  a: .025 
-    #  perturb_scale: .3
-    #  parameters:
-    #    Theta: False
-    #    CoTheta: False
-    #    W: False
-    #    V: False
-    #EGreedyMLP:
-    #  dimension: 25
-    #  hidden_layer_dimension: 10
-    #  threshold: .005
-    #  epsilon: .025 
     #  parameters:
     #    Theta: False
     #    CoTheta: False

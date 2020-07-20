@@ -2,10 +2,10 @@ from conf import *
 from LastFM_util_functions import *
 from random import shuffle 
 from Users.Users import UserManager
-import matplotlib.pyplot as plt
 
 import datetime
 
+import matplotlib.pyplot as plt
 
 class randomStruct():
         def __init__(self):       
@@ -37,8 +37,10 @@ class DatasetRewardManager():
             AlgReward = {}
             AlgPicked = {} # Records what article each algorithm picks
             AlgRegret = {}      
+            AlgMSE = {}      
             AlgRewardRatio_vsRandom = {} 
             BatchCumlateRegret = {}
+            BatchCumlateMSE = {}
             RandomChoice = randomStruct() 
             RandomChoiceRegret = []
              
@@ -46,7 +48,9 @@ class DatasetRewardManager():
                 AlgReward[alg_name] = []
                 AlgPicked[alg_name] = []
                 AlgRegret[alg_name] = []
+                AlgMSE[alg_name] = []
                 BatchCumlateRegret[alg_name] = []
+                BatchCumlateMSE[alg_name] = []
                 AlgRewardRatio_vsRandom[alg_name] = []
 
             totalObservations = 0
@@ -57,20 +61,18 @@ class DatasetRewardManager():
             with open(fileName, 'r') as f:
                 f.readline()
                 for i, line in enumerate(f, 1):
-                    #if i > 10000: break 
+                    #if i > 1000: break 
                     articlePool = []
                     userID, tim, pool_articles = parseLine(line)
                     article_chosen = int(pool_articles[0]) 
                     for article in pool_articles:
                         article_id = int(article.strip(']'))
                         articlePool.append(Article(article_id, FeatureVectors[article_id]))
-                    
                     RandomArticlePicked = choice(articlePool)
                     if RandomArticlePicked.id == article_chosen:
                         RandomChoice.reward += 1 
                     else:
                         RandomChoice.regret += 1
-
 
                     shuffle(articlePool[:self.poolArticleSize])
                         
@@ -79,8 +81,10 @@ class DatasetRewardManager():
                             currentUserID = self.label[userID]
                         else:
                             currentUserID = userID
-                        pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k).articles[0]
-                        
+                        pickedArticle, predReward = alg.createRecommendation(articlePool, currentUserID, self.k)
+                       	pickedArticle = pickedArticle.articles[0]
+
+				 
                         if (pickedArticle.id == article_chosen):
                             reward = 1
                         else:
@@ -90,6 +94,7 @@ class DatasetRewardManager():
                         AlgReward[alg_name].append(reward)
                         AlgPicked[alg_name].append(pickedArticle.id)
                         AlgRegret[alg_name].append(OptimalReward - reward) 
+			AlgMSE[alg_name].append((reward-predReward) **2)
 
                         if save_flag:
                             model_name = 'saved_models/'+self.dataset+'_'+str(self.nClusters)+'_shuffled_Clustering_'\
@@ -98,6 +103,7 @@ class DatasetRewardManager():
 
                         if i % 100==0:#self.batchSize==0:
                             BatchCumlateRegret[alg_name].append(sum(AlgRegret[alg_name]))
+                            BatchCumlateMSE[alg_name].append(sum(AlgMSE[alg_name]))
                             if RandomChoice.reward != 0:
                                 AlgRewardRatio_vsRandom[alg_name].append((i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
                             else:
@@ -105,38 +111,56 @@ class DatasetRewardManager():
                     if i % 100 == 0:
                         tim_.append(i) 
                         RandomChoiceRegret.append(RandomChoice.regret)
-                        if i % 1000 == 0:
+                        if i % 10000 == 0 or i % 96000 == 0:
                             self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
                             self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumlateRegret, i, RandomChoice.regret)
-                self.plot_result(algorithms, BatchCumlateRegret, tim_, None, RandomChoiceRegret, AlgRewardRatio_vsRandom)
+                self.plot_result(algorithms, BatchCumlateRegret, tim_, BatchCumlateMSE, RandomChoiceRegret, AlgRewardRatio_vsRandom)
 
 
-        def plot_result(self, algorithms, BatchCumlateRegret, tim_, diffLists, RandomChoiceRegret, AlgRewardRatio_vsRandom):
+        def plot_result(self, algorithms, BatchCumlateRegret, tim_, BatchCumlateMSE, RandomChoiceRegret, AlgRewardRatio_vsRandom):
                 # plot the results      
+                for alg_name in algorithms.iterkeys():
+                        print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
+                        print '%s: %.2f' % (alg_name, BatchCumlateMSE[alg_name][-1])
+                        print '%s: %.2f' % (alg_name, AlgRewardRatio_vsRandom[alg_name][-1])
+
+                print("RandomChoiceRegret: " +str(RandomChoiceRegret[-1]))
+		print("")
+
+
+                # plot the results      
+                #f, axa = plt.subplots(1, sharex=True)
+                #for alg_name in algorithms.iterkeys():
+                #        axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
+                #axa.plot(tim_, RandomChoiceRegret, label='Random Choice')
+
+                #axa.legend(loc='upper left',prop={'size':9})
+                #axa.set_xlabel("Iteration")
+                #axa.set_ylabel("Regret")
+                #axa.set_title("Accumulated Regret")
+                #plt.show()
+
                 f, axa = plt.subplots(1, sharex=True)
                 for alg_name in algorithms.iterkeys():
                         axa.plot(tim_, BatchCumlateRegret[alg_name],label = alg_name)
-                        print '%s: %.2f' % (alg_name, BatchCumlateRegret[alg_name][-1])
-
-                print("RandomChoiceRegret: " +str(RandomChoiceRegret[-1]))
                 axa.plot(tim_, RandomChoiceRegret, label='Random Choice')
 
                 axa.legend(loc='upper left',prop={'size':9})
                 axa.set_xlabel("Iteration")
                 axa.set_ylabel("Regret")
-                axa.set_title("Accumulated Regret")
+                axa.set_title("Accumulated SquareError")
                 plt.show()
-
-                # plot the results      
+		
+		print("next")
+                #plot the results      
                 f, axa = plt.subplots(1, sharex=True)
                 for alg_name in algorithms.iterkeys():
                         axa.plot(tim_, AlgRewardRatio_vsRandom[alg_name],label = alg_name)
-                        print '%s: %.2f' % (alg_name, AlgRewardRatio_vsRandom[alg_name][-1])
 
                 axa.legend(loc='upper left',prop={'size':9})
                 axa.set_xlabel("Iteration")
                 axa.set_ylabel("Normalized Payoff")
-                axa.set_title("Reward Ratio Algorith vs Random")
+                axa.set_title("Reward Ratio Algorithm vs Random")
                 plt.show()
 
  

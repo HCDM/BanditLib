@@ -1,3 +1,6 @@
+# Reward Manager for simulation
+
+
 from Rewards.LinearReward import LinearReward
 from Rewards.SocialLinearReward import SocialLinearReward
 # from Rewards.FairReward import FairReward
