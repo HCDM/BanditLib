@@ -146,8 +146,7 @@ class YahooRewardManager():
 				# article picked by random strategy
 				articles_random.learn_stats.addrecord(click)
 				for alg_name, alg in algorithms.items():
-				    pickedArticle, predReward = alg.createRecommendation(articlePool, currentUserID, self.k)
-				    print(alg_name)
+				    pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k)
 				    pickedArticle = pickedArticle.articles[0]
 				    # reward = getReward(userID, pickedArticle) 
 				    if (pickedArticle.id == article_chosen):

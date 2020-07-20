@@ -92,11 +92,8 @@ def addDatasetParams(rewardManagerDict):
 		rewardManagerDict['FeatureVectorsFileName'] = Delicious_FeatureVectorsFileName  
 		rewardManagerDict['itemNum'] = 190000  
 	elif gen['dataset'] == 'Yahoo':
-		print("YAHOO NOT IMPLEMENTED")
-		#rewardManagerDict['relationFileName'] = Delicious_relationFileName
 		rewardManagerDict['address'] = Yahoo_address
 		rewardManagerDict['save_address'] = Yahoo_save_address
-		#rewardManagerDict['FeatureVectorsFileName'] = Delicious_FeatureVectorsFileName  
 		rewardManagerDict['itemNum'] = 200000
 
 
@@ -180,7 +177,7 @@ if __name__ == '__main__':
 			print("LastFM")
                         n_users = 2100
                         n_articles = 19000
-		if gen['dataset'] == 'Delicious':
+		elif gen['dataset'] == 'Delicious':
 			print("Delicious")
                         n_users = 2100
                         n_articles = 190000
@@ -251,6 +248,7 @@ if __name__ == '__main__':
 		W, GW, nClusters = createW(gen)
 		experiment = DatasetRewardManager(arg_dict = rewardManagerDict)
 	elif gen.has_key('dataset') and gen['dataset'] == 'Yahoo':
+		print('Yahoo')
 		addDatasetParams(rewardManagerDict)
 		clusterNum = 160 
 		fileNameWriteCluster = os.path.join(Kmeansdata_address, '10kmeans_model'+str(clusterNum)+ '.dat')

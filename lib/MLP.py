@@ -1,5 +1,5 @@
-
-
+# Multi Layer Perceptron Algorithm
+# They only work on the datasets (Yahoo, LastFM, Delicious) and not on current simulation
 
 import numpy as np
 import torch
@@ -68,6 +68,7 @@ class MLP(torch.nn.Module):
 		else:
 			layer.weight.grad  = layer.weight.grad + torch.tensor(np.random.normal(scale=perturb_scale, size=size)).float()
 
+
 class MLPUserStruct:
 	def __init__(self, input_dim, hidden_dim, threshold, device, learning_rate, perturb_type='normal', n=1):
 		self.device = device
@@ -80,6 +81,12 @@ class MLPUserStruct:
 		self.history = []
 		self.clicks = torch.empty(0,1).to(device=self.device)
 	
+	# Use single sample to update
+	def updateParameters(self, article_FeatureVector, click, perturb_scale=0):
+		article_FeatureVector = torch.tensor([article_FeatureVector]).float().to(device=self.device)
+		click = torch.tensor([[click]]).float().to(device=self.device)
+		return self.mlp.update_model(article_FeatureVector, click, perturb_scale)
+
 	# Uses entire history to update
 	#def updateParameters(self, article_FeatureVector, click, perturb_scale=0):
 	#	article_FeatureVector = torch.tensor([article_FeatureVector]).float().to(device=self.device)
@@ -87,12 +94,6 @@ class MLPUserStruct:
 	#	self.article_FeatureVectors = torch.cat((self.article_FeatureVectors, article_FeatureVector), 0)
 	#	self.clicks = torch.cat((self.clicks, click), 0)
 	#	return self.mlp.update_model(self.article_FeatureVectors, self.clicks, perturb_scale)
-
-	# Use single sample to update
-	def updateParameters(self, article_FeatureVector, click, perturb_scale=0):
-		article_FeatureVector = torch.tensor([article_FeatureVector]).float().to(device=self.device)
-		click = torch.tensor([[click]]).float().to(device=self.device)
-		return self.mlp.update_model(article_FeatureVector, click, perturb_scale)
 
 	# Uses new datapoint and random subset of history to update
 	# In the future should have the ability to select n different subsets of history updating the model on each subset
@@ -152,7 +153,7 @@ class MLPAlgorithm(BaseAlg):
 				articlePicked = x
 				maxPTA = x_pta
 
-		return [articlePicked], maxPTA
+		return [articlePicked]
 
 
 	def getProb(self, pool_articles, userID):
@@ -195,7 +196,7 @@ class EGreedyMLPAlgorithm(MLPAlgorithm):
 	def decide(self, pool_articles, userID, k = 1):
 		# Random explore with probability epilon
 		if random.random() < self.epsilon:
-			return [random.choice(pool_articles)], 1
+			return [random.choice(pool_articles)]
 
 		maxPTA = float('-inf')
 		articlePicked = None
@@ -206,7 +207,7 @@ class EGreedyMLPAlgorithm(MLPAlgorithm):
 				articlePicked = x
 				maxPTA = x_pta
 
-		return [articlePicked], maxPTA
+		return [articlePicked]
 
 
 #--------------- Single MLP Algorithm (All users share one MLP) ---------------
@@ -227,7 +228,7 @@ class MLPSingleAlgorithm(BaseAlg):
 				articlePicked = x
 				maxPTA = x_pta
 
-		return [articlePicked], maxPTA
+		return [articlePicked]
 
 	def updateParameters(self, articlePicked, click, userID):
 		return self.mlp.updateParameters(articlePicked.contextFeatureVector[:self.dimension], click)
@@ -278,7 +279,7 @@ class UCBMLPAlgorithm(MLPSingleAlgorithm):
 				maxPTA = x_pta
 				self.input_two = input_two
 
-		return [articlePicked], maxPTA
+		return [articlePicked]
 	
 	# This is the same idea found in LinUCB where we approxmiate uncertainty about an arm 
 	# We approximate uncertaintely at each layer of the MLP
