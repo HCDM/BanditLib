@@ -11,8 +11,6 @@ import sys
 from scipy.sparse import csgraph
 from scipy.spatial import distance
 from YahooExp_util_functions import *
-import matplotlib
-matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 
 
@@ -179,9 +177,7 @@ def plot_results(algorithms, random):
 	plt.ylabel('CTR-Ratio')
 	plt.legend(loc = 'lower right')
 	plt.title('Yahoo 160 Users')
-        filename = datetime.datetime.now().strftime("batch_results/yahoo_2layer/MLPMany5x25_lr01_1sample")
-
-	plt.savefig(filename)
+	plt.show()
 
 
 

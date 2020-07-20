@@ -1,11 +1,15 @@
+1. GOBlin, PTS and UCBPMF seem to have linear or close to linear regret w/ simulation
+	- Unsure if this is an issue
+
 1. Simulation.py needs some refactoring
 	 - Alot of complexity with it handling both simulation setup and dataset setup
 
-2. Mean Square Error recording and plot was removed for DatasetRewardManager and YahooRewardManager
+2. Potentially add MSE recording and plotting in Dataset/Yahoo RewardManagers 
 	- I think we need to change createReccommendation in lib/BaseAlg.py to get access to prediction
 	- All algorithms decide functions will need to return the picked article and the predicted value 
 
-3. Cannot save algorithm (ie theta values, weights for MLP) on any Dataset 
+3. Add functionality to save algorithm (ie theta values, weights for MLP) on all datasets 
+	- Similar implemenations should be in CF_Bandit repo
 	- MLP saving will also require saving history 
 	- YahooDatasetRewardManager and DatasetRewardManager 
 

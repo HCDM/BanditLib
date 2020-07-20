@@ -1,4 +1,3 @@
-# Working on adding thompson sampling to the library
 import numpy as np
 import math
 from BaseAlg import BaseAlg
@@ -23,6 +22,7 @@ class ThompsonSamplingUserStruct:
         return np.dot(self.theta_estimate, article_FeatureVector)  
 
 
+#---------------Thompson Sampling Algorithm---------------
 class ThompsonSamplingAlgorithm(BaseAlg):
     def __init__(self, arg_dict):
         BaseAlg.__init__(self, arg_dict)
@@ -44,6 +44,7 @@ class ThompsonSamplingAlgorithm(BaseAlg):
         return [articlePicked]
 
     def decide(self, pool_articles, userID, k=1):
+	# Pick k best itmems
         art_features = np.empty([len(pool_articles), len(pool_articles[0].contextFeatureVector[:self.dimension])])
         for i in range(len(pool_articles)):
             art_features[i, :] = pool_articles[i].contextFeatureVector[:self.dimension]

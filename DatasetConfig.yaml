@@ -8,38 +8,11 @@
 
 # System level settings to be used in all algorithms
 general:
-  testing_iterations: 1000 # (int) Number of iterations to testing and refine model upon
-  training_iterations: 0 # (int) Number of iterations to train a model
   context_dimension: 25 # (int) The number of features which the algorithm knows about each article
   hidden_dimension: 0 # (int) The number of features hidden from the algorithms
   pool_article_size: 20 # (int) Number of articles to select from total pool from which the algorithm can choose
-  batch_size: 1 # (int) 
-  testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created
-  collaborative: True # (True/False) connection between collaborative user and social_linear rewards
-  dataset: Yahoo #(None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
-
-# Different settings for user objects
-user:
-  number: 10 # (int) Number of users for the algorithm to select arms for
-  groups: 5 # (int) define how the users are organized together
-  theta_func: featureUniform # (string)
-  load: no # (yes/no) Load the theta for each user from file specified by file_name
-  save: no # (yes/no Save the thetas for each user to be loaded for future simulations
-  collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
-  file_name: test.json # (string) File from which to load user thetas
-
-# Different settings for article arms
-article:
-  number: 1000 # (int) total number of articles from which to create the article pool
-  groups: 5 # (int)
-  load: no # (yes/no) Load attributes for each article from file specified by file_name
-  save: no # (yes/no) Save attributes for each article into a file for future simulations
-  file_name: test.json # (string) File from which to load article objects
-
-# Reward to determine the accuracy of choices made by the algorithm
-reward:
-  k: 1 # (int) number of articles to recommend for each user each iteration type: Linear # (string) Linear/SocialLinear/Fair: determines which reward function is used, overridden by general collaborative setting
+  dataset: LastFM #(LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
 
 # Parameters for the different algorithms
 alg:
@@ -47,9 +20,8 @@ alg:
   general:
     alpha: 0.3
     lambda_: 0.1
-    threshold: 1000
-    learning_rate: .01
-    number_sample: 1
+    # threshold: .001   # threshold, learning_rate apply to MLP algorithms
+    # learning_rate: .01
     # Define what sort of additional parameter modifications will be tracked
     parameters:
       Theta: True
