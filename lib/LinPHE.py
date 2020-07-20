@@ -24,6 +24,7 @@ class LinPHEUserStruct:
                 return np.dot(self.UserTheta, article_featureVector)
 
 
+#---------------Linear Perturbed History Algorithm---------------
 class LinPHEAlgorithm(BaseAlg):
         def __init__(self, arg_dict):
                 BaseAlg.__init__(self, arg_dict)

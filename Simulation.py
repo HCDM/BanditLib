@@ -134,6 +134,7 @@ if __name__ == '__main__':
 	with open(args.config, 'r') as ymlfile:
 		cfg = yaml.load(ymlfile)
 	gen = cfg['general'] if cfg.has_key('general') else {}
+	simulating = True if not gen.has_key('dataset') or gen['dataset'] == 'None' else False
 	user = cfg['user'] if cfg.has_key('user') else {}
 	article = cfg['article'] if cfg.has_key('article') else {}
 	reco = cfg['reward'] if cfg.has_key('reward') else {}
@@ -152,7 +153,8 @@ if __name__ == '__main__':
 	else:
 		latent_dimension = gen['hidden_dimension'] if gen.has_key('hidden_dimension') else 0
 	rewardManagerDict['latent_dimension'] = latent_dimension
-
+	
+	
 	rewardManagerDict['training_iterations'] = gen['training_iterations'] if gen.has_key('training_iterations') else 0
 	rewardManagerDict['testing_iterations'] = gen['testing_iterations'] if gen.has_key('testing_iterations') else 100
 	rewardManagerDict['plot'] = gen['plot'] if gen.has_key('plot') else True
@@ -222,7 +224,7 @@ if __name__ == '__main__':
 			FeatureFunc=featureUniform,  argv={'l2_limit':1})
 	if article.has_key('load') and article['load']:
 		articles = AM.loadArticles(articles['filename']) if articles.has_key('filename') else AM.loadArticles(articlesFilename)
-	else:
+	elif not gen.has_key('dataset') or gen['dataset'] == 'None':
 		articles = AM.simulateArticlePool()
 		if article.has_key('save') and article['save']:
 			AM.saveArticles(articles, articlesFilename, force=False) 
@@ -231,6 +233,7 @@ if __name__ == '__main__':
 	
 	#PCA
 	#pca_articles(articles, 'random')
+	
 	rewardManagerDict['articles'] = articles
 	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
 	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])

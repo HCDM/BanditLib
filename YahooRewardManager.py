@@ -11,6 +11,7 @@ import sys
 from scipy.sparse import csgraph
 from scipy.spatial import distance
 from YahooExp_util_functions import *
+import matplotlib.pyplot as plt
 
 
 from lib.LinUCB import LinUCBAlgorithm, Uniform_LinUCBAlgorithm,Hybrid_LinUCBAlgorithm
@@ -191,9 +192,21 @@ class YahooRewardManager():
 				#    WriteStat()
 			    #print stuff to screen and save parameters to file when the Yahoo! dataset file ends
 			    printWrite()
-			    #WriteStat()
-		#for alg_name, alg in algorithms.items():
-		#    model_name = 'Yahoo_'+str(clusterNum)+'_'+alg_name+'_'+dataDay+'_' + timeRun                    
-		#    model_dump(alg, model_name, line, dataDay)
-		#    tstart = tend
-		# sys.exit()
+
+
+def plot_results(algorithms, random):
+	num_data_points = len(random.learn_stats.cumulative_CTR_list)
+	tim_ = [i for i in range(num_data_points)]
+	random_CTR_list = random.learn_stats.cumulative_CTR_list
+
+	f, axa = plt.subplots(1, sharex=True)
+	for alg_name, alg in algorithms.items():
+		alg_CTR_list = alg.learn_stats.cumulative_CTR_list
+		alg_normalized_CTR = [alg_CTR/rand_CTR for alg_CTR, rand_CTR in zip(alg_CTR_list, random_CTR_list)]
+		axa.plot(tim_, alg_normalized_CTR, label=alg_name)
+	plt.xlabel('time')
+	plt.ylabel('CTR-Ratio')
+	plt.legend(loc = 'lower right')
+	plt.title('Yahoo 160 Users')
+	plt.show()
+
