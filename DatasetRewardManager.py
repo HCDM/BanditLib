@@ -1,3 +1,5 @@
+# RewardManager for LastFM and Delicious
+
 from conf import *
 from LastFM_util_functions import *
 from random import shuffle 
@@ -64,7 +66,6 @@ class DatasetRewardManager():
                     for article in pool_articles:
                         article_id = int(article.strip(']'))
                         articlePool.append(Article(article_id, FeatureVectors[article_id]))
-                    
                     RandomArticlePicked = choice(articlePool)
                     if RandomArticlePicked.id == article_chosen:
                         RandomChoice.reward += 1 
@@ -90,18 +91,22 @@ class DatasetRewardManager():
                         AlgReward[alg_name].append(reward)
                         AlgPicked[alg_name].append(pickedArticle.id)
                         AlgRegret[alg_name].append(OptimalReward - reward) 
-
-                        if save_flag:
-                            model_name = 'saved_models/'+self.dataset+'_'+str(self.nClusters)+'_shuffled_Clustering_'\
-                                                +alg_name+'_Diagnol_'+args.diagnol+'_' + timeRun
-                            model_dump(alg, model_name, i)
-
-                        if i % 100==0:#self.batchSize==0:
+			
+			# This does not work
+                        #if save_flag:
+                        #    model_name = 'saved_models/'+self.dataset+'_'+str(self.nClusters)+'_shuffled_Clustering_'\
+                        #                        +alg_name+'_Diagnol_'+args.diagnol+'_' + timeRun
+                        #    model_dump(alg, model_name, i)
+			
+			# record cumulative information about each algorithms performance
+                        if i % 100==0: #self.batchSize==0:
                             BatchCumlateRegret[alg_name].append(sum(AlgRegret[alg_name]))
                             if RandomChoice.reward != 0:
                                 AlgRewardRatio_vsRandom[alg_name].append((i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
                             else:
                                 AlgRewardRatio_vsRandom[alg_name].append(0)
+
+	            # Add recorded information to file 
                     if i % 100 == 0:
                         tim_.append(i) 
                         RandomChoiceRegret.append(RandomChoice.regret)

@@ -79,41 +79,32 @@ class YahooRewardManager():
 				if article == article_chosen:
 				    articleFalsePositive[article_chosen] +=1
 
-
-
+		tstart = datetime.datetime.now()
 		timeRun = datetime.datetime.now().strftime('_%m_%d_%H_%M')     # the current data time
 		dataDays = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
-#		fileSig = str(algName)+str(clusterNum)+ 'SP'+ str(SparsityLevel)+algName
-		batchSize = 100000
-		statBatchSize = 200000                            # size of one batch
 
-		d = 5             # feature dimension
-		context_dimension = d
-		latent_dimension = 2
-		alpha = 0.3     # control how much to explore
-		lambda_ = 0.2   # regularization used in matrix A
-		epsilon = 0.3
-
-		itemNum = 200000
-
-
-		totalObservations = 0
 		articleTruePositve = {}
 		articleFalseNegative = {}
-
 		articleTrueNegative = {}
 		articleFalsePositive = {}
 
 		articles_random = randomStruct()
 
-		tsave = 60*60*47 # Time interval for saving model.
-		tstart = time.time()
-
-		userNum = 160 
-
+		alg_accesses = {}
+		alg_clicks = {}
+		alg_CTR = {}
 		for alg_name, alg in algorithms.items():
-			#if not args.load:
 		        alg.learn_stats = articleAccess()
+
+		clusterNum = 160
+		userNum = 160 
+		
+		fileNameWriteCluster = os.path.join(Kmeansdata_address, '10kmeans_model'+str(clusterNum)+ '.dat')
+		userFeatureVectors = getClusters(fileNameWriteCluster)
+		#Yahoo dataset does not come with user labels
+		# We group users my kmeans clustering
+		
+		totalObservations = 0
 
 		for dataDay in dataDays:
 		#	if args.load:
@@ -153,13 +144,21 @@ class YahooRewardManager():
 				#-----------------------------Pick an article (CoLinUCB, LinUCB, Random)-------------------------
 				articlePool = []    
 				currentArticles = []            
+
+				# Create articles pool  
 				for article in pool_articles:
 				    article_featureVector = np.asarray(article[1:6])
+				    user_featureVector = userFeatureVectors[currentUserID] 
+				    combined_featureVector = np.outer(article_featureVector, user_featureVector).flatten()
+				    # We can choose the feature vector to be an outer product of the article and user vector if we want more information
+				    #combined_featureVector= np.asarray(article[1:6])
 				    if len(article_featureVector) == 5:
 					    article_id = int(article[0])
 					    articlePool.append(Article(article_id, article_featureVector))
 					    currentArticles.append(article_id)  
 				shuffle(articlePool)	
+				
+				
 				for article in currentArticles:
 				    if article not in articleTruePositve:
 					articleTruePositve[article] = 0
@@ -168,28 +167,23 @@ class YahooRewardManager():
 					articleFalseNegative[article] = 0
 				# article picked by random strategy
 				articles_random.learn_stats.addrecord(click)
+				
 				for alg_name, alg in algorithms.items():
 				    pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k)
 				    pickedArticle = pickedArticle.articles[0]
-				    # reward = getReward(userID, pickedArticle) 
+				    
 				    if (pickedArticle.id == article_chosen):
 					alg.learn_stats.addrecord(click)
 					alg.updateParameters(pickedArticle, click, currentUserID)
 					calculateStat()
-					
 
-				# if the batch has ended
-				#if totalObservations%batchSize==0:
-				#    printWrite()
-				#    tend = time.time()
-				    '''
-				    if tend-tstart>tsave:
-					model_name = 'Yahoo_'+str(clusterNum)+'_'+alg_name+'_'+dataDay+'_' + timeRun                    
-					model_dump(alg, model_name, line, dataDay)
-					tstart = tend
-				    '''
-				#if totalObservations%statBatchSize==0:
-				#    WriteStat()
+				totalObservations += 1
+				
+				#Record current click through rate
+				if totalObservations % 2000 == 0:
+				    articles_random.learn_stats.updateCTR()
+				    for alg in algorithms.values():
+					algCTR = alg.learn_stats.updateCTR()
 			    #print stuff to screen and save parameters to file when the Yahoo! dataset file ends
 			    printWrite()
 
