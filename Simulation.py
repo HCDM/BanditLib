@@ -168,8 +168,6 @@ if __name__ == '__main__':
 
 	n_articles = article['number'] if article.has_key('number') else 1000
 	ArticleGroups = article['groups'] if article.has_key('groups') else 5
-       	print("SGD") 	
-	print("Default Initialization")
         if user.has_key('number'):
                 n_users = user['number'] 
         else:
@@ -226,7 +224,7 @@ if __name__ == '__main__':
 			FeatureFunc=featureUniform,  argv={'l2_limit':1})
 	if article.has_key('load') and article['load']:
 		articles = AM.loadArticles(articles['filename']) if articles.has_key('filename') else AM.loadArticles(articlesFilename)
-	elif not gen.has_key('dataset') or gen['dataset'] == 'None':
+	elif simulating:
 		articles = AM.simulateArticlePool()
 		if article.has_key('save') and article['save']:
 			AM.saveArticles(articles, articlesFilename, force=False) 
@@ -235,15 +233,15 @@ if __name__ == '__main__':
 	
 	#PCA
 	#pca_articles(articles, 'random')
-	
-	rewardManagerDict['articles'] = articles
-	rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
-	rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])
-	rewardManagerDict['type'] = "UniformTheta"
-	rewardManagerDict['simulation_signature'] = AM.signature
+	if simulating:	
+		rewardManagerDict['articles'] = articles
+		rewardManagerDict['testing_method'] = gen['testing_method'] if gen.has_key('testing_method') else "online"
+		rewardManagerDict['noise'] = lambda : np.random.normal(scale = rewardManagerDict['NoiseScale'])
+		rewardManagerDict['type'] = "UniformTheta"
+		rewardManagerDict['simulation_signature'] = AM.signature
 
-	for i in range(len(articles)):
-		articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
+		for i in range(len(articles)):
+			articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
         nClusters = n_users	
 	if gen.has_key('dataset') and gen['dataset'] in ['LastFM', 'Delicious']:
@@ -271,7 +269,8 @@ if __name__ == '__main__':
 		W = UM.getW()
 
 
-	print "Starting for ", experiment.simulation_signature
+	if simulating:
+		print "Starting for ", experiment.simulation_signature
 	system_params = {
 		'context_dim': context_dimension,
 		'latent_dim': latent_dimension,

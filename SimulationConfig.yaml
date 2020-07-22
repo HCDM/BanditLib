@@ -60,95 +60,100 @@ alg:
     LinUCB:
       alpha: 0.3
       lambda_: 1
-    LinPHE:
-      a: 1 
-      lambda_: 0.1
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
-    ThompsonSampling:
-       lambda_: 0.1
-       R: .0001 
-       delta: .1
-       epsilon: .05
-       parameters:
-         Theta: True
-         CoTheta: False
-         W: False
-         V: False
-    CoLinUCB:
-      alpha: 0.3
-      lambda_: 0.1
-      use_alpha_t: False # Use a theoretical alpha_t value
-      parameters:
-        Theta: False
-        CoTheta: True
-        W: False
-        V: False
-    GOBLin:
-      alpha: 0.3
-      lambda_: 0.1
-      use_alpha_t: False
-      parameters:
-        Theta: False
-        CoTheta: True
-        W: False
-        V: False
-    HLinUCB:
-      alpha: 0.3
-      alpha2: 0.1
-      lambda_: 0.1
-      parameters:
-        Theta: False
-        CoTheta: True
-        W: False
-        V: True
-    FairUCB:
-      alpha: 0.3
-      lambda_: 0.1
-      parameters:
-        Theta: True
-        CoTheta: False
-        W: False
-        V: False
-    UCBPMF:
-      sigma : 0.5
-      sigmaU : 1 
-      sigmaV : 1 
-      alpha : 0.1
-      parameters:
-        Theta: False
-        CoTheta: False
-        W: False
-        V: False
-    FactorUCB:
-      alpha: 0.05
-      alpha2: 0.025
-      lambda_: 0.1
-      parameters:
-        Theta: False
-        CoTheta: True
-        W: False
-        V: True
-    CLUB:
-      alpha: 0.1
-      alpha2: 0.5
-      lambda_: 0.1 
-      cluster_init : 'Erdos-Renyi'
-      parameters:
-        Theta: False
-        CoTheta: False
-        W: False
-        V: False
-    PTS:
-      particle_num : 10 
-      sigma : 0.5
-      sigmaU : 1 
-      sigmaV : 1 
-      parameters:
-        Theta: False
-        CoTheta: False
-        W: False
-        V: False
+    #LinPHE:
+    #  a: 1 
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: True
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #ThompsonSampling:
+    #   lambda_: 0.1
+    #   R: .0001 
+    #   delta: .1
+    #   epsilon: .05
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    #CoLinUCB:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  use_alpha_t: False # Use a theoretical alpha_t value
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: False
+    #GOBLin:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  use_alpha_t: False
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: False
+    #HLinUCB:
+    #  alpha: 0.3
+    #  alpha2: 0.1
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: True
+    #FairUCB:
+    #  alpha: 0.3
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: True
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #UCBPMF:
+    #  sigma : 0.5
+    #  sigmaU : 1 
+    #  sigmaV : 1 
+    #  alpha : 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #FactorUCB:
+    #  alpha: 0.05
+    #  alpha2: 0.025
+    #  lambda_: 0.1
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: True
+    #    W: False
+    #    V: True
+    #CLUB:
+    #  alpha: 0.1
+    #  alpha2: 0.5
+    #  lambda_: 0.1 
+    #  cluster_init : 'Erdos-Renyi'
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
+    #PTS:
+    #  particle_num : 10 
+    #  sigma : 0.5
+    #  sigmaU : 1 
+    #  sigmaV : 1 
+    #  parameters:
+    #    Theta: False
+    #    CoTheta: False
+    #    W: False
+    #    V: False
