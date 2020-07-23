@@ -121,12 +121,12 @@ class FactorUCBUserStruct:
 class FactorUCBAlgorithm(BaseAlg):
 	def __init__(self, arg_dict, init='random', window_size = 1, max_window_size = 10):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
-		self.d = self.context_dimension + self.latent_dimension
+		self.d = self.dimension + self.latent_dimension
 		
-		self.USERS = FactorUCBUserStruct(self.context_dimension, self.latent_dimension, self.lambda_ , self.n, self.W, init)
+		self.USERS = FactorUCBUserStruct(self.dimension, self.latent_dimension, self.lambda_ , self.n, self.W, init)
 		self.articles = []
 		for i in range(self.itemNum):
-			self.articles.append(FactorUCBArticleStruct(i, self.context_dimension, self.latent_dimension, self.lambda_, self.W, init)) 
+			self.articles.append(FactorUCBArticleStruct(i, self.dimension, self.latent_dimension, self.lambda_, self.W, init)) 
 
 		if window_size == -1:
 			self.increase_window = True
@@ -145,7 +145,7 @@ class FactorUCBAlgorithm(BaseAlg):
 			articlePicked = None
 
 			for x in pool_articles:
-				self.articles[x.id].V[:self.context_dimension] = x.contextFeatureVector[:self.context_dimension]
+				self.articles[x.id].V[:self.dimension] = x.contextFeatureVector[:self.dimension]
 				x_pta = self.USERS.getProb(self.alpha, self.alpha2, self.articles[x.id], userID)
 
 				# pick article with highest Prob
@@ -160,7 +160,7 @@ class FactorUCBAlgorithm(BaseAlg):
 		means = []
 		vars = []
 		for x in pool_articles:
-			self.articles[x.id].V[:self.context_dimension] = x.contextFeatureVector[:self.context_dimension]
+			self.articles[x.id].V[:self.dimension] = x.contextFeatureVector[:self.dimension]
 			x_pta, mean, var = self.USERS.getProb_plot(self.alpha, self.alpha2, self.articles[x.id], userID)
 			means.append(mean)
 			vars.append(var)
@@ -178,19 +178,6 @@ class FactorUCBAlgorithm(BaseAlg):
 			self.USERS.updateParameters(articles, clicks, userID)
 			for articlePicked, click, userID in self.window:
 				self.articles[articlePicked.id].updateParameters(self.USERS, click, userID)
-			# for articlePicked, click, userID in self.window:
-			# 	article = self.articles[articlePicked.id]
-
-			# 	#self.articles[articlePicked.id].A2 -= (article.getCount(userID))*np.outer(user.U[self.context_dimension:], user.U[self.context_dimension:])
-			# 	self.USERS.updateParameters(self.articles[articlePicked.id], click, userID)
-			
-			# for articlePicked, click, userID in self.window:
-			# 	#self.articles[articlePicked.id].A2 += (article.getCount(userID)-1)*np.outer(user.U[self.context_dimension:], user.U[self.context_dimension:])
-
-			# 	# self.users[userID].A -= (user.getCount(articlePicked.id))*np.outer(article.V, article.V)
-			# 	self.articles[articlePicked.id].updateParameters(self.USERS, click, userID)
-			# 	article = self.articles[articlePicked.id]
-			# 	# self.users[userID].A += (user.getCount(articlePicked.id)-1)*np.outer(article.V, article.V)
 			self.window = []
 			if self.increase_window == True:
 				self.window_size = min(self.window_size+1, self.max_window_size)

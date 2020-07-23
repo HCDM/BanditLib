@@ -51,6 +51,7 @@ def createCoLinUCBDict(specific, general, W, system_params):
 		'alpha': 0.3,
 		'lambda_': 0.1,
 		'use_alpha_t': False,
+		'n_users': system_params['n_clusters'],
 		'parameters': {
 			'CoTheta': True,
 		}
@@ -83,6 +84,12 @@ def createUCBPMFDict(specific, general, W, system_params):
 		'sigmaU' : 1,
 		'sigmaV' : 1,
 		'alpha' : 0.1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -96,6 +103,12 @@ def createFactorUCBDict(specific, general, W, system_params):
 		'lambda_' : 0.1,
 		'n' : system_params['n_users'],
 		'itemNum' : system_params['n_articles'],
+		'parameters': {
+			'Theta': False,
+			'CoTheta': True,
+			'W': False,
+			'V': True, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -106,6 +119,12 @@ def createCLUBDict(specific, general, W, system_params):
 		'n' : system_params['n_users'],
 		'alpha_2' : 0.5,
 		'cluster_init' : 'Erdos-Renyi',
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False, 
+		}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
@@ -117,6 +136,87 @@ def createPTSDict(specific, general, W, system_params):
 		'sigma' : np.sqrt(.5),
 		'sigmaU' : 1,
 		'sigmaV' : 1,
+		'parameters': {
+			'Theta': False,
+			'CoTheta': False,
+			'W': False,
+			'V': False, 
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createThompsonSamplingDict(specific, general, W, system_params):
+	base_dict = {
+		'lambda_': 0.1,
+		'R': .0001,
+                'delata': .1,
+                'epsilon': .05,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+
+def createLinPHEDict(specific, general, W, system_params):
+	base_dict = {
+		'a': 1,
+                'lambda_': .1,
+		'parameters': {
+			'Theta': True,
+		}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'parameters': {}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createMLPSingleDict(specific, general, W, system_params):
+	return createMLPDict(specific, general, W, system_params)
+
+def createUCBMLPDict(specific, general, W, system_params):
+	return createMLPDict(specific, general, W, system_params)
+
+def createPerturbedRewardMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'a': 1,
+		'perturb_scale': .1,
+		'parameters': {}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createPerturbedRewardMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedRewardMLPDict(specific, general, W, system_params)
+	
+def createPerturbedRewardBinomialMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedRewardMLPDict(specific, general, W, system_params)
+
+def createPerturbedGradientMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'a': 1,
+		'perturb_scale': .1,
+		'parameters': {}
+	}
+	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
+def createPerturbedGradientMLPSingleDict(specific, general, W, system_params):
+	return createPerturbedGradientMLPDict(specific, general, W, system_params)
+
+def createEGreedyMLPDict(specific, general, W, system_params):
+	base_dict = {
+		'dimension': 25,
+		'hidden_layer_dimension': 10,
+		'epsilon': .05,
+		'parameters': {}
 	}
 	return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
