@@ -1,0 +1,131 @@
+# Bandit Lib Config File
+#   Config file to set different parameters for the system
+#   To use append --config option to the python Simulation.py command
+#     i.e: python Simulation.py --config <config-file-name>.yaml
+#   None of the parameters are required, if not included system will 
+#     default to a value
+#   Default values for the parameters are the current values for each parameter
+
+# System level settings to be used in all algorithms
+general:
+  context_dimension: 25 # (int) The number of features which the algorithm knows about each article
+  hidden_dimension: 0 # (int) The number of features hidden from the algorithms
+  pool_article_size: 20 # (int) Number of articles to select from total pool from which the algorithm can choose
+  plot: True # (True/False) Should plots be created
+  dataset: LastFM #(LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
+
+# Parameters for the different algorithms
+alg:
+  # General Parameters, setting in this section will overwrite default values in all algorithms simulation
+  general:
+    alpha: 0.3
+    lambda_: 0.1
+    # Define what sort of additional parameter modifications will be tracked
+    parameters:
+      Theta: True
+      CoTheta: False
+      W: False
+      V: False
+  # Specific Parameters, setting in this section under an algorithm will overwrite default and 
+  #   general parameters for that algorithm
+  specific:
+    LinUCB:
+      alpha: 0.3
+      lambda_: 0.1
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+    LinPHE:
+      a: 1 
+      lambda_: 0.1
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+    ThompsonSampling:
+       lambda_: 0.1
+       R: .0001 
+       delta: .1
+       epsilon: .05
+       parameters:
+         Theta: True
+         CoTheta: False
+         W: False
+         V: False
+    # CoLinUCB:
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   use_alpha_t: False # Use a theoretical alpha_t value
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: False
+    # GOBLin:
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   use_alpha_t: False
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: False
+    # HLinUCB:
+    #   alpha: 0.3
+    #   alpha2: 0.1
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: True
+    # FairUCB:
+    #   alpha: 0.3
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: True
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # UCBPMF:
+    #   sigma : 0.5
+    #   sigmaU : 1 
+    #   sigmaV : 1 
+    #   alpha : 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # FactorUCB:
+    #   alpha: 0.05
+    #   alpha2: 0.025
+    #   lambda_: 0.1
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: True
+    #     W: False
+    #     V: True
+    # CLUB:
+    #   alpha: 0.1
+    #   alpha2: 0.5
+    #   lambda_: 0.1 
+    #   cluster_init : 'Erdos-Renyi'
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False
+    # PTS:
+    #   particle_num : 10 
+    #   sigma : 0.5
+    #   sigmaU : 1 
+    #   sigmaV : 1 
+    #   parameters:
+    #     Theta: False
+    #     CoTheta: False
+    #     W: False
+    #     V: False

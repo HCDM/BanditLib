@@ -83,7 +83,7 @@ class PTSAlgorithm(BaseAlg):
 		BaseAlg.__init__(self, arg_dict)
 		self.particles = [] # Particles
 		for i in range(self.particle_num):
-			self.particles.append(PTSParticleStruct(self.dimension, self.n, self.itemNum, self.sigma, self.sigmaU, self.sigmaV, 1.0/self.particle_num))
+			self.particles.append(PTSParticleStruct(self.dimension, self.n_users, self.itemNum, self.sigma, self.sigmaU, self.sigmaV, 1.0/self.particle_num))
 		self.time = 0
 
 	def decide(self, pool_articles, userID, k = 1):

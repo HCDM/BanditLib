@@ -1,0 +1,20 @@
+1. Simulation.py needs some refactoring
+	- Alot of complexity with it handling both simulation setup and dataset setup
+	- See 6
+
+2. Add functionality to save algorithms in YahooRewardManager, DatasetRewardManager 
+	- Similar implemenations should be in CF_Bandit repo (YahooMain.py)
+	- MLP implementation will be different
+
+3. Potentially add MSE recording and plotting in Dataset/Yahoo RewardManagers 
+	- I think we need to change createReccommendation in lib/BaseAlg.py to get access to prediction
+	- All algorithms decide functions will need to return the picked article and the predicted value 
+
+5. There is some inconsitency between algorithms that return a list of picked articles and a single instance of an article
+	- Similarly only some algorithms have a page rank implemenation (paramater k in decide functions)
+	- It is also confusing that k can only be one for algorithms on dataset
+
+6. Issues with hidden_dimension set to > 0 when some algorithms are run. 
+	- Ex: when running all algorithms with simulation and hidden_dim = 4 errors throw
+	- I believe it is an issued in Simulation.py 
+

@@ -79,7 +79,6 @@ class CoLinUCBAlgorithm(BaseAlg):
 	def __init__(self, arg_dict, update='inv'):  # n is number of users
 		BaseAlg.__init__(self, arg_dict)
 		self.update = update #default is inverse. Could be 'rankone' instead.
-
 		self.USERS = CoLinUCBUserSharedStruct(arg_dict['dimension'], arg_dict['lambda_'], arg_dict['n_users'], arg_dict['W'])
 
 	def decide_old(self, pool_articles, userID, exclude = []):
