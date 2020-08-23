@@ -1,5 +1,5 @@
 # BanditLib
-This repo contains the implementation of serveral contextual bandits algorithm, including CoLin, hLinUCB, factorUCB, GOB.Lin, LinUCB, HybridLinUCB, PTS, and UCBPMF. CoLin, hLinUCB and factorUCB are our proposed algorithms published in [1], [2], [3].
+This repo contains the implementation of serveral contextual bandits algorithm, including CoLin, hLinUCB, factorUCB, GOB.Lin, LinUCB, HybridLinUCB, PTS, and UCBPMF. CoLin, hLinUCB and factorUCB are our proposed algorithms published in [1], [2], [3]. We are updating the library and current version may have bugs. You can also check a stable release here: https://github.com/huazhengwang/BanditLib/releases/tag/1.0
 
 ## Usage
 Run the simulator: `python Simulation.py --alg XXX` where parameter alg represents the name of algorithm. 
