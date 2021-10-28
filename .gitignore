@@ -4,3 +4,5 @@
 ./SimulationResults/*
 /SimulationResults/
 .idea
+.vscode/
+Results/
