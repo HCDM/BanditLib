@@ -77,23 +77,12 @@ class DatasetRewardManager:
                 shuffle(articlePool[: self.poolArticleSize])
 
                 for alg_name, alg in algorithms.items():
-                    if alg_name in [
-                        "CoLinUCB",
-                        "CoLinRankOne",
-                        "factorLinUCB",
-                        "GOBLin",
-                        "LearnWl2",
-                        "LearnWl1",
-                        "LearnWl1_UpdateA",
-                        "LearnWl2_UpdateA",
-                        "LearnW_WRegu",
-                    ]:
+                    if alg_name in ["CoLinUCB", "CoLinRankOne", "factorLinUCB", "GOBLin", "LearnWl2", "LearnWl1",
+                                    "LearnWl1_UpdateA", "LearnWl2_UpdateA", "LearnW_WRegu", ]:
                         currentUserID = self.label[userID]
                     else:
                         currentUserID = userID
-                    pickedArticle = alg.createRecommendation(
-                        articlePool, currentUserID, self.k
-                    ).articles[0]
+                    pickedArticle = alg.createRecommendation(articlePool, currentUserID, self.k).articles[0]
 
                     if pickedArticle.id == article_chosen:
                         reward = 1
@@ -116,8 +105,7 @@ class DatasetRewardManager:
                         BatchCumlateRegret[alg_name].append(sum(AlgRegret[alg_name]))
                         if RandomChoice.reward != 0:
                             AlgRewardRatio_vsRandom[alg_name].append(
-                                (i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward)
-                            )
+                                (i - BatchCumlateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
                         else:
                             AlgRewardRatio_vsRandom[alg_name].append(0)
 
@@ -127,20 +115,11 @@ class DatasetRewardManager:
                     RandomChoiceRegret.append(RandomChoice.regret)
                     if i % 1000 == 0:
                         self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
-                        self.write_regret_to_file(
-                            filenameWriteRegret,
-                            algorithms,
-                            BatchCumlateRegret,
-                            i,
-                            RandomChoice.regret,
-                        )
-            self.plot_result(
-                algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom
-            )
+                        self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumlateRegret, i,
+                            RandomChoice.regret, )
+            self.plot_result(algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom)
 
-    def plot_result(
-        self, algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom
-    ):
+    def plot_result(self, algorithms, BatchCumlateRegret, tim_, RandomChoiceRegret, AlgRewardRatio_vsRandom):
         # plot the results
         f, axa = plt.subplots(1, sharex=True)
         for alg_name in algorithms.iterkeys():
@@ -185,16 +164,9 @@ class DatasetRewardManager:
             f.write("," + ",".join([str(alg_name) for alg_name in algorithms.iterkeys()]))
             f.write("\n")
 
-    def write_regret_to_file(
-        self, filenameWriteRegret, algorithms, BatchCumlateRegret, iter_, randomRegret
-    ):
+    def write_regret_to_file(self, filenameWriteRegret, algorithms, BatchCumlateRegret, iter_, randomRegret):
         with open(filenameWriteRegret, "a+") as f:
             f.write(str(iter_))
             f.write("," + str(randomRegret))
-            f.write(
-                ","
-                + ",".join(
-                    [str(BatchCumlateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]
-                )
-            )
+            f.write("," + ",".join([str(BatchCumlateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
             f.write("\n")

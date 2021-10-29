@@ -38,7 +38,7 @@ class L2RRewardManager:
         AlgPicked = {}  # Records what article each algorithm picks
         AlgRegret = {}
         AlgRewardRatio_vsRandom = {}
-        batchCumulateRegret = {}
+        BatchCumulateRegret = {}
         RandomChoice = randomStruct()
         RandomChoiceRegret = []
 
@@ -46,7 +46,7 @@ class L2RRewardManager:
             AlgReward[alg_name] = []
             AlgPicked[alg_name] = []
             AlgRegret[alg_name] = []
-            batchCumulateRegret[alg_name] = []
+            BatchCumulateRegret[alg_name] = []
             AlgRewardRatio_vsRandom[alg_name] = []
 
         print("Preparing the dataset...")
@@ -84,17 +84,33 @@ class L2RRewardManager:
                 AlgRegret[alg_name].append(optimalReward - reward)
 
                 if i % 100 == 0:
-                    batchCumulateRegret[alg_name].append(sum(AlgRegret[alg_name]))
+                    BatchCumulateRegret[alg_name].append(sum(AlgRegret[alg_name]))
                     if RandomChoice.reward != 0:
                         AlgRewardRatio_vsRandom[alg_name].append(
-                            (cumulativeOptimalReward - batchCumulateRegret[alg_name][-1])
-                            / (1.0 * RandomChoice.reward)
-                        )
+                            (cumulativeOptimalReward - BatchCumulateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
                     else:
                         AlgRewardRatio_vsRandom[alg_name].append(0)
+
+            if i % 100 == 0:
+                tim_.append(i)
+                RandomChoiceRegret.append(RandomChoice.regret)
+                if i % 1000 == 0:
+                    self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
+                    self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumulateRegret, i,
+                                              RandomChoice.regret)
 
     def set_up_regret_file(self, filenameWriteRegret, algorithms):
         with open(filenameWriteRegret, "w") as f:
             f.write("Time(Iteration),Random")
             f.write("," + ",".join([str(alg_name) for alg_name in algorithms.keys()]))
+            f.write("\n")
+
+    def batchRecord(self, algorithms, iter_, tstart, articles_random, AlgPicked):
+        print("Datapoint #{} Elapsed time".format(iter_, datetime.datetime.now() - tstart))
+
+    def write_regret_to_file(self, filenameWriteRegret, algorithms, BatchCumulateRegret, iter_, randomRegret):
+        with open(filenameWriteRegret, "a+") as f:
+            f.write(str(iter_))
+            f.write("," + str(randomRegret))
+            f.write("," + ",".join([str(BatchCumulateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
             f.write("\n")
