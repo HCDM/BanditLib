@@ -37,34 +37,34 @@ def generate_algorithms(alg_dict, W, system_params):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulation for Neural Bandit Algorithms")
-    parser.add_argument(
-        "--alg",
-        dest="alg",
-        default="NeuralUCB",
-        help="Select a specific algorithm, could be NeuralUCB, NeuralTS, NeuralLinear, etc.",
-    )
-    parser.add_argument(
-        "--contextdim",
-        dest="contextdim",
-        type=int,
-        default=136,
-        help="Set dimension of context features.",
-    )
+    # parser.add_argument(
+    #     "--alg",
+    #     dest="alg",
+    #     default="NeuralUCB",
+    #     help="Select a specific algorithm, could be NeuralUCB, NeuralTS, NeuralLinear, etc.",
+    # )
+    # parser.add_argument(
+    #     "--contextdim",
+    #     dest="contextdim",
+    #     type=int,
+    #     default=136,
+    #     help="Set dimension of context features.",
+    # )
     parser.add_argument(
         "--config", dest="config", default="SimulationNeuralConfig.yaml", help="yaml config file"
     )
-    parser.add_argument(
-        "--dataset", dest="dataset", default="Web10K", choices=["Web10K", "YahooL2R"]
-    )
+    # parser.add_argument(
+    #     "--dataset", dest="dataset", default="Web10K", choices=["Web10K", "YahooL2R"]
+    # )
     args = parser.parse_args()
 
     with open(args.config, "r") as ymlfile:
         cfg = yaml.load(ymlfile)
     gen = cfg["general"] if "general" in cfg else {}
-    if args.contextdim:
-        context_dimension = args.contextdim
-    else:
-        context_dimension = gen["context_dimension"] if "context_dimension" in gen else 136
+    # if args.contextdim:
+    #     context_dimension = args.contextdim
+    # else:
+    context_dimension = gen["context_dimension"] if "context_dimension" in gen else 136
     system_params = {"context_dim": context_dimension, "n_users": 1}
     algorithms, diffLists = generate_algorithms(cfg["alg"], None, system_params)
     rewardManagerDict = {}
@@ -79,6 +79,8 @@ if __name__ == "__main__":
         rewardManagerDict["address"] = "../datasets/Yahoo_hcdm/Fold1/"
         rewardManagerDict["save_address"] = "./Results/YahooL2RResults/"
         rewardManagerDict["context_dimension"] = 700
+
+    print("Running for dataset {}".format(gen["dataset"]))
 
     experiment = L2RRewardManager(arg_dict=rewardManagerDict)
     experiment.runAlgorithms(algorithms, diffLists)

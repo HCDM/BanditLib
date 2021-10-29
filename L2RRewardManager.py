@@ -50,7 +50,7 @@ class L2RRewardManager:
             AlgRewardRatio_vsRandom[alg_name] = []
 
         print("Preparing the dataset...")
-        data = DataSet(self.address)
+        data = DataSet(self.address, self.context_dimension)
         data.read_data()
         n_queries = data.n_queries
         # random shuffle the query list

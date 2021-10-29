@@ -10,7 +10,7 @@
 general:
   testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 700 # (int) The number of features which the algorithm knows about each article
+  context_dimension: 136 # (int) The number of features which the algorithm knows about each article
   batch_size: 1 # (int) 
   testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created

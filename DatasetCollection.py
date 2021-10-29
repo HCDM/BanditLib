@@ -6,12 +6,13 @@ FOLDDATA_WRITE_VERSION = 3
 
 
 class DataSet(object):
-    def __init__(self, data_path):
+    def __init__(self, data_path, num_features=None):
         self.data_path = data_path
         self.FeatureMap = {}
         self.FeatureMatrix = None
         self.DoclistRanges = None
         self.LabelVector = None
+        self.num_features = num_features
 
     def _read_file(self, path):
         CurrentQid = None
@@ -64,7 +65,10 @@ class DataSet(object):
                 TotalFeatures += 1
 
     def convert_FeatureDict(self, Doclists, LabelLists, FeatureMapping, query_level_norm=True):
-        TotalFeatures = len(FeatureMapping)
+        if self.num_features is None:
+            TotalFeatures = len(FeatureMapping)
+        else:
+            TotalFeatures = self.num_features
         TotalDocs = 0
         Ranges = []
         for doclist in Doclists:
@@ -100,8 +104,8 @@ class DataSet(object):
         return FeatureMatrix, QueryPointer, LabelVector
 
     def read_data(self):
-        data_pickle_path = self.data_path + "binarized_data.npz"
-        fmap_pickle_path = self.data_path + "binarized_fmap.pickle"
+        data_pickle_path = self.data_path + "binarized_bandit_data.npz"
+        fmap_pickle_path = self.data_path + "binarized_bandit_fmap.pickle"
 
         fmap_read = False
         data_read = False
@@ -120,6 +124,7 @@ class DataSet(object):
         if not fmap_read or not data_read:
             doclists = []
             labels = []
+            self.FeatureMap = {}
 
             for name in ["train.txt", "vali.txt", "test.txt"]:
                 _, n_doclists, n_labels, features = self._read_file(self.data_path + name)
