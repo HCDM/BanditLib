@@ -57,9 +57,9 @@ class NeuralUCBUserStruct:
                 # context_feature = torch.tensor(batch["context"], dtype=torch.float32).to(
                 #     self.device
                 # )
-                context_feature = (batch["context"].clone().detach().float().requires_grad_(True).to(self.device))
+                context_feature = batch["context"].clone().detach().float().requires_grad_(True).to(self.device)
                 # click = torch.tensor(batch["click"], dtype=torch.float32).to(self.device).view(-1)
-                click = (batch["click"].clone().detach().float().requires_grad_(True).to(self.device).view(-1))
+                click = batch["click"].clone().detach().float().requires_grad_(True).to(self.device).view(-1)
                 pred = self.model(context_feature).view(-1)
                 loss = self.loss_func(pred, click)
                 total_loss += loss
