@@ -106,7 +106,6 @@ class DataSet(object):
     def read_data(self):
         data_pickle_path = self.data_path + "binarized_bandit_data.npz"
         fmap_pickle_path = self.data_path + "binarized_bandit_fmap.pickle"
-
         fmap_read = False
         data_read = False
         if os.path.isfile(fmap_pickle_path):

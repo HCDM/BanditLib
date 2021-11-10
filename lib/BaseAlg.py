@@ -86,3 +86,24 @@ class Network(nn.Module):
     def forward(self, data):
         out = self.model(data)
         return out
+
+
+class Network_NL(nn.Module):
+    def __init__(self,feature_dim, mlp_dims):
+        super(Network_NL,self).__init__()
+        layers = [torch.nn.Linear(feature_dim, mlp_dims[0]), torch.nn.ReLU()]
+        for idx in range(len(mlp_dims) - 1):
+            layers.append(torch.nn.Linear(mlp_dims[idx], mlp_dims[idx + 1]))
+            layers.append(torch.nn.ReLU())
+        layers.append(torch.nn.Linear(mlp_dims[-1], 1))
+        self.model = torch.nn.Sequential(*layers)
+        self.model_last = torch.nn.Sequential(*layers[:-1])
+        self.total_param = sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def forward(self, data,path="all"):
+        if path == "all":
+            out = self.model(data)
+        elif path == "last":
+            out = self.model_last(data)
+        return out
+

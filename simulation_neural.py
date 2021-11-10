@@ -9,6 +9,7 @@ from LastFM_util_functions import *
 from YahooExp_util_functions import *
 from L2RRewardManager import L2RRewardManager
 from lib.NeuralUCB import NeuralUCBAlgorithm
+from lib.NeuralLinear import NeuralLinearAlgorithm
 
 
 def generate_algorithms(alg_dict, W, system_params):
@@ -35,11 +36,12 @@ def generate_algorithms(alg_dict, W, system_params):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulation for Neural Bandit Algorithms")
-    parser.add_argument("--config", dest="config", default="SimulationNeuralConfig.yaml", help="yaml config file")
+    parser.add_argument("--config", dest="config", default="C:/Users/wbw/PycharmProjects/BanditLib"
+                                                           "/SimulationConfigNeuralLinear.yaml", help="yaml config file")
     args = parser.parse_args()
 
     with open(args.config, "r") as ymlfile:
-        cfg = yaml.load(ymlfile)
+        cfg = yaml.load(ymlfile,Loader=yaml.FullLoader)
     gen = cfg["general"] if "general" in cfg else {}
     context_dimension = gen["context_dimension"] if "context_dimension" in gen else 136
     system_params = {"context_dim": context_dimension, "n_users": 1}
@@ -49,7 +51,7 @@ if __name__ == "__main__":
 
     rewardManagerDict["k"] = gen["k"]
     if gen["dataset"] == "Web10K":
-        rewardManagerDict["address"] = "../datasets/MSLR-WEB10K_hcdm/Fold1/"
+        rewardManagerDict["address"] = "D:/OneDrive - University of Virginia/neural bandit algorithm/MSLR-WEB10K/Fold1/"
         rewardManagerDict["save_address"] = "./Results/Web10KResults/"
         rewardManagerDict["context_dimension"] = 136
     if gen["dataset"] == "YahooL2R":

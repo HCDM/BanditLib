@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from Users.Users import UserManager
 import datetime
 from DatasetCollection import DataSet
+from lib.NeuralLinear import NeuralLinearAlgorithm
 
 
 class randomStruct:
@@ -42,7 +43,7 @@ class L2RRewardManager:
         RandomChoice = randomStruct()
         RandomChoiceRegret = []
 
-        for alg_name, alg in algorithms.items():
+        for alg_name, alg in algorithms.items(): # "NeuralLinear"
             AlgReward[alg_name] = []
             AlgPicked[alg_name] = []
             AlgRegret[alg_name] = []
@@ -75,7 +76,8 @@ class L2RRewardManager:
             optimalReward = max(label_vector)
             cumulativeOptimalReward += optimalReward
             for alg_name, alg in algorithms.items():
-                pickedArticle = alg.createRecommendation(articlePool, UserID, self.k).articles[0]
+                # ********************************************************************************
+                pickedArticle = alg.createRecommendation(articlePool, UserID, self.k).articles[0] # generate k articles
                 reward = label_vector[pickedArticle.id]
                 alg.updateParameters(pickedArticle, reward, UserID)
 
@@ -112,5 +114,5 @@ class L2RRewardManager:
         with open(filenameWriteRegret, "a+") as f:
             f.write(str(iter_))
             f.write("," + str(randomRegret))
-            f.write("," + ",".join([str(BatchCumulateRegret[alg_name][-1]) for alg_name in algorithms.iterkeys()]))
+            f.write("," + ",".join([str(BatchCumulateRegret[alg_name][-1]) for alg_name in algorithms.keys()]))
             f.write("\n")

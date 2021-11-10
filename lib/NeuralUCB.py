@@ -81,7 +81,7 @@ class NeuralUCBAlgorithm(BaseAlg):
                 NeuralUCBUserStruct([], arg_dict["dimension"], arg_dict["lambda_"], arg_dict["mlp"], arg_dict["epoch"],
                                     arg_dict["batch_size"], arg_dict["learning_rate"], init, ))
 
-    def decide(self, pool_articles, userID, k=1):
+    def decide(self, pool_articles, userID, k=1) -> object:
         # MEAN
         # create concatenated feature for the user and arm
         user_feat = np.array(self.users[userID].feature)

@@ -43,8 +43,23 @@ alg:
         CoTheta: False
         W: False
         V: False
+    NeuralLinear:
+      lambda_: 0.25
+      mlp: 10,10
+      epoch: 10
+      learning_rate: 0.1
+      batch_size: 1024 # mini-batch size 512
+      a0: 3
+      b0: 3
+      training_freq_network: 100
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
+
     #LinPHE:
-    #  a: 1 
+    #  a: 1
     #  lambda_: 0.1
     #  parameters:
     #    Theta: True
@@ -53,7 +68,7 @@ alg:
     #    V: False
     #ThompsonSampling:
     #   lambda_: 0.1
-    #   R: .0001 
+    #   R: .0001
     #   delta: .1
     #   epsilon: .05
     #   parameters:
@@ -98,8 +113,8 @@ alg:
     #    V: False
     #UCBPMF:
     #  sigma : 0.5
-    #  sigmaU : 1 
-    #  sigmaV : 1 
+    #  sigmaU : 1
+    #  sigmaV : 1
     #  alpha : 0.1
     #  parameters:
     #    Theta: False
@@ -118,7 +133,7 @@ alg:
     #CLUB:
     #  alpha: 0.1
     #  alpha2: 0.5
-    #  lambda_: 0.1 
+    #  lambda_: 0.1
     #  cluster_init : 'Erdos-Renyi'
     #  parameters:
     #    Theta: False
@@ -126,10 +141,10 @@ alg:
     #    W: False
     #    V: False
     #PTS:
-    #  particle_num : 10 
+    #  particle_num : 10
     #  sigma : 0.5
-    #  sigmaU : 1 
-    #  sigmaV : 1 
+    #  sigmaU : 1
+    #  sigmaV : 1
     #  parameters:
     #    Theta: False
     #    CoTheta: False
