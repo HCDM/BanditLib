@@ -72,19 +72,17 @@ class L2RRewardManager:
                 articlePool.append(Article(DocId, feature[DocId]))
             RandomArticlePickled = random.choice(articlePool)
             RandomChoice.reward += label_vector[RandomArticlePickled.id]
-
             optimalReward = max(label_vector)
             cumulativeOptimalReward += optimalReward
+            RandomChoice.regret = cumulativeOptimalReward - RandomChoice.reward
             for alg_name, alg in algorithms.items():
-                # ********************************************************************************
-                pickedArticle = alg.createRecommendation(articlePool, UserID, self.k).articles[0] # generate k articles
+                pickedArticle = alg.createRecommendation(articlePool, UserID, self.k).articles[0]
                 reward = label_vector[pickedArticle.id]
                 alg.updateParameters(pickedArticle, reward, UserID)
 
                 AlgReward[alg_name].append(reward)
                 AlgPicked[alg_name].append(pickedArticle.id)
                 AlgRegret[alg_name].append(optimalReward - reward)
-
                 if i % 100 == 0:
                     BatchCumulateRegret[alg_name].append(sum(AlgRegret[alg_name]))
                     if RandomChoice.reward != 0:
@@ -92,11 +90,10 @@ class L2RRewardManager:
                             (cumulativeOptimalReward - BatchCumulateRegret[alg_name][-1]) / (1.0 * RandomChoice.reward))
                     else:
                         AlgRewardRatio_vsRandom[alg_name].append(0)
-
             if i % 100 == 0:
                 tim_.append(i)
                 RandomChoiceRegret.append(RandomChoice.regret)
-                if i % 1000 == 0:
+                if i % 1000 == 0 or i == 9999:
                     self.batchRecord(algorithms, i, tstart, RandomChoice, AlgPicked)
                     self.write_regret_to_file(filenameWriteRegret, algorithms, BatchCumulateRegret, i,
                                               RandomChoice.regret)

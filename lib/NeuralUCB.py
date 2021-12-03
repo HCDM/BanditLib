@@ -92,7 +92,6 @@ class NeuralUCBAlgorithm(BaseAlg):
         #     concat_feature = pool_articles
         tensor = torch.tensor(concat_feature, dtype=torch.float32).to(self.users[userID].device)
         mean_matrix = self.users[userID].model(tensor)
-
         sum_mean = torch.sum(mean_matrix)
         with backpack(BatchGrad()):
             sum_mean.backward()

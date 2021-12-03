@@ -10,6 +10,7 @@ from YahooExp_util_functions import *
 from L2RRewardManager import L2RRewardManager
 from lib.NeuralUCB import NeuralUCBAlgorithm
 from lib.NeuralLinear import NeuralLinearAlgorithm
+from lib.NeuralLinUCB import NeuralLinUCBAlgorithm
 
 
 def generate_algorithms(alg_dict, W, system_params):
@@ -37,7 +38,7 @@ def generate_algorithms(alg_dict, W, system_params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulation for Neural Bandit Algorithms")
     parser.add_argument("--config", dest="config", default="C:/Users/wbw/PycharmProjects/BanditLib"
-                                                           "/SimulationConfigNeuralLinear.yaml", help="yaml config file")
+                                                           "/SimulationConfigNeuralLinUCB.yaml", help="yaml config file")
     args = parser.parse_args()
 
     with open(args.config, "r") as ymlfile:

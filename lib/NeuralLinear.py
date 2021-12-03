@@ -72,7 +72,7 @@ class NeuralLinearAlgorithm(BaseAlg):
         # create parameters
         # Gaussian prior for each beta_i
         self._lambda_prior = float(arg_dict["lambda_"])
-        self.mu = np.zeros(self.param_dim) # param_dim is the dimension of the output of last layer of NN
+        self.mu = np.zeros(self.param_dim)
         self.f = np.zeros(self.param_dim)
         self.yy = [0]
         self.cov = (1.0 / self._lambda_prior) * np.eye(self.param_dim)
@@ -132,7 +132,7 @@ class NeuralLinearAlgorithm(BaseAlg):
         else:
             z_context_ = z_context.clone().detach().numpy()
             self.precision += np.dot(z_context_.T, z_context_)
-            self.f += np.dot(z_context_.T, click) # X_T * Y
+            self.f += np.dot(z_context_.T, click)
         self.yy += click**2
         self.cov = np.linalg.inv(self.precision)
         self.mu = np.dot(self.cov,self.f)

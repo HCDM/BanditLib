@@ -41,9 +41,12 @@ class BaseAlg:
     def updateParameters(self, articlePicked, click, userID):
         pass
 
+
+
     def updateRecommendationParameters(self, recommendation, reward, userID):
         for i in range(recommendation.k):
             self.updateParameters(recommendation.articles[i], reward[i], userID)
+
 
     def getV(self, articleID):
         if self.dimension == 0:
