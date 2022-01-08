@@ -38,6 +38,15 @@ def createNeuralLinearDict(specific, general, W, system_params):
     }
     return createSpecificAlgDict(specific, general, W, system_params, base_dict)
 
+def createNeuralLinearLikelihoodMatchingDict(specific, general, W, system_params):
+    base_dict = {
+        "lambda_": 0.25,
+        "parameters": {
+            "Theta": True,
+        },
+    }
+    return createSpecificAlgDict(specific, general, W, system_params, base_dict)
+
 
 def createNeuralUCBDict(specific, general, W, system_params):
     base_dict = {

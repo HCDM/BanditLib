@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy.linalg
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,13 +11,14 @@ from backpack.extensions import BatchGrad
 from lib.BaseAlg import BaseAlg, get_device, Network,Network_NL, obs_data_all
 import numpy as np
 from backpack import backpack, extend
-
+import cvxpy as cvx
+import math
 import numpy as np
 from scipy.stats import invgamma
 
 class NeuralLinearUserStruct:
     def __init__(self, feature, featureDimension, mlp_dims,
-                 epoch, batch_size, learning_rate,):
+                 epoch, batch_size, learning_rate,buffer_s):
         # create neural model
         self.feature = feature
         self.mlp_dims = [int(x) for x in mlp_dims.split(",") if x != ""]
@@ -26,8 +28,8 @@ class NeuralLinearUserStruct:
         self.learning_rate = learning_rate
         self.model = extend(Network_NL(feature_dim=featureDimension, mlp_dims=self.mlp_dims).to(self.device))
         self.loss_func = nn.MSELoss()
-        self.data = obs_data_all() # training set
-        self.latent_data = obs_data_all()
+        self.data = obs_data_all(buffer_s=buffer_s) # training set
+        self.latent_data = obs_data_all(buffer_s=buffer_s)
         self.time = 0
 
     def updateParameters(self):
@@ -61,7 +63,7 @@ class NeuralLinearUserStruct:
             scheduler.step()
 
 
-class NeuralLinearAlgorithm(BaseAlg):
+class NeuralLinearLikelihoodMatchingAlgorithm(BaseAlg):
     def __init__(self, arg_dict,):  # n is number of users
         BaseAlg.__init__(self, arg_dict)
         self.device = get_device()
@@ -70,14 +72,22 @@ class NeuralLinearAlgorithm(BaseAlg):
         self.latent_dim = self.mlp_dims[-1]
         self.param_dim = self.latent_dim
         # create parameters
+        self.contexts = None
+        self.context_dim = 0
+        self.buffer_s = arg_dict["mem"]
         # Gaussian prior for each beta_i
         self._lambda_prior = float(arg_dict["lambda_"])
         self.mu = np.zeros(self.param_dim)
+        self.mu_prior = self.mu
         self.f = np.zeros(self.param_dim)
         self.yy = [0]
         self.cov = (1.0 / self._lambda_prior) * np.eye(self.param_dim)
-        self.precision = self._lambda_prior * np.eye(self.param_dim)
+        self.precision = np.zeros_like(self.cov)
+        self.precision_prior = self.precision
         # Inverse Gamma prior for each sigma2_i
+        self.sigma_prior_flag = arg_dict["sigma_prior_flag"]
+        self.mu_prior_flag = arg_dict["mu_prior_flag"]
+        self.EPSILON = 0.00001
         self._a0 = float(arg_dict["a0"])
         self._b0 = float(arg_dict["b0"])
         self.a = self._a0
@@ -89,7 +99,7 @@ class NeuralLinearAlgorithm(BaseAlg):
         for i in range(arg_dict["n_users"]):
             self.users.append(
                 NeuralLinearUserStruct([], arg_dict["dimension"], arg_dict["mlp"], arg_dict["epoch"],
-                                    arg_dict["batch_size"], arg_dict["learning_rate"],))
+                                    arg_dict["batch_size"], arg_dict["learning_rate"],buffer_s=arg_dict["mem"]))
 
     def decide(self, pool_articles, userID, k=1,) -> object:
         """Samples beta's from posterior, and chooses best action accordingly."""
@@ -105,6 +115,7 @@ class NeuralLinearAlgorithm(BaseAlg):
         # forward
         z_context = self.users[userID].model(tensor,path="last")
         z_context_=z_context.clone().detach().numpy()
+        self.contexts = z_context_
         vals = np.dot(beta_s,z_context_.T)
         pool_positions = np.argsort(vals)[(k * -1):]
         articles = []
@@ -112,33 +123,87 @@ class NeuralLinearAlgorithm(BaseAlg):
             articles.append(pool_articles[pool_positions[i]])
         return articles
 
+    def calc_precision_prior(self, new_z_):
+        precision_return = []
+        new_z_ = np.array(new_z_).reshape(-1,10)
+        n, m = new_z_.shape
+        prior = (self.EPSILON) * np.eye(self.param_dim)
+
+        if self.cov is not None:
+            precision = self.cov
+
+            # compute  confidence scores for old data
+            d = []
+            for c in self.contexts[:]:
+                d.append(np.dot(np.dot(c, precision), c.T))
+            # compute new data correlations
+            phi = []
+            for c in self.contexts[:]:
+                phi.append(np.outer(c,c))
+
+            X = cvx.Variable((m,m), PSD=True)
+
+            obj = cvx.Minimize(sum([(cvx.trace(X*phi[i]) - d[i]) ** 2 for i in range(len(d))]))
+            prob = cvx.Problem(obj)
+            prob.solve()
+            if X.value is None:
+                precision_return.append(np.linalg.inv(prior))
+                self.cov = prior
+            else:
+                precision_return.append(np.linalg.inv(X.value+prior))
+                self.cov = X.value + prior
+        else:
+            precision_return.append(np.linalg.inv(prior))
+            self.cov = prior
+        return np.array(precision_return)
+
+
     def updateParameters(self, articlePicked, click, userID): # click: reward
         self.t += 1
+        prior = (self.EPSILON) * np.eye(self.param_dim)
         article_id = articlePicked.id
         article_feature = articlePicked.contextFeatureVector[: self.dimension] # context_feature
         concat_feature = np.array(articlePicked.featureVector)
         #     #! need to double check the implementation for concatenate user and item features
         tensor = torch.tensor(concat_feature, dtype=torch.float32).to(self.users[userID].device)
-        z_context = self.users[userID].model(tensor,path="last")
+        z_context = self.users[userID].model(tensor,path="last") # old
         # put pickedArticle data into training set to update model
         self.users[userID].data.push(article_feature, click)  # self.data_h.add(context, action, reward)
         if self.t % self.update_freq_nn == 0:
             self.users[userID].updateParameters() # update_model(Train NN for new features)
             tensor = torch.tensor(concat_feature, dtype=torch.float32).to(self.users[userID].device)
-            new_z = self.users[userID].model(tensor, path="last")
+            new_z = self.users[userID].model(tensor, path="last") # new
             new_z_ = new_z.clone().detach().numpy()
-            self.precision = (np.dot(new_z_.T, new_z_) + self._lambda_prior * np.eye(self.param_dim))
-            self.f = np.dot(new_z_.T, click)
+            if self.sigma_prior_flag == 1:
+                self.precision_prior = self.calc_precision_prior(new_z_)
+            if self.mu_prior_flag == 1:
+                self.mu_prior = self.users[userID].model.last_layer.weight.clone().detach().numpy().T
+            self.precision = (np.dot(new_z_.T, new_z_) + self.precision_prior)
+            self.f = np.dot(new_z_, click)
+
         else:
             z_context_ = z_context.clone().detach().numpy()
             self.precision += np.dot(z_context_.T, z_context_)
             self.f += np.dot(z_context_.T, click)
         self.yy += click**2
-        self.cov = np.linalg.inv(self.precision)
-        self.mu = np.dot(self.cov, self.f)
+
+        if len(self.cov.shape) > 2 :
+            self.cov = self.cov.squeeze(axis=0)
+        if len(self.precision.shape) > 2:
+            self.precision = self.precision.squeeze(axis=0)
+        if len(self.precision_prior.shape) > 2:
+            self.precision_prior = self.precision_prior.squeeze(axis=0)
+        self.cov = np.diag(self.precision) * np.eye(self.precision.shape[0])
+        temp = self.precision_prior @ self.mu_prior
+        if len(temp.shape) > 1:
+            temp = temp.squeeze()
+        temp0 = temp + self.f
+        self.mu = np.dot(self.cov,temp0.T)
         # Inverse Gamma posterior update
         self.a += 0.5
-        b_ = 0.5 * (self.yy - np.dot(self.mu.T, np.dot(self.precision, self.mu)))
+        b_ = np.array(0.5 * self.yy).reshape(1,1)
+        b_ += 0.5 * np.dot(self.mu_prior.T, np.dot(self.precision_prior, self.mu_prior))
+        b_ -= 0.5 * (np.dot(self.mu.T, np.dot(self.precision, self.mu)))
         self.b += b_
 
 

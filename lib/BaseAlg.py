@@ -59,13 +59,23 @@ class BaseAlg:
 
 
 class obs_data_all(torch.utils.data.Dataset):
-    def __init__(self):
+    def __init__(self, buffer_s=-1):
         self.context_history = []
         self.click_history = []
+        self.buffer_s = buffer_s
 
     def push(self, context, click):
-        self.context_history.append(context)
-        self.click_history.append(click)
+        if self.buffer_s > 0:
+            self.context_history.append(context)
+            self.click_history.append(click)
+            # fifo
+            if len(self.context_history) > self.buffer_s:
+                self.context_history.pop(0)
+            if len(self.click_history) > self.buffer_s:
+                self.click_history.pop(0)
+        else:
+            self.context_history.append(context)
+            self.click_history.append(click)
 
     def __len__(self):
         return len(self.click_history)
@@ -101,6 +111,7 @@ class Network_NL(nn.Module):
         layers.append(torch.nn.Linear(mlp_dims[-1], 1))
         self.model = torch.nn.Sequential(*layers)
         self.model_last = torch.nn.Sequential(*layers[:-1])
+        self.last_layer = layers[-1]
         self.total_param = sum(p.numel() for p in self.parameters() if p.requires_grad)
 
     def forward(self, data,path="all"):
