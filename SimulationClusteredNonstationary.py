@@ -410,6 +410,6 @@ if __name__ == '__main__':
                                 aggregationMethod="combine", useOutdated=True,
                                 maxNumOutdatedModels=None)
     startTime = datetime.datetime.now()
-    with open(os.path.join(save_address, 'Config' + startTime.strftime('_%m_%d_%H_%M_%S') + '.json'), 'w') as fp:
-        json.dump(config, fp)
+    # with open(os.path.join(save_address, 'Config' + startTime.strftime('_%m_%d_%H_%M_%S') + '.json'), 'w') as fp:
+    #     json.dump(config, fp)
     simExperiment.runAlgorithms(algorithms, startTime)
