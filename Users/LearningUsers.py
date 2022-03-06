@@ -153,8 +153,8 @@ class LinUser:
         self.I_d = np.eye(self.d)
         self.t = 0
         self.MAX_ITE = 100000
-        self.beta1 = [t ** (0.01) for t in range(1, self.MAX_ITE)]
-        self.beta2 = [t ** (0.01) for t in range(1, self.MAX_ITE)]
+        self.beta1 = [(int(np.random.rand() > 0.5) * 2 - 1) for t in range(self.MAX_ITE + 1)]
+        self.beta2 = [(int(np.random.rand() > 0.5) * 2 - 1) for t in range(self.MAX_ITE + 1)]
 
         self.reset(diag=np.ones(self.d))
 

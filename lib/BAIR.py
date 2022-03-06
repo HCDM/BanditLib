@@ -15,7 +15,7 @@ class Bair:
 
     def run(self, N0=None, verbose=False):
         if N0 is None:
-            self.N0 = (2*(K-1)/delta)**(1/ alpha) /rho
+            self.N0 = (2*(K-1)/delta)**(1/alpha)/self.user_model.rho0
         else:
             self.N0 = N0
         if verbose:
