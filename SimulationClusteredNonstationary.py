@@ -16,6 +16,7 @@ from lib.dLinUCB import dLinUCB
 from lib.oracleLinUCB import oracleLinUCB
 from lib.CoDBand import CoDBand
 from lib.DyClu import DyClu
+from lib.DenBand import DenBand
 
 class simulateOnlineData(object):
     def __init__(self, namelabel, context_dimension, testing_iterations, maximum_change_schedule,
@@ -400,7 +401,11 @@ if __name__ == '__main__':
                                     lambda_=config["lambda_"], NoiseScale=config["NoiseScale"], tau=config["tau"],
                                     delta_1=config["delta_1"], delta_2=config["delta_2"],
                                     tilde_delta_1=config["tilde_delta_1"])
-    algorithms['CoDBand'] = CoDBand(v=1, d=config["context_dimension"], lambda_=config["lambda_"], NoiseScale=config["NoiseScale"], alpha_prior={'a': 7.5, 'b': 1.}, tau_cd=config["tau"], alpha=config["alpha"], memory_size=config["memory_size"])
+    algorithms['DenBand'] = DenBand(dimension=config["context_dimension"], alpha=config["dLinUCB_alpha"],
+                                    lambda_=config["lambda_"], NoiseScale=config["NoiseScale"], tau=config["tau"],
+                                    delta_1=config["delta_1"], delta_2=config["delta_2"], 
+                                    tilde_delta_1=config["tilde_delta_1"],
+                                    delta_L=config["tilde_delta_1"],age_threshold=int(args.T)/2)
     algorithms['DyClu'] = DyClu(dimension=config["context_dimension"], alpha=config["alpha"],
                                 lambda_=config["lambda_"],
                                 NoiseScale=config["NoiseScale"], tau_e=config["tau"],
