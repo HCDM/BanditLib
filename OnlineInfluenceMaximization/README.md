@@ -31,7 +31,7 @@ SimulationResults -- The folder saved for the results.
 - Run  `python ./SampleFeature/GenerateEdgeFeature.py` to get the edge features, which will be saved into a file named `Small_edgeFeatures.dic`.
 
 
-### 2. Experiment hyperparameters
+### 2. Hyperparameters
 
 ```python
 graph_address = './datasets/Flickr/Small_Final_SubG.G'
@@ -53,7 +53,7 @@ oracle = degreeDiscountIAC3
 ```
 Run `python IMBandit.py` to reproduce our experiments (the hyperparameters listed above are already included in the `IMBandit.py` file).
 
-#### 3. Experiment Results
+### 3. Experimental Results
 - Result on Flickr dataset: 12812 nodes, 137986 edges
 
 <p float="left">
