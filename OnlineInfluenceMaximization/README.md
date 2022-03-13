@@ -1,4 +1,4 @@
-# Online Influence Maximization with Bandits
+# Factorization Bandits for Online Influence Maximization
 
 This repo contains the implementation of the online influence maximization algorithm IMFB, which is published in SIGKDD 2019 [1], together with several baselines.
 
