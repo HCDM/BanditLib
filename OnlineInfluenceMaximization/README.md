@@ -22,7 +22,7 @@ SimulationResults -- The folder saved for the results.
 
 ### 1. Data pre-processing
 
-- Get the original Flickr and NetHEPT datasets via [Stanford Large Network Dataset Collection](https://snap.stanford.edu/data/)
+- Get the original Flickr and NetHEPT datasets via [Stanford Large Network Dataset Collection](https://snap.stanford.edu/data/).
 
 - Run `python ./SampleFeature/SampleSubgraph.py` to get the sub-sampled graph which will be saved into a file named `Small_Final_SubG.G`.
 
