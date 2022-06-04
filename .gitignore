@@ -3,3 +3,6 @@
 *.pyc
 ./SimulationResults/*
 /SimulationResults/
+.idea
+.vscode/
+Results/

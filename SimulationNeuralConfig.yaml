@@ -10,39 +10,12 @@
 general:
   testing_iterations: 100 # (int) Number of iterations to testing and refine model upon
   training_iterations: 0 # (int) Number of iterations to train a model
-  context_dimension: 16 # (int) The number of features which the algorithm knows about each article
-  hidden_dimension: 0 # (int) The number of features hidden from the algorithms
-  pool_article_size: 10 # (int) Number of articles to select from total pool from which the algorithm can choose
-  # pool_article_size maybe means arm
+  context_dimension: 136 # 136/700 (int) The number of features which the algorithm knows about each article
   batch_size: 1 # (int) 
   testing_method: 'online' # (string) online: update the model after each iterations
   plot: True # (True/False) Should plots be created
-  collaborative: True # (True/False) connection between collaborative user and social_linear rewards
-  dataset: None # (string None/LastFM/Delicious/Yahoo) Choosing a dataset rather than simluation will override some of the other paramaters
-
-# Different settings for user objects
-user:
-  n: 10 # (int) Number of users for the algorithm to select arms for
-  groups: 5 # (int) define how the users are organized together
-  theta_func: featureUniform # (string)
-  load: no # (yes/no) Load the theta for each user from file specified by file_name
-  save: no # (yes/no Save the thetas for each user to be loaded for future simulations
-  collaborative: no # (yes/no) Is the user able to access information about other users, overridden by general collaborative setting
-  file_name: test.json # (string) File from which to load user thetas
-
-# Different settings for article arms
-article:
-  number: 1000 # (int) total number of articles from which to create the article pool
-  groups: 5 # (int)
-  load: no # (yes/no) Load attributes for each article from file specified by file_name
-  save: no # (yes/no) Save attributes for each article into a file for future simulations
-  file_name: test.json # (string) File from which to load article objects
-
-# Reward to determine the accuracy of choices made by the algorithm
-reward:
-  k: 1 # (int) number of articles to recommend for each user each iteration type: Linear # (string) Linear/SocialLinear/Fair: determines which reward function is used, overridden by general collaborative setting
-  type: linear # (string) Linear/SocialLinear/Fair: determines which reward function is used, overridden by general collaborative setting
-
+  dataset: Web10K # (string Web10K/YahooL2R) Choosing a dataset rather than simluation will override some of the other paramaters
+  k: 1
 # [Parameters for the different algorithms
 alg:
   # General Parameters, setting in this section will overwrite default values in all algorithms simulation
@@ -58,21 +31,35 @@ alg:
   # Specific Parameters, setting in this section under an algorithm will overwrite default and 
   #   general parameters for that algorithm
   specific:
-    LinUCB:
+    NeuralUCB:
       alpha: 0.3
       lambda_: 1
+      mlp: 10,
+      epoch: 10
+      learning_rate: 0.1
+      batch_size: 1024
       parameters:
         Theta: True
         CoTheta: False
         W: False
         V: False
     NeuralLinear:
-      a0: 6
-      b0: 6
-      lambda_prior: 0.25
+      lambda_: 0.25
+      mlp: 10,10
+      epoch: 10
+      learning_rate: 0.1
+      batch_size: 1024 # mini-batch size 512
+      a0: 3
+      b0: 3
+      training_freq_network: 100
+      parameters:
+        Theta: True
+        CoTheta: False
+        W: False
+        V: False
 
     #LinPHE:
-    #  a: 1 
+    #  a: 1
     #  lambda_: 0.1
     #  parameters:
     #    Theta: True
@@ -81,7 +68,7 @@ alg:
     #    V: False
     #ThompsonSampling:
     #   lambda_: 0.1
-    #   R: .0001 
+    #   R: .0001
     #   delta: .1
     #   epsilon: .05
     #   parameters:
@@ -126,8 +113,8 @@ alg:
     #    V: False
     #UCBPMF:
     #  sigma : 0.5
-    #  sigmaU : 1 
-    #  sigmaV : 1 
+    #  sigmaU : 1
+    #  sigmaV : 1
     #  alpha : 0.1
     #  parameters:
     #    Theta: False
@@ -146,7 +133,7 @@ alg:
     #CLUB:
     #  alpha: 0.1
     #  alpha2: 0.5
-    #  lambda_: 0.1 
+    #  lambda_: 0.1
     #  cluster_init : 'Erdos-Renyi'
     #  parameters:
     #    Theta: False
@@ -154,10 +141,10 @@ alg:
     #    W: False
     #    V: False
     #PTS:
-    #  particle_num : 10 
+    #  particle_num : 10
     #  sigma : 0.5
-    #  sigmaU : 1 
-    #  sigmaV : 1 
+    #  sigmaU : 1
+    #  sigmaV : 1
     #  parameters:
     #    Theta: False
     #    CoTheta: False
