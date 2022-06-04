@@ -1,4 +1,3 @@
-import cPickle
 import numpy as np 
 from util_functions import featureUniform, gaussianFeature, fileOverWriteWarning
 from random import sample, randint

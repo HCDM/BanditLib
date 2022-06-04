@@ -5,6 +5,12 @@ import copy
 from random import *
 from custom_errors import FileExists
 
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+
+def dsigmoid(x):
+    return sigmoid(x)*(1-sigmoid(x))
+
 # specific : dictionary of arguments specific to the algorithm and supersedes all other parameter settings
 # general : dictionary of arguments shared between all algorithms, supersedes everything except specific parameters
 def createBaseAlgDict(specific, general, W, system_params):
@@ -57,7 +63,6 @@ def createNeuralUCBDict(specific, general, W, system_params):
         },
     }
     return createSpecificAlgDict(specific, general, W, system_params, base_dict)
-
 
 def createLinUCBDict(specific, general, W, system_params):
     base_dict = {
@@ -266,7 +271,6 @@ def fileOverWriteWarning(filename, force):
             print("Warning : fileOverWriteWarning {}".format(filename))
         else:
             raise FileExists(filename)
-
 
 def vectorize(M):
     # temp = []
