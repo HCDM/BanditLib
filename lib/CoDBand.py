@@ -147,7 +147,7 @@ class UserModelStruct:
 			self.lambda_)
 
 	def getCB(self, x):
-		var = np.sqrt(np.dot(np.dot(x, self.AInv), x))
+		var = np.sqrt(np.linalg.multi_dot([x, self.AInv, x]))
 		if self.alpha != -1:
 			return self.alpha * var
 		else:

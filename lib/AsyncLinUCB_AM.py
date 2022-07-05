@@ -49,9 +49,9 @@ class LocalClient:
         article_FeatureVector_g = article_FeatureVector[:self.d_g]
         article_FeatureVector_l = article_FeatureVector[self.d_g:]
         mean_g = np.dot(self.UserTheta_g, article_FeatureVector_g)
-        var_g = np.sqrt(np.dot(np.dot(article_FeatureVector_g, self.AInv_g), article_FeatureVector_g))
+        var_g = np.sqrt(np.linalg.multi_dot([article_FeatureVector_g, self.AInv_g, article_FeatureVector_g]))
         mean_l = np.dot(self.UserTheta_l, article_FeatureVector_l)
-        var_l = np.sqrt(np.dot(np.dot(article_FeatureVector_l, self.AInv_l), article_FeatureVector_l))
+        var_l = np.sqrt(np.linalg.multi_dot([article_FeatureVector_l, self.AInv_l, article_FeatureVector_l]))
         pta = mean_g + alpha_g * var_g + mean_l + alpha_l * var_l
         return pta
 

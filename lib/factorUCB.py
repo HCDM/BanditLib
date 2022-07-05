@@ -82,7 +82,7 @@ class FactorUCBUserStruct:
 
 		self.UserTheta = matrixize(np.dot(self.AInv, self.b), len(articles[0].V)) 
 		self.CoTheta = np.dot(self.UserTheta, self.W)
-		self.CCA = np.dot(np.dot(self.BigW , self.AInv), np.transpose(self.BigW))				
+		self.CCA = np.linalg.multi_dot([self.BigW , self.AInv, np.transpose(self.BigW)])				
 	
 	def getA(self):
 		return self.A
@@ -97,8 +97,8 @@ class FactorUCBUserStruct:
 		TempFeatureV = vectorize(TempFeatureM)
 
 		mean = np.dot(self.CoTheta.T[userID], article.V)	
-		var = np.sqrt(np.dot(np.dot(TempFeatureV, self.CCA), TempFeatureV))
-		var2 = np.sqrt(np.dot(np.dot(self.CoTheta.T[userID][self.context_dimension:], article.A2Inv),  self.CoTheta.T[userID][self.context_dimension:]))
+		var = np.sqrt(np.linalg.multi_dot([TempFeatureV, self.CCA, TempFeatureV]))
+		var2 = np.sqrt(np.linalg.multi_dot([self.CoTheta.T[userID][self.context_dimension:], article.A2Inv,  self.CoTheta.T[userID][self.context_dimension:]]))
 		pta = mean + alpha * var + alpha2*var2
 		return pta
 	def getProb_plot(self, alpha, alpha2, article, userID):
