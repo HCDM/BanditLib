@@ -52,7 +52,7 @@ class LinUCBUserStruct:
 
 	def getProb_plot(self, alpha, article_FeatureVector):
 		mean = np.dot(self.UserTheta,  article_FeatureVector)
-		var = np.sqrt(np.dot(np.dot(article_FeatureVector, self.AInv),  article_FeatureVector))
+		var = np.sqrt(np.linalg.multi_dot([article_FeatureVector, self.AInv,  article_FeatureVector]))
 		pta = mean + alpha * var
 		return pta, mean, alpha * var
 
