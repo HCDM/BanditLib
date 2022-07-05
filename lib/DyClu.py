@@ -84,7 +84,7 @@ class localUserModel:
             self.lambda_)
 
     def getCB(self, x, useConstantAlpha = False):
-        var = np.sqrt(np.dot(np.dot(x, self.AInv), x))
+        var = np.sqrt(np.linalg.multi_dot([x, self.AInv, x]))
         if useConstantAlpha:
             return self.alpha * var
         else:
@@ -109,7 +109,7 @@ class localUserModel:
                 else:
                     mean = np.dot(self.UserThetaNoReg, x)
                     rewardEstimationError = (mean - click)**2
-                    rewardEstimationErrorSTD = self.NoiseScale**2 * (1 + np.dot(np.dot(x, np.linalg.pinv(self.A-self.lambda_ * np.identity(n=self.d))), x))
+                    rewardEstimationErrorSTD = self.NoiseScale**2 * (1 + np.linalg.multi_dot([x, np.linalg.pinv(self.A-self.lambda_ * np.identity(n=self.d)), x]))
                     df1 = 1
 
                     chiSquareStatistic = rewardEstimationError / rewardEstimationErrorSTD
@@ -164,7 +164,7 @@ class AggregatedClusterModel:
             self.lambda_)
 
     def getCB(self, x, useConstantAlpha = False):
-        var = np.sqrt(np.dot(np.dot(x, self.AInv), x))
+        var = np.sqrt(np.linalg.multi_dot([x, self.AInv, x]))
         if useConstantAlpha:
             return self.alpha * var
         else:
