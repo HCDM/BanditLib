@@ -45,7 +45,7 @@ class LinUCBUserStruct:
 		if alpha == -1:
 			alpha = alpha = 0.1*np.sqrt(np.log(self.time+1))
 		mean = np.dot(self.UserTheta,  article_FeatureVector)
-		var = np.sqrt(np.dot(np.dot(article_FeatureVector, self.AInv),  article_FeatureVector))
+		var = np.sqrt(np.linalg.multi_dot([article_FeatureVector, self.AInv,  article_FeatureVector]))
 		self.alpha_t = self.NoiseScale *np.sqrt(np.log(np.linalg.det(self.A)/float(self.sigma * self.lambda_) )) + np.sqrt(self.lambda_)
 		#pta = mean + alpha * var
 		return {'mean':mean, 'var':var, 'alpha':alpha, 'alpha_t':self.alpha_t}
