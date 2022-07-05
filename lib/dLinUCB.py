@@ -154,7 +154,7 @@ class SlaveLinUCBStruct(LinUCBUserStruct):
         if alpha == -1:
             alpha = alpha = 0.1*np.sqrt(np.log(self.time+1))
         mean = np.dot(self.UserTheta,  article_FeatureVector)
-        var = np.sqrt(np.dot(np.dot(article_FeatureVector, self.AInv),  article_FeatureVector))
+        var = np.sqrt(np.linalg.multi_dot([article_FeatureVector, self.AInv,  article_FeatureVector]))
         # self.alpha_t =  self.NoiseScale*np.sqrt(self.d* np.log( (self.lambda_ + self.update_num)/float(self.sigma * self.lambda_) )) + np.sqrt(self.lambda_)
         self.alpha_t = self.NoiseScale ** 2 * np.sqrt(
             self.d * np.log(1 + self.update_num / (self.d * self.lambda_)) + 2 * np.log(1 / self.delta_1)) + np.sqrt(
