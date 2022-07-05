@@ -208,10 +208,10 @@ class Hybrid_LinUCBUserStruct:
 	def getProb(self, alpha, article_FeatureVector,userID):
 		x = article_FeatureVector
 		z = vectorize(np.outer(self.users[userID].userFeature, article_FeatureVector))
-		temp =np.dot(np.dot(np.dot( self.A_zInv , np.transpose( self.users[userID].B)) , self.users[userID].AInv), x )
+		temp =np.linalg.multi_dot([self.A_zInv , np.transpose( self.users[userID].B) , self.users[userID].AInv, x ])
 		mean = np.dot(self.users[userID].UserTheta,  x)+ np.dot(self.beta, z)
-		s_t = np.dot(np.dot(z, self.A_zInv),  z) + np.dot(np.dot(x, self.users[userID].AInv),  x)
-		-2* np.dot(z, temp)+ np.dot(np.dot( np.dot(x, self.users[userID].AInv) ,  self.users[userID].B ) ,temp)
+		s_t = np.linalg.multi_dot([z, self.A_zInv,  z]) + np.linalg.multi_dot([x, self.users[userID].AInv,  x])
+		-2* np.dot(z, temp)+ np.linalg.multi_dot([x, self.users[userID].AInv ,  self.users[userID].B  ,temp])
 
 		var = np.sqrt(s_t)
 		pta = mean + alpha * var
