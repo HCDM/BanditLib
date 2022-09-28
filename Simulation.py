@@ -106,7 +106,7 @@ def createW(gen):
     Gepsilon = .3
     # won't work when there is a clusterfile procided. args.diagnol doesn't exist
 
-    if gen.has_key('clusterfile'):
+    if 'clusterfile' in gen:
         label = read_cluster_label(gen['clusterfile'])
         rewardManagerDict['label'] = label
         userNum = nClusters = int(args.clusterfile.name.split('.')[-1])  # Get cluster number.
@@ -168,11 +168,11 @@ if __name__ == '__main__':
 
     n_articles = article['number'] if article.has_key('number') else 1000
     ArticleGroups = article['groups'] if article.has_key('groups') else 5
-    if user.has_key('number'):
+    if 'number' in user:
         n_users = user['number']
     else:
         n_users = 10
-    if gen.has_key('dataset'):
+    if 'dataset' in gen:
         if gen['dataset'] == 'LastFM':
             print("LastFM")
             n_users = 2100
@@ -200,7 +200,7 @@ if __name__ == '__main__':
                                         "users_" + str(n_users) + "context_" + str(context_dimension) + "latent_" + str(
                                             latent_dimension) + "Ugroups" + str(UserGroups) + ".json")
     # Override User type
-    if gen.has_key('collaborative'):
+    if 'collaborative' in gen:
         if gen['collaborative']:
             use_coUsers = True
             reward_type = 'SocialLinear'
@@ -227,12 +227,12 @@ if __name__ == '__main__':
         context_dimension) + "latent_" + str(latent_dimension) + "Agroups" + str(ArticleGroups) + ".json")
     AM = ArticleManager(context_dimension + latent_dimension, n_articles=n_articles, ArticleGroups=ArticleGroups,
                         FeatureFunc=featureUniform, argv={'l2_limit': 1})
-    if article.has_key('load') and article['load']:
+    if 'load' in article and article['load']:
         articles = AM.loadArticles(articles['filename']) if articles.has_key('filename') else AM.loadArticles(
             articlesFilename)
     elif simulating:
         articles = AM.simulateArticlePool()
-        if article.has_key('save') and article['save']:
+        if 'save' in article and article['save']:
             AM.saveArticles(articles, articlesFilename, force=False)
     rewardManagerDict['k'] = reco['k'] if reco.has_key('k') else 1
     # reward_type = reco['type'] if reco.has_key('type') else 'linear'
@@ -250,11 +250,11 @@ if __name__ == '__main__':
             articles[i].contextFeatureVector = articles[i].featureVector[:context_dimension]
 
     nClusters = n_users
-    if gen.has_key('dataset') and gen['dataset'] in ['LastFM', 'Delicious']:
+    if 'dataset' in gen and gen['dataset'] in ['LastFM', 'Delicious']:
         addDatasetParams(rewardManagerDict)
         W, GW, nClusters = createW(gen)
         experiment = DatasetRewardManager(arg_dict=rewardManagerDict)
-    elif gen.has_key('dataset') and gen['dataset'] == 'Yahoo':
+    elif 'dataset' in gen and gen['dataset'] == 'Yahoo':
         print('Yahoo')
         addDatasetParams(rewardManagerDict)
         clusterNum = 160
